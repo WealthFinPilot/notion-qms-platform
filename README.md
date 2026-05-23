@@ -1,11 +1,11 @@
 # notion-qms-lab
-## SMQ ISO/IEC 17025 — Plateforme QMS Notion × n8n pour laboratoire ISO/IEC 17025
+## Plateforme QMS (Quality Management System) Notion × n8n pour laboratoire accrédité ISO/IEC 17025
 
 `Notion` · `n8n` · `ISO/IEC 17025` · `Mermaid`
 
 ## Présentation en une phrase
 
-Architecture documentée d'une plateforme QMS combinant Notion (référentiel relationnel, RACI) et n8n (automatisation événementielle et planifiée) pour une PME de laboratoire métallurgique accréditée.
+Architecture documentée d'une plateforme de management qualité combinant Notion (référentiel relationnel, RACI) et n8n (automatisation événementielle et planifiée) pour une PME de laboratoire métallurgique accréditée.
 
 > 🎥 **Voir le projet en action** — ▶ [Présentation générale](https://youtu.be/8AHTXgseMW4) · [Focus](https://youtu.be/NJMF1m_C7qQ) · [RH / Formation](https://youtu.be/NXGGmjdkIiE) · [Documentation](https://youtu.be/EjH6szkbJ3w) · [Achats](https://youtu.be/TiAE6TcnOb0)
 
@@ -20,7 +20,7 @@ Une PME de laboratoire accréditée (~15-20 personnes, essais destructifs et con
 
 ## La solution
 
-Une plateforme QMS hybride, pensée pour rester maintenable par une petite structure :
+Une plateforme orienté Système Managemnent de la Qualité hybride, pensée pour rester maintenable par une petite structure :
 
 - **Notion** comme référentiel structuré — 9 hubs Back End, matrice RACI appliquée à toutes les tâches, vues différenciées par profil (commun / gestionnaires / personnels).
 - **n8n auto-hébergé (VPS Hostinger)** comme moteur d'automatisation — scans planifiés (production de tâches) et webhooks événementiels (réaction aux clics utilisateur), avec journalisation des exécutions.
