@@ -1,0 +1,1359 @@
+{
+  "name": "WorkFlow 08",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_DEMANDES_D_ACHAT}}",
+          "mode": "list",
+          "cachedResultName": "Demandes d’achat",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_DEMANDES_D_ACHAT}}"
+        },
+        "simple": false,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "🔴Statut demande|status",
+              "condition": "equals",
+              "statusValue": "À traiter"
+            },
+            {
+              "key": "PO Créer|checkbox",
+              "condition": "equals"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -176,
+        16
+      ],
+      "id": "1089a0ab-e27e-4736-91a5-392b1ffa3599",
+      "name": "Get Demande Achat",
+      "notesInFlow": false,
+      "executeOnce": false,
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b7387bc1-c69c-40f7-a89f-0ed7185baa97",
+              "name": "ItemID",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f48ecfbd-385d-4244-a2cc-7ccc4a4078da",
+              "name": "🔴Statut demande",
+              "value": "={{ $json.properties[\"🔴Statut demande\"].status.name }}",
+              "type": "string"
+            },
+            {
+              "id": "e28454e1-8502-49f0-a66d-94e4094230b3",
+              "name": "🔴📆Master Fournisseurs",
+              "value": "={{ $json.properties[\"🔴📆Master Fournisseurs\"].rich_text[0].plain_text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -608,
+        16
+      ],
+      "id": "5e821951-2b39-480f-a479-f2db4159f0eb",
+      "name": "Edit Webhook",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4c56bd49-b1b5-4905-8040-77b93346ecc5",
+              "name": "Quantité",
+              "value": "={{ $json.properties[\"✅Quantité\"].number || \"\"}}",
+              "type": "number"
+            },
+            {
+              "id": "17a7407f-99da-4e96-a10f-3d2b50328bc1",
+              "name": "unitaire",
+              "value": "={{ $json.properties[\"💲Coût unitaire ($)\"].number || \"\"}}",
+              "type": "number"
+            },
+            {
+              "id": "2e192972-338c-4902-892d-65657c267b06",
+              "name": "Petit Total",
+              "value": "={{ $json.properties[\"🔴Coût total ($)\"].formula.number || \"\"}}",
+              "type": "number"
+            },
+            {
+              "id": "41140ea4-62e6-4e6a-892b-b6f23d3b7e61",
+              "name": "Responsable",
+              "value": "={{ $json.properties[\"🔴Responsable achat\"].rich_text[0].plain_text || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "bd69e36d-0fc7-427c-8f66-189497198b13",
+              "name": "Demandeur",
+              "value": "={{ $json.properties[\"🟡Demandeur\"].rich_text[0].plain_text }}",
+              "type": "string"
+            },
+            {
+              "id": "e7afbdb8-4a8c-42fa-89b9-4c60123e02e6",
+              "name": "Départements",
+              "value": "={{ $json.properties[\"🟡Départements\"] || \"\"}}",
+              "type": "object"
+            },
+            {
+              "id": "f3e4859f-e9f7-4e58-b6e8-118c5a7bac76",
+              "name": "Nom Commun",
+              "value": "={{ $json.properties[\"🔴Nom Commun\"].rich_text[0].text.content || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "4041e6d5-26b5-45bd-88a2-390d349b4eb3",
+              "name": "Criticité",
+              "value": "={{ $json.properties[\"🔴Criticité\"].number || \"\" }}",
+              "type": "number"
+            },
+            {
+              "id": "4db7691d-0af5-484c-9c63-8e39c7505511",
+              "name": "properties[\"🔴Types de consommables\"]",
+              "value": "={{ $json.properties[\"🔴Types de consommables\"].rich_text[0].plain_text || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "4b23e735-1dcd-424a-999d-8d0cae7351a5",
+              "name": "Mode de paiement",
+              "value": "={{ $json.properties[\"🟡Mode de paiement\"].select || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "56f41967-3a4d-4b1c-b023-64bac3b0b77f",
+              "name": "No d'article",
+              "value": "={{ $json.properties[\"🔴No d'article\"].rich_text[0].text.content || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "38f19a52-6337-464b-890b-41bd6ddb83df",
+              "name": "Nom Item",
+              "value": "={{ $json.properties.Demande.title[0].plain_text || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "34714d70-b34a-44d3-8de0-33f240ca8d0d",
+              "name": "URL",
+              "value": "={{ $json.properties[\"🔴URL\"].url }}",
+              "type": "string"
+            },
+            {
+              "id": "59ffb04f-4bbc-4b1a-86cf-7cfd2a767e21",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "613a4e78-d508-4959-b88e-f7ada7263073",
+              "name": "Procédé",
+              "value": "={{ $json.properties[\"🔴Types de procédé\"].rich_text[0].plain_text }}",
+              "type": "string"
+            },
+            {
+              "id": "63d224d2-5f02-4ade-9c75-59ec5af61281",
+              "name": "Statut Demande",
+              "value": "={{ $json.properties[\"🔴Statut demande\"].status.name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        496,
+        16
+      ],
+      "id": "585e579e-743c-4549-ac3b-b727e1076d87",
+      "name": "Edit Demande",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Récupérer tous les items d'entrée\nconst items = $input.all();\n\n// Initialiser les variables\nlet grandTotal = 0;\nlet erreur = null;\n\n// Fonction pour vérifier si une valeur est un nombre valide et positif\nfunction isValidPositiveNumber(value) {\n  return value !== null && value !== undefined && typeof value === 'number' && !isNaN(value) && isFinite(value) && value > 0;\n}\n\n// 1. Vérifier les \"Quantité\" de tous les items (nombre, pas null, supérieur à 0)\nlet quantiteError = false;\nitems.forEach(item => {\n  const quantite = item.json[\"Quantité\"];\n  if (!isValidPositiveNumber(quantite)) {\n    quantiteError = true;\n  }\n});\n\n// Si erreur sur les quantités\nif (quantiteError) {\n  erreur = \"Erreur: Quantité\";\n} else {\n  erreur = null;\n}\n\n// 2. Vérifier les \"unitaire\" de tous les items (nombre et supérieur à 0)\nlet unitaireError = false;\nitems.forEach(item => {\n  const unitaire = item.json[\"unitaire\"];\n  if (!isValidPositiveNumber(unitaire)) {\n    unitaireError = true;\n  }\n});\n\n// 3. Si pas d'erreur sur quantité ET pas d'erreur sur unitaire → calculer Grand Total\nif (erreur === null && !unitaireError) {\n  items.forEach(item => {\n    const petitTotal = item.json[\"Petit Total\"];\n    // Additionner les Petit Total (pas besoin de vérifier, on additionne directement)\n    grandTotal += petitTotal;\n  });\n} else {\n  grandTotal = null;\n}\n\n// Créer les items de sortie - un pour chaque item d'entrée\nconst outputItems = items.map((item, index) => {\n  const data = item.json;\n  \n  // Vérifier si CET item spécifique a une erreur de quantité\n  const quantite = data[\"Quantité\"];\n  const itemQuantiteError = !isValidPositiveNumber(quantite);\n  \n  return {\n    json: {\n      // Garder toutes les données originales\n      ...data,\n      // Ajouter les informations de validation\n      \"Grand Total\": grandTotal,\n      \"Erreur\": erreur,\n      \"Erreur item\": itemQuantiteError ? \"Erreur: Quantité\" : null\n    }\n  };\n});\n\nreturn outputItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        16
+      ],
+      "id": "e55ee844-da4c-479a-8f9c-cabd2202db62",
+      "name": "Grand Total",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f15b795d-5689-46c7-9805-cc0c227d9e5c",
+              "leftValue": "={{ $json.Erreur }}",
+              "rightValue": "null",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        912,
+        16
+      ],
+      "id": "5d41b8a9-ec6a-44fb-ab1f-a921d4e810ce",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f15b795d-5689-46c7-9805-cc0c227d9e5c",
+              "leftValue": "={{ $json[\"Erreur item\"] }}",
+              "rightValue": "null",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        912,
+        304
+      ],
+      "id": "e61c7bb0-85e5-4f39-bfbc-6806974b6cba",
+      "name": "If2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        240
+      ],
+      "id": "b55ebad6-8ec7-4ee2-adf7-787b2351c4cf",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Auto task|select",
+              "selectValue": "Erreur: Check Quantity"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1168,
+        400
+      ],
+      "id": "a41fecc1-dd90-4da4-a382-7c8c291055eb",
+      "name": "Erreur Quanitié",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ItemsID (robuste) — \"item i\" = \"Quantité X unitaire$\" (unitaire à 2 décimales)\n// + champs additionnels par i : Criticié i, Consommable i, No Article i, Procédé i, Name item i\n\nconst rows = $input.all();\nif (!rows.length) return [];\n\n// Parse tolérant: enlève $/espaces, remplace virgule par point\nconst parseNum = (v) => {\n  if (v === null || v === undefined || v === '') return null;\n  const n = Number(String(v).replace(/\\s|\\$/g, '').replace(',', '.'));\n  return Number.isFinite(n) ? n : null;\n};\n\n// Libellé formaté: \"Quantité X unitaire$\"\nconst fmt = (q, u) => {\n  const nq = parseNum(q);\n  const nu = parseNum(u);\n  if (nq !== null && nu !== null) return `${nq} X ${nu.toFixed(2)}$`;\n  if (nq !== null && nu === null)  return `${nq}`;\n  if (nq === null && nu !== null)  return `${nu.toFixed(2)}$`;\n  return 'Non spécifié';\n};\n\n// Helper pour lire une propriété tolérante (top-level ou sous \"properties\")\nconst getProp = (r, key) =>\n  r.json[key] ??\n  (r.json.properties && r.json.properties[key]) ??\n  null;\n\nconst increment = rows.length;\nconst itemsID   = rows.map(r => r.json.id).filter(Boolean).join(', ');\n\nconst itemList        = {};\nconst lienList        = {};\nconst criticieList    = {};\nconst consommableList = {};\nconst noArticleList   = {};\nconst procedeList     = {};\nconst nameItemList    = {};\n\nrows.forEach((r, i) => {\n  const y    = i + 1;\n  const qte  = getProp(r, 'Quantité');\n  const unit = getProp(r, 'unitaire');\n  const url  = getProp(r, 'URL');\n\n  // Champs additionnels (sources)\n  const criticite     = getProp(r, 'Criticité');\n  const consommable   = getProp(r, '🔴Types de consommables');\n  const noArticle     = getProp(r, \"No d'article\");\n  const procede       = getProp(r, 'Procédé');\n  const nomCommun     = getProp(r, 'Nom Commun');\n\n  // Sorties\n  itemList[`item ${y}`]            = fmt(qte, unit);   // \"2 X 53.00$\" | \"2\" | \"53.00$\" | \"Non spécifié\"\n  lienList[`Lien ${y}`]            = url || null;\n\n  criticieList[`Criticié ${y}`]    = criticite ?? null;\n  consommableList[`Consommable ${y}`] = consommable ?? null;\n  noArticleList[`No Article ${y}`] = noArticle ?? null;\n  procedeList[`Procédé ${y}`]      = procede ?? null;\n  nameItemList[`Name item ${y}`]   = nomCommun ?? null;\n});\n\nreturn [{\n  json: {\n    ...rows[0].json,     // base\n    increment,\n    ItemsID: itemsID,\n    // listes\n    ...itemList,\n    ...lienList,\n    ...criticieList,\n    ...consommableList,\n    ...noArticleList,\n    ...procedeList,\n    ...nameItemList,\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        0
+      ],
+      "id": "3936339d-1c87-4261-b4e9-6cb65359df49",
+      "name": "ItemsID"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_BONS_DE_COMMANDE_PO}}",
+          "mode": "list",
+          "cachedResultName": "Bons de Commande (PO)",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_BONS_DE_COMMANDE_PO}}"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Date création PO|date",
+              "includeTime": false,
+              "date": "={{ $now }}"
+            },
+            {
+              "key": "Total estimé|number",
+              "numberValue": "={{ $json[\"Grand Total\"] }}"
+            },
+            {
+              "key": "Numéro PO|title",
+              "title": "PO"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1392,
+        0
+      ],
+      "id": "b580230d-04eb-4e72-ba35-e5677d628ead",
+      "name": "Create PO page",
+      "executeOnce": false,
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.notion.com/v1/pages/{{ $json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ \n  JSON.stringify((() => {\n    const ItemsIDs = $('ItemsID').item.json.ItemsID;\n    const POName = 'PO' + '-' + $json.properties.Identifiant.unique_id.number;\n    \n    // Convertir la string en array d'objets pour Notion\n    const relationArray = ItemsIDs\n      .split(\", \")  // Séparer par virgule-espace\n      .map(id => ({ id: id.trim() }));  // Créer un objet {id: \"...\"} pour chaque ID\n    \n    // Payload PATCH\n    return {\n      properties: {\n        title: { \n          title: [\n            {\n              type: \"text\",\n              text: { content: POName }\n            }\n          ]\n        }, \n        oXxi: { relation: relationArray }\n      }\n    };\n  })())\n}}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1584,
+        0
+      ],
+      "id": "3eaf8acf-2040-46a8-9afa-9baada4dbb58",
+      "name": "HTTP Update PO",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "notes": "Demandes incluses : oXxi"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.notion.com/v1/blocks/{{ $json.target_id }}/children",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 90
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2176,
+        0
+      ],
+      "id": "cc7a59a0-4f80-4ea0-91cf-2d782705a1a6",
+      "name": "HTTP To do PO",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "notes": "Demandes incluses : oXxi"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1641a4b1-28d3-44de-ad3c-2669de3da543",
+              "name": "po_page_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "535c7dc3-f3f5-4b7e-bee3-d197a4198555",
+              "name": "po_title",
+              "value": "={{ $json.properties[\"Numéro PO\"].title[0].plain_text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1776,
+        0
+      ],
+      "id": "b340c540-9d98-460a-ad3c-44730da7a778",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === CONFIG: remplace par les noms exacts de tes nodes ===\nconst NODE_ITEMS = 'ItemsID';             // node qui sort increment, ItemsID, item i, No Article i, Criticité i, Name item i, Procédé i, Consommable i\nconst NODE_PO_CREATE = 'Create PO page';  // node Notion qui a créé la page PO (pour récupérer son id)\n\n// === UTILITAIRES ===\nconst SAFE_BATCH = 90;\nfunction chunk(arr, size) { const out=[]; for (let i=0;i<arr.length;i+=size) out.push(arr.slice(i,i+size)); return out; }\n\nfunction buildHeadingExact(text) {\n  return {\n    object: \"block\",\n    type: \"heading_2\",\n    heading_2: { rich_text: [{ type: \"text\", text: { content: text } }], is_toggleable: false }\n  };\n}\n\n// Achât — 3 colonnes : 1) lien consommable (mention page), 2) item i, 3) \"Criticité : <valeur>\" si non vide\nfunction buildToDoAchat(relId, label, criticite, fallbackFirstColText) {\n  const rt = [];\n\n  // Colonne 1 : lien consommable (mention page si possible)\n  if (relId) {\n    rt.push({ type: \"mention\", mention: { type: \"page\", page: { id: relId } } });\n  } else if (fallbackFirstColText && String(fallbackFirstColText).trim() !== '') {\n    rt.push({ type: \"text\", text: { content: String(fallbackFirstColText).trim() } });\n  } else {\n    rt.push({ type: \"text\", text: { content: \" \" } });\n  }\n\n  // Colonne 2 : item (i)\n  const col2 = (label && String(label).trim()) ? String(label).trim() : '';\n  if (col2 !== '') {\n    rt.push({ type: \"text\", text: { content: \" — \" } });\n    rt.push({ type: \"text\", text: { content: col2 } });\n  }\n\n  // Colonne 3 : \"Criticité : <valeur>\" uniquement si valeur non vide\n  const c = (criticite !== null && criticite !== undefined) ? String(criticite).trim() : '';\n  if (c !== '') {\n    rt.push({ type: \"text\", text: { content: \" — \" } });\n    rt.push({ type: \"text\", text: { content: \"Criticité : \" } });\n    rt.push({ type: \"text\", text: { content: c } });\n  }\n\n  return { object: \"block\", type: \"to_do\", to_do: { rich_text: rt, checked: false } };\n}\n\n// Ligne sous Achât : \"<NoArticle | Lien i> -> URL\" ; si NoArticle vide, utiliser \"Lien i\"\nfunction buildAchatLinkLine(i, noArticle, url) {\n  const u = (url && String(url).trim() !== '') ? String(url).trim() : '';\n  if (u === '') return null;\n  const art = (noArticle !== null && noArticle !== undefined) ? String(noArticle).trim() : '';\n  const label = (art !== '') ? art : `Lien ${i}`;\n  return {\n    object: \"block\",\n    type: \"paragraph\",\n    paragraph: {\n      rich_text: [\n        { type: \"text\", text: { content: `${label} -> ` } },\n        { type: \"text\", text: { content: u, link: { url: u } } }\n      ]\n    }\n  };\n}\n\n// Reception — 2 colonnes : 1) Name item i, 2) Procédé i (si non vide)\nfunction buildToDoReception(nameItem, procede) {\n  const rt = [];\n  const col1 = (nameItem && String(nameItem).trim()) ? String(nameItem).trim() : '';\n  const col2 = (procede && String(procede).trim()) ? String(procede).trim() : '';\n  if (col1 !== '') rt.push({ type: \"text\", text: { content: col1 } });\n  if (col2 !== '') {\n    if (rt.length > 0) rt.push({ type: \"text\", text: { content: \" — \" } });\n    rt.push({ type: \"text\", text: { content: col2 } });\n  }\n  if (rt.length === 0) rt.push({ type: \"text\", text: { content: \" \" } });\n  return { object: \"block\", type: \"to_do\", to_do: { rich_text: rt, checked: false } };\n}\n\n// Ligne sous Reception : valeur seule de \"Consommable i\" (sans libellé)\nfunction buildConsommableValueLine(value) {\n  const v = (value !== null && value !== undefined) ? String(value).trim() : '';\n  if (v === '') return null;\n  return { object: \"block\", type: \"paragraph\", paragraph: { rich_text: [{ type: \"text\", text: { content: v } }] } };\n}\n\n// === RÉCUP DES DONNÉES EN AMONT ===\nconst itemsNodeItems = $(NODE_ITEMS).all();\nif (!itemsNodeItems.length) throw new Error('Aucun output du node ItemsID');\nconst base = itemsNodeItems[0].json;\n\nconst poCreate = $(NODE_PO_CREATE).item.json || {};\nconst poId = poCreate.id || base.po_page_id;\nif (!poId) throw new Error('ID de la page PO introuvable. Vérifie NODE_PO_CREATE.id ou base.po_page_id');\n\n// === NOMBRE D’ITEMS & IDs de pages consommables ===\nconst ids = (base.ItemsID || '').split(',').map(s => s.trim()).filter(Boolean);\nlet inc = Number(base.increment) || 0;\nif (!inc) {\n  const itemKeys = Object.keys(base).filter(k => /^item\\s+\\d+$/i.test(k));\n  inc = Math.max(ids.length, itemKeys.length, 0);\n}\n\n// === CONSTRUCTION DES BLOCS ===\nconst blocks = [];\n\n// Titres EXACTS\nblocks.push(buildHeadingExact('Achât'));\n\nfor (let i = 1; i <= inc; i++) {\n  const label       = base[`item ${i}`];                         // \"35 X 56.00$\"\n  const criticite   = base[`Criticité ${i}`] ?? base[`Criticié ${i}`]; // garder vide si absent\n  const noArticle   = base[`No Article ${i}`];\n  const nameItem    = base[`Name item ${i}`];\n  const url         = base[`Lien ${i}`] || null;\n  const relId       = ids[i - 1] || null;\n\n  // Achât — to_do (3 colonnes, Criticité avec son libellé si présent)\n  const firstColFallback = nameItem || '';\n  blocks.push(buildToDoAchat(relId, label, criticite ?? '', firstColFallback));\n\n  // Sous Achât : \"<NoArticle | Lien i> -> URL\" (si URL présent)\n  const linkLine = buildAchatLinkLine(i, noArticle, url);\n  if (linkLine) blocks.push(linkLine);\n}\n\nblocks.push(buildHeadingExact('Reception'));\n\nfor (let i = 1; i <= inc; i++) {\n  const nameItem    = base[`Name item ${i}`] ?? '';\n  const procede     = base[`Procédé ${i}`] ?? '';\n  const consommable = base[`Consommable ${i}`] ?? '';\n\n  // Reception — to_do (2 colonnes)\n  blocks.push(buildToDoReception(nameItem, procede));\n\n  // Sous Reception : valeur de Consommable i (sans libellé)\n  const consLine = buildConsommableValueLine(consommable);\n  if (consLine) blocks.push(consLine);\n}\n\n// === BATCHING → 1 item / requête append ===\nconst batches = chunk(blocks, SAFE_BATCH);\nreturn batches.map(batch => ({ json: { target_id: poId, body: { children: batch } } }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1984,
+        0
+      ],
+      "id": "32aa280e-a1ea-4ffd-a1bf-2f32744bd626",
+      "name": "Liste To do"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2208,
+        464
+      ],
+      "id": "3c700f86-a777-41fc-90e7-7d26ecb3f90e",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Edit Demande').item.json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "🔴Statut demande|status",
+              "statusValue": "En cours"
+            },
+            {
+              "key": "PO Créer|checkbox",
+              "checkboxValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        2416,
+        464
+      ],
+      "id": "dbfd3888-9f3a-4397-9f66-f40313ee65f9",
+      "name": "Update Demandes",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "79c90d27-697d-4a50-9280-7e1be6be47c4",
+              "leftValue": "={{ $json.isFirstResponsable }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "772805f0-011d-4dfe-a4c3-a0bfae55bbc0",
+              "leftValue": "={{ $json.isFirstFournisseur }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        16
+      ],
+      "id": "9c7c8ade-5e7f-437a-b84e-a9ba7f91bcc8",
+      "name": "If3"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        496,
+        208
+      ],
+      "id": "c6711357-fd8a-4a04-991f-908a54302165",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1472,
+        16
+      ],
+      "id": "33c2a162-05c3-45f9-82cd-66481063763c",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_log.workflow",
+              "value": "={{$workflow.name}}"
+            },
+            {
+              "name": "_log.executionId",
+              "value": "={{$execution.id}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d36ef818-c8d8-4816-90c6-453f02b9ebd1",
+      "name": "Log Meta (expressions)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -1248,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const startedAt = new Date().toISOString();\n  i.json._log = {\n    runId: startedAt,\n    workflow: i.json._log?.workflow || null,\n    executionId: i.json._log?.executionId || null,\n    startedAt,\n    ok: 0,\n    ko: 0,\n    actions: [],\n    failedNodes: {}\n  };\n  return i;\n});"
+      },
+      "id": "b0c789b8-2882-4a88-ae4c-bcb6e060f130",
+      "name": "Start Log",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -1056,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_DEMANDES_D_ACHAT}}",
+          "mode": "list",
+          "cachedResultName": "Demandes d’achat",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_DEMANDES_D_ACHAT}}"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "PO Créer|checkbox",
+              "condition": "equals"
+            },
+            {
+              "key": "🔴Statut demande|status",
+              "condition": "equals",
+              "statusValue": "À traiter"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -832,
+        16
+      ],
+      "id": "34c36781-26ec-4092-b861-362f82701d65",
+      "name": "First call",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": true
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -400,
+        0
+      ],
+      "id": "d2a3c7b2-4504-4016-bb7a-168ffe62954f",
+      "name": "Loop Over Responsable"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Récupérer tous les items d'entrée\nconst items = $input.all();\n\nif (items.length === 0) {\n  return [{ json: { message: \"Aucun item à traiter\" } }];\n}\n\n// Trouver le premier responsable (premier item qui a un responsable défini)\nlet firstResponsable = null;\nfor (let item of items) {\n  if (item.json.properties && \n      item.json.properties[\"🔴Responsable achat\"] && \n      item.json.properties[\"🔴Responsable achat\"].rich_text && \n      item.json.properties[\"🔴Responsable achat\"].rich_text[0] && \n      item.json.properties[\"🔴Responsable achat\"].rich_text[0].plain_text) {\n    firstResponsable = item.json.properties[\"🔴Responsable achat\"].rich_text[0].plain_text;\n    break; // Arrêter dès qu'on trouve le premier\n  }\n}\n\n// Trouver le premier fournisseur (premier item qui a un fournisseur défini)\nlet firstFournisseur = null;\nfor (let item of items) {\n  if (item.json.properties && \n      item.json.properties[\"🔴📆Master Fournisseurs\"] && \n      item.json.properties[\"🔴📆Master Fournisseurs\"].rich_text && \n      item.json.properties[\"🔴📆Master Fournisseurs\"].rich_text[0] && \n      item.json.properties[\"🔴📆Master Fournisseurs\"].rich_text[0].plain_text) {\n    firstFournisseur = item.json.properties[\"🔴📆Master Fournisseurs\"].rich_text[0].plain_text;\n    break; // Arrêter dès qu'on trouve le premier\n  }\n}\n\n// Retourner TOUS les items avec les constantes booléennes\nreturn items.map((item, index) => {\n  // Extraire le responsable de cet item\n  let itemResponsable = null;\n  if (item.json.properties && \n      item.json.properties[\"🔴Responsable achat\"] && \n      item.json.properties[\"🔴Responsable achat\"].rich_text && \n      item.json.properties[\"🔴Responsable achat\"].rich_text[0] && \n      item.json.properties[\"🔴Responsable achat\"].rich_text[0].plain_text) {\n    itemResponsable = item.json.properties[\"🔴Responsable achat\"].rich_text[0].plain_text;\n  }\n  \n  // Extraire le fournisseur de cet item\n  let itemFournisseur = null;\n  if (item.json.properties && \n      item.json.properties[\"🔴📆Master Fournisseurs\"] && \n      item.json.properties[\"🔴📆Master Fournisseurs\"].rich_text && \n      item.json.properties[\"🔴📆Master Fournisseurs\"].rich_text[0] && \n      item.json.properties[\"🔴📆Master Fournisseurs\"].rich_text[0].plain_text) {\n    itemFournisseur = item.json.properties[\"🔴📆Master Fournisseurs\"].rich_text[0].plain_text;\n  }\n  \n  return {\n    json: {\n      ...item.json,\n      isFirstResponsable: itemResponsable === firstResponsable,\n      isFirstFournisseur: itemFournisseur === firstFournisseur\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        16
+      ],
+      "id": "250b8575-7c36-4fe5-875b-e9309625edb4",
+      "name": "Assign Target"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "7834a7ac-8b7c-4d23-a472-ce2e3a382076",
+      "name": "Update Log1",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -608,
+        -368
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{ ($workflow.name || 'Unknown Workflow') + \" - \" + ($json._log?.actions?.find(action => !action.ok)?.node || Object.keys($json._log?.failedNodes || {})[0] || 'UnknownNode') }}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8d1eac55-8462-4a53-b1fc-16d240f7b2fb",
+      "name": "Log Snapshot",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -832,
+        -368
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        48,
+        -352
+      ],
+      "id": "65a69543-eb7c-4b0f-be59-866a186f69e4",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "2f558b7a-9d93-4916-af3b-067acf6a3480",
+      "name": "Update Log",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{ ($workflow.name || 'Unknown Workflow') + \" - \" + ($json._log?.actions?.find(action => !action.ok)?.node || Object.keys($json._log?.failedNodes || {})[0] || 'UnknownNode') }}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0b9bcc3e-197b-4c6e-b7aa-4b8ef80c48b2",
+      "name": "Log Snapshot1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        1392,
+        -176
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1968,
+        -336
+      ],
+      "id": "c56524eb-15c5-4e25-b831-7720eaf5d894",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Nph7coAgeAm16pwp",
+          "mode": "list",
+          "cachedResultName": "Logger - Send to Notion"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2800,
+        -336
+      ],
+      "id": "658d84e2-2e9c-4108-b1bb-399a22a35597",
+      "name": "Execute Logger - Send to Notion"
+    },
+    {
+      "parameters": {
+        "functionCode": "const i = items[0];\nconst log = i.json._log || {};\nlog.finishedAt = new Date().toISOString();\n\nconst start = new Date(log.startedAt || log.runId || Date.now()).getTime();\nconst end = new Date(log.finishedAt).getTime();\nlog.durationSec = Math.round((end - start) / 1000);\n\n// 🎯 CORRECTION : Extraire les noms de nœuds uniques des échecs\nconst failedNodeNames = [];\nconst uniqueErrorMessages = [];\n\n// Parcourir les actions pour identifier les échecs\nif (log.actions && Array.isArray(log.actions)) {\n  log.actions.forEach(action => {\n    if (!action.ok) {\n      // Ajouter le nom du nœud s'il n'est pas déjà présent\n      if (!failedNodeNames.includes(action.node)) {\n        failedNodeNames.push(action.node);\n      }\n      \n      // Ajouter le message d'erreur s'il n'est pas déjà présent\n      if (action.msg && !uniqueErrorMessages.includes(action.msg)) {\n        uniqueErrorMessages.push(action.msg);\n      }\n    }\n  });\n}\n\n// 🎯 RÉSULTATS CORRIGÉS\nlog.failedNodesList = failedNodeNames; // Noms uniques des nœuds en échec\nlog.uniqueErrorMessages = uniqueErrorMessages; // Messages d'erreur uniques\nlog.errorSummary = uniqueErrorMessages.join(' | '); // Compilation des erreurs\n\n// Stats améliorées\nlog.stats = {\n  totalProcessed: log.ok + log.ko,\n  successCount: log.ok,\n  failureCount: log.ko,\n  successRate: `${Math.round((log.ok / (log.ok + log.ko)) * 100)}%`,\n  uniqueFailedNodes: failedNodeNames.length,\n  distinctErrors: uniqueErrorMessages.length\n};\n\ni.json._log = log;\nreturn [i];"
+      },
+      "id": "112d70e2-9fae-45cd-8615-9fa25d5e921a",
+      "name": "Finish Log",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        2608,
+        -336
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Consolidation COMPLÈTE des logs\nconst logData = {\n  workflow: $('Log Meta (expressions)').first().json._log?.workflow || \"WorkFlow 01\",\n  executionId: $execution.id,\n  startedAt: $('Start Log').first().json._log?.startedAt,\n  finishedAt: new Date().toISOString(),\n  runId: $('Start Log').first().json._log?.runId,\n  \n  // Consolidation des compteurs\n  ok: $input.all().reduce((sum, item) => sum + (item.json._log?.ok || 0), 0),\n  ko: $input.all().reduce((sum, item) => sum + (item.json._log?.ko || 0), 0),\n  failedNodes: $input.all().flatMap(item => item.json._log?.failedNodes || []),\n  \n  // Logique Actions\n  actions: (() => {\n    const koCount = $input.all().reduce((sum, item) => sum + (item.json._log?.ko || 0), 0);\n    if (koCount === 0) {\n      return [{ msg: \"Pass\" }];\n    } else {\n      const allActions = $input.all().flatMap(item => item.json._log?.actions || []);\n      return allActions.filter(action => action.msg !== \"Pass\");\n    }\n  })()\n};\n\nreturn [{ json: { _log: logData } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        -336
+      ],
+      "id": "9f7ad26e-5bf1-4055-b33f-007910deba1b",
+      "name": "One Item"
+    },
+    {
+      "parameters": {
+        "content": "## Webhook Notion trigger de la base Demande d'achat\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/)",
+        "height": 256,
+        "width": 592,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1520,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "11031bad-c524-47f5-80a1-0ed8a969f835",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Scan des demandes et regroupements par PO\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/)",
+        "height": 736,
+        "width": 2224,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -928,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "67e48904-ea00-4ee0-bbce-204781e74fdc",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Productions des PO par reponsable\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/)",
+        "height": 736,
+        "width": 1696,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1296,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "3704a7f1-40c7-4778-9507-e7e4cb04facc",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "height": 416,
+        "width": 3920
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -928,
+        -464
+      ],
+      "typeVersion": 1,
+      "id": "66cc306c-bf5a-4eef-8997-79eaf1183e1d",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get Demande Achat": {
+      "main": [
+        [
+          {
+            "node": "Assign Target",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Webhook": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Responsable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Demande": {
+      "main": [
+        [
+          {
+            "node": "Grand Total",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Grand Total": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "ItemsID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Erreur Quanitié",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ItemsID": {
+      "main": [
+        [
+          {
+            "node": "Create PO page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create PO page": {
+      "main": [
+        [
+          {
+            "node": "HTTP Update PO",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Update PO": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP To do PO": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Liste To do",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Liste To do": {
+      "main": [
+        [
+          {
+            "node": "HTTP To do PO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Update Demandes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Demandes": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Responsable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Edit Demande",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Log Meta (expressions)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Meta (expressions)": {
+      "main": [
+        [
+          {
+            "node": "Start Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Log": {
+      "main": [
+        [
+          {
+            "node": "First call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "First call": {
+      "main": [
+        [
+          {
+            "node": "Edit Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Responsable": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Get Demande Achat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assign Target": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Update Log1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Snapshot1": {
+      "main": [
+        [
+          {
+            "node": "Update Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finish Log": {
+      "main": [
+        [
+          {
+            "node": "Execute Logger - Send to Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One Item": {
+      "main": [
+        [
+          {
+            "node": "Finish Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "One Item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "26be990d-1735-4bf5-b7ca-3029f8496bde",
+  "meta": {
+    "instanceId": "af83b3ea93bc43d0c5ac63a56a75bfd2e58c747f1d5aca065acb21b4a4d3daa3"
+  },
+  "id": "hMbcmXkICSrWrGHJ",
+  "tags": [
+    {
+      "updatedAt": "2025-09-12T22:39:32.525Z",
+      "createdAt": "2025-09-12T22:39:32.525Z",
+      "id": "ob1iUzBDY4oAYrZ0",
+      "name": "Achat"
+    },
+    {
+      "updatedAt": "2025-09-16T22:04:42.247Z",
+      "createdAt": "2025-09-16T22:04:42.247Z",
+      "id": "g3rXBDceesMgheZ3",
+      "name": "Automatique"
+    }
+  ]
+}

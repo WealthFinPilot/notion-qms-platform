@@ -1,0 +1,1589 @@
+{
+  "name": "WorkFlow 06",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "{{WEBHOOK_PATH_WF06_NAMED}}",
+        "options": {
+          "responseData": ""
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -912,
+        80
+      ],
+      "id": "be2f5c1c-6317-4c27-a1f1-34f0fc6d5b0e",
+      "name": "Webhook Master Tâche",
+      "webhookId": "{{WEBHOOK_ID_WF06}}"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst processedItems = [];\n\nfor (const item of items) {\n  // Récupération de la propriété \"*Référence n8n*\"\n  const textData = item.json[\"*Référence n8n*\"] || '';\n  \n  // Initialisation des variables\n  let parsedData = {\n    nom_tache: '',\n    id_database: '',\n    id_page: '',\n    id_fournisseur: '',\n    ticket: null\n  };\n  \n  if (textData) {\n    // Normalisation : Remplacer les \\n littéraux par de vrais sauts de ligne\n    const normalizedText = textData.replace(/\\\\n/g, '\\n');\n    \n    // Découpage du texte par lignes (après normalisation)\n    const lignes = normalizedText.split('\\n');\n    \n    // [1] Nom de la tâche (première ligne)\n    if (lignes[0]) {\n      parsedData.nom_tache = lignes[0].trim();\n    }\n    \n    // Parsing des lignes suivantes\n    for (let i = 1; i < lignes.length; i++) {\n      const ligne = lignes[i].trim();\n      \n      // [2] ID Database\n      if (ligne.startsWith('ID Database:')) {\n        parsedData.id_database = ligne.replace('ID Database:', '').trim();\n      }\n      \n      // [3] ID Page\n      if (ligne.startsWith('ID Page:')) {\n        parsedData.id_page = ligne.replace('ID Page:', '').trim();\n      }\n      \n      // [4] ID Fournisseur (uniquement pour les certificats)\n      if (ligne.startsWith('ID Fournisseur :')) {\n        parsedData.id_fournisseur = ligne.replace('ID Fournisseur :', '').trim();\n      }\n      \n      // [5] Ticket (extraction du numéro)\n      if (ligne.startsWith('Ticket :') || ligne.startsWith('Ticket:')) {\n        const ticketText = ligne.replace(/Ticket\\s*:\\s*/i, '').trim();\n        const ticketNumber = parseInt(ticketText, 10);\n        \n        // Vérification que c'est bien un nombre valide\n        if (!isNaN(ticketNumber)) {\n          parsedData.ticket = ticketNumber;\n        }\n      }\n    }\n  }\n  \n  // Sortie simplifiée - seulement les 5 propriétés demandées\n  processedItems.push({\n    json: parsedData\n  });\n}\n\nreturn processedItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        80
+      ],
+      "id": "6fd133a8-360d-4096-9666-865cfb265474",
+      "name": "Code",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3cd64026-9303-4324-899e-9a8c59c26aed",
+              "name": "ID",
+              "value": "={{ $json.body.data.id }}",
+              "type": "string"
+            },
+            {
+              "id": "1dc41514-c599-4ec1-b1b7-3950e4355bde",
+              "name": "Etat",
+              "value": "={{ $json.body.data.properties[\"État\"].status.name }}",
+              "type": "string"
+            },
+            {
+              "id": "a6c35c3f-ba77-46c7-a166-8e913eb30488",
+              "name": "*Référence n8n*",
+              "value": "={{ $json.body.data.properties[\"*Référence n8n*\"].rich_text[0].text.content }}",
+              "type": "string"
+            },
+            {
+              "id": "1769fe8d-8f6e-4e1e-a51c-eed98e601516",
+              "name": "Anti-Spam",
+              "value": "={{ $json.body.data.properties[\"Anti-Spam\"].checkbox }}",
+              "type": "boolean"
+            },
+            {
+              "id": "1ac7e478-784d-4324-8702-94ebad2a2ffd",
+              "name": "New Date",
+              "value": "={{ $json.body.data.properties[\"Date complété\"] }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -352,
+        80
+      ],
+      "id": "2a790dc7-1735-4f1f-86f3-451a61863754",
+      "name": "Edit Webhook",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.nom_tache }}",
+                    "rightValue": "Qualité",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "f958dfa3-1a82-4990-b222-9729016ad985"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Qualité"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "17afe359-6337-4530-aa2d-0afc69c3201f",
+                    "leftValue": "={{ $json.nom_tache }}",
+                    "rightValue": "Certificat",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Certificat"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2d99a9e3-3c87-44cb-b151-2e8cd8de8cf5",
+                    "leftValue": "={{ $json.nom_tache }}",
+                    "rightValue": "Maintenance",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Maintenance"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a63ef0e6-1f0d-4fd3-9696-4e3d673baaeb",
+                    "leftValue": "={{ $json.nom_tache }}",
+                    "rightValue": "Deviation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Deviation"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d99cfde7-133c-4b1a-82c8-1f99f0fb0a48",
+                    "leftValue": "={{ $json.nom_tache }}",
+                    "rightValue": "Calibration",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Calibration"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        224,
+        16
+      ],
+      "id": "3e27054a-5e38-4ac0-b38c-387aa3adbc23",
+      "name": "Switch",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id_page }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        848,
+        -448
+      ],
+      "id": "bd5995ca-50b4-40a7-955e-5897d6b2b8ec",
+      "name": "Get page Qualité",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a5d8f122-4dc7-41aa-96cb-443a50651b7a",
+              "name": "Date de début",
+              "value": "={{ $json.property_date_de_d_but }}",
+              "type": "object"
+            },
+            {
+              "id": "4c3cb38e-57b5-442b-acee-b75da9ed103a",
+              "name": "Date de fin",
+              "value": "={{ $json.property_date_de_fin }}",
+              "type": "object"
+            },
+            {
+              "id": "79b7596b-48ee-494b-943c-870261c9d550",
+              "name": "jours",
+              "value": "={{ $json.property_fr_quence_jours }}",
+              "type": "number"
+            },
+            {
+              "id": "1ee038f7-9d96-4911-8701-f628e6f96a03",
+              "name": "New Date",
+              "value": "={{ $('Edit Webhook').item.json[\"New Date\"] }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1040,
+        -448
+      ],
+      "id": "4ba47f3e-fece-4f25-812b-5b06fe897186",
+      "name": "Edit Date Qualité",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === Code Node n8n — Recalage sur jours ouvrés (UTC-safe) ===\nconst items = $input.all();\nconst out = [];\n\n// Helpers UTC pour éviter les décalages DST/fuseau\nconst MS_PER_DAY = 24 * 60 * 60 * 1000;\n\nfunction parseISODateOnly(s) {\n  if (!s) return null;\n  return new Date(`${s}T00:00:00Z`); // force minuit UTC\n}\n\nfunction toISODateOnly(dUtc) {\n  return dUtc.toISOString().slice(0, 10);\n}\n\nfunction addDaysUTC(dUtc, n) {\n  const d = new Date(Date.UTC(dUtc.getUTCFullYear(), dUtc.getUTCMonth(), dUtc.getUTCDate()));\n  d.setUTCDate(d.getUTCDate() + n);\n  return d;\n}\n\n// Si samedi/dimanche → avance jusqu'au lundi\nfunction nextWorkingDayUTC(dUtc) {\n  let res = new Date(Date.UTC(dUtc.getUTCFullYear(), dUtc.getUTCMonth(), dUtc.getUTCDate()));\n  const dow = res.getUTCDay(); // 0=dim, 6=sam\n  if (dow === 6) res = addDaysUTC(res, 2); // samedi -> lundi\n  else if (dow === 0) res = addDaysUTC(res, 1); // dimanche -> lundi\n  return res;\n}\n\nfor (const item of items) {\n  const data = item.json || {};\n  const startProp = data[\"Date de début\"]?.start;\n  const endProp   = data[\"Date de fin\"]?.start;\n  const jours     = Number.isFinite(Number(data.jours)) ? Number(data.jours) : 0;\n\n  // 1) GAP en jours calendaires (0 si info manquante)\n  const startOrig = parseISODateOnly(startProp);\n  const endOrig   = parseISODateOnly(endProp);\n  let gap = 0;\n  if (startOrig && endOrig) {\n    gap = Math.round((endOrig - startOrig) / MS_PER_DAY);\n  }\n\n  // 2) Nouvelle Date de début = (Date de début + jours) puis ajustée jour ouvré\n  //    Fallback: si start manquant, on part d'aujourd'hui.\n  const todayStr  = new Date().toISOString().slice(0, 10);\n  const baseStart = startOrig || parseISODateOnly(todayStr);\n  const candidateStart = addDaysUTC(baseStart, jours);\n  const startWorking   = nextWorkingDayUTC(candidateStart);\n  const startOutStr    = toISODateOnly(startWorking);\n\n  // 3) Nouvelle Date de fin = (nouvelle Date de début + gap) puis ajustée jour ouvré\n  const candidateEnd = addDaysUTC(startWorking, gap);\n  const endWorking   = nextWorkingDayUTC(candidateEnd);\n  const endOutStr    = toISODateOnly(endWorking);\n\n  // Logs utiles\n  console.log(\"=== DATES ===\", {\n    jours,\n    gap,\n    start_input: startProp || \"(null->today)\",\n    end_input: endProp || \"(null)\",\n    start_out: startOutStr,\n    end_out: endOutStr,\n  });\n\n  out.push({\n    json: {\n      ...data,\n      \"Date de début\": { start: startOutStr, end: null, time_zone: null },\n      \"Date de fin\":   { start: endOutStr,   end: null, time_zone: null },\n    }\n  });\n}\n\nreturn out;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        -448
+      ],
+      "id": "1472cf3d-9433-4daf-9348-d9304e843d39",
+      "name": "Code Date Qualité",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id_page }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        848,
+        64
+      ],
+      "id": "75badd73-6bcd-4c16-9475-1c2fb36c4cab",
+      "name": "Get page Maintenance",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a5d8f122-4dc7-41aa-96cb-443a50651b7a",
+              "name": "Date de début",
+              "value": "={{ $json.property_derni_re_maintenance }}",
+              "type": "object"
+            },
+            {
+              "id": "4c3cb38e-57b5-442b-acee-b75da9ed103a",
+              "name": "Date de fin",
+              "value": "={{ $json.property_prochaine_maintenance }}",
+              "type": "object"
+            },
+            {
+              "id": "79b7596b-48ee-494b-943c-870261c9d550",
+              "name": "jours",
+              "value": "={{ $json.property_fr_quence_maintenance_jours }}",
+              "type": "number"
+            },
+            {
+              "id": "1ee038f7-9d96-4911-8701-f628e6f96a03",
+              "name": "New Date",
+              "value": "={{ $('Edit Webhook').item.json[\"New Date\"] }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1040,
+        64
+      ],
+      "id": "b962d3cd-657b-4a51-ab6f-e80e4571b66a",
+      "name": "Edit Date Maintenance",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Get page Qualité').item.json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Date de début|date",
+              "includeTime": false,
+              "date": "={{ $json[\"Date de début\"].start }}"
+            },
+            {
+              "key": "Date de fin|date",
+              "date": "={{ $json[\"Date de fin\"].start }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1424,
+        -448
+      ],
+      "id": "7f0e01ec-d4d3-4119-8f7f-27fb03395213",
+      "name": "Update page Qualité",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === Code Node n8n — New Date (fallback now) → Date de fin sur jour ouvré (UTC) ===\nconst items = $input.all();\nconst out = [];\n\n// Helpers UTC\nconst MS_PER_DAY = 24 * 60 * 60 * 1000;\nfunction parseISODateOnly(s) { return s ? new Date(`${s}T00:00:00Z`) : null; }\nfunction toISODateOnly(dUtc) { return dUtc.toISOString().slice(0, 10); }\nfunction addDaysUTC(dUtc, n) {\n  const d = new Date(Date.UTC(dUtc.getUTCFullYear(), dUtc.getUTCMonth(), dUtc.getUTCDate()));\n  d.setUTCDate(d.getUTCDate() + n);\n  return d;\n}\nfunction nextWorkingDayUTC(dUtc) {\n  let res = new Date(Date.UTC(dUtc.getUTCFullYear(), dUtc.getUTCMonth(), dUtc.getUTCDate()));\n  const dow = res.getUTCDay(); // 0=dim, 6=sam\n  if (dow === 6) res = addDaysUTC(res, 2); // samedi -> lundi\n  else if (dow === 0) res = addDaysUTC(res, 1); // dimanche -> lundi\n  return res;\n}\n\nfor (const item of items) {\n  const data = item.json || {};\n  const jours = Number.isFinite(Number(data.jours)) ? Number(data.jours) : 0;\n\n  // 1) New Date: si start null -> aujourd'hui, sinon conserver\n  const newDateProp = data[\"New Date\"];\n  const todayStr = new Date().toISOString().slice(0, 10);\n  const newDateStartStr = newDateProp?.date?.start || todayStr;\n\n  const newDateOut = {\n    id: newDateProp?.id || \"date_id\",\n    type: \"date\",\n    date: { start: newDateStartStr, end: null, time_zone: null }\n  };\n\n  // 2) Date de fin = New Date + jours (calendaire), puis ajustée jour ouvré\n  const base = parseISODateOnly(newDateStartStr) || parseISODateOnly(todayStr);\n  const candidateEnd = addDaysUTC(base, jours);\n  const endWorking = nextWorkingDayUTC(candidateEnd);\n  const endOutStr = toISODateOnly(endWorking);\n\n  // Logs utiles\n  console.log(\"=== WF Fin ===\", {\n    newDateStartStr,\n    jours,\n    date_fin_out: endOutStr\n  });\n\n  out.push({\n    json: {\n      ...data,\n      \"New Date\": newDateOut,\n      \"Date de fin\": { start: endOutStr, end: null, time_zone: null }\n    }\n  });\n}\n\nreturn out;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        64
+      ],
+      "id": "0c3579d4-fe8d-474c-9e03-f71562efc23e",
+      "name": "Code Date Maintenance",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Get page Maintenance').item.json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Dernière maintenance|date",
+              "date": "={{ $json[\"New Date\"].date.start }}"
+            },
+            {
+              "key": "Prochaine maintenance|date",
+              "date": "={{ $json[\"Date de fin\"].start }}"
+            },
+            {
+              "key": "Maintenance Request|checkbox"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1424,
+        64
+      ],
+      "id": "b752b9ef-630c-4f5f-9436-673d75a049a9",
+      "name": "Update page maintenance",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Edit Webhook').item.json.ID }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Anti-Spam|checkbox",
+              "checkboxValue": true
+            },
+            {
+              "key": "Mention|select",
+              "selectValue": "🔁Tâche réassignée🎉"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        2048,
+        64
+      ],
+      "id": "7f766bdd-46f6-4646-8ea7-5845bac891c8",
+      "name": "Update Master Tâche",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "numberInputs": 5
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1904,
+        0
+      ],
+      "id": "aca0571d-6f70-43c7-8cf4-591fae85eac4",
+      "name": "Merge",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_log.workflow",
+              "value": "={{$workflow.name}}"
+            },
+            {
+              "name": "_log.executionId",
+              "value": "={{$execution.id}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7dbab677-736a-4e25-b41c-7570867c3229",
+      "name": "Log Meta (expressions)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const startedAt = new Date().toISOString();\n  i.json._log = {\n    runId: startedAt,\n    workflow: i.json._log?.workflow || null,\n    executionId: i.json._log?.executionId || null,\n    startedAt,\n    ok: 0,\n    ko: 0,\n    actions: [],\n    failedNodes: {}\n  };\n  return i;\n});"
+      },
+      "id": "b8aa52ec-7eb3-4557-b7b7-d7c93d9effe2",
+      "name": "Start Log",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -528,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{ ($workflow.name || 'Unknown Workflow') + \" - \" + ($json._log?.actions?.find(action => !action.ok)?.node || Object.keys($json._log?.failedNodes || {})[0] || 'UnknownNode') }}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b020d9e3-97d7-47e7-85a5-7654b388c8f0",
+      "name": "Log Snapshot3",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        624,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "800bca95-4306-4909-8470-5a3fce0f6560",
+      "name": "Update Log9",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        848,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const i = items[0];\nconst log = i.json._log || {};\nlog.finishedAt = new Date().toISOString();\n\nconst start = new Date(log.startedAt || log.runId || Date.now()).getTime();\nconst end = new Date(log.finishedAt).getTime();\nlog.durationSec = Math.round((end - start) / 1000);\n\n// 🎯 CORRECTION : Extraire les noms de nœuds uniques des échecs\nconst failedNodeNames = [];\nconst uniqueErrorMessages = [];\n\n// Parcourir les actions pour identifier les échecs\nif (log.actions && Array.isArray(log.actions)) {\n  log.actions.forEach(action => {\n    if (!action.ok) {\n      // Ajouter le nom du nœud s'il n'est pas déjà présent\n      if (!failedNodeNames.includes(action.node)) {\n        failedNodeNames.push(action.node);\n      }\n      \n      // Ajouter le message d'erreur s'il n'est pas déjà présent\n      if (action.msg && !uniqueErrorMessages.includes(action.msg)) {\n        uniqueErrorMessages.push(action.msg);\n      }\n    }\n  });\n}\n\n// 🎯 RÉSULTATS CORRIGÉS\nlog.failedNodesList = failedNodeNames; // Noms uniques des nœuds en échec\nlog.uniqueErrorMessages = uniqueErrorMessages; // Messages d'erreur uniques\nlog.errorSummary = uniqueErrorMessages.join(' | '); // Compilation des erreurs\n\n// Stats améliorées\nlog.stats = {\n  totalProcessed: log.ok + log.ko,\n  successCount: log.ok,\n  failureCount: log.ko,\n  successRate: `${Math.round((log.ok / (log.ok + log.ko)) * 100)}%`,\n  uniqueFailedNodes: failedNodeNames.length,\n  distinctErrors: uniqueErrorMessages.length\n};\n\ni.json._log = log;\nreturn [i];"
+      },
+      "id": "2281040a-036b-46fd-9a10-4cbb4272cdf2",
+      "name": "Finish Log",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Consolidation COMPLÈTE des logs\nconst logData = {\n  workflow: $('Log Meta (expressions)').first().json._log?.workflow || \"WorkFlow 01\",\n  executionId: $execution.id,\n  startedAt: $('Start Log').first().json._log?.startedAt,\n  finishedAt: new Date().toISOString(),\n  runId: $('Start Log').first().json._log?.runId,\n  \n  // Consolidation des compteurs\n  ok: $input.all().reduce((sum, item) => sum + (item.json._log?.ok || 0), 0),\n  ko: $input.all().reduce((sum, item) => sum + (item.json._log?.ko || 0), 0),\n  failedNodes: $input.all().flatMap(item => item.json._log?.failedNodes || []),\n  \n  // Logique Actions\n  actions: (() => {\n    const koCount = $input.all().reduce((sum, item) => sum + (item.json._log?.ko || 0), 0);\n    if (koCount === 0) {\n      return [{ msg: \"Pass\" }];\n    } else {\n      const allActions = $input.all().flatMap(item => item.json._log?.actions || []);\n      return allActions.filter(action => action.msg !== \"Pass\");\n    }\n  })()\n};\n\nreturn [{ json: { _log: logData } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        816
+      ],
+      "id": "c098f078-6cd0-4fda-ad1b-a6d4f3b4c687",
+      "name": "One Item"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "55fb9325-f021-4e3f-8c97-346559b04971",
+      "name": "Update Log",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        32,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Edit Webhook').item.json.ID }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Anti-Spam|checkbox",
+              "checkboxValue": true
+            },
+            {
+              "key": "Mention|select",
+              "selectValue": "🟢Tâche réassignée🔁"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        816
+      ],
+      "id": "773e1ec7-2034-4da6-b0b0-85784ee84863",
+      "name": "Master Tâche Erreur",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id_page }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        848,
+        320
+      ],
+      "id": "cf523f88-a9ab-4a6f-b83a-557a6a6f2080",
+      "name": "Get page Deviation",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a5d8f122-4dc7-41aa-96cb-443a50651b7a",
+              "name": "Date de début",
+              "value": "={{ $json.property_dernier_contr_le_d_viation }}",
+              "type": "object"
+            },
+            {
+              "id": "4c3cb38e-57b5-442b-acee-b75da9ed103a",
+              "name": "Date de fin",
+              "value": "={{ $json.property_prochain_contr_le_d_viation }}",
+              "type": "object"
+            },
+            {
+              "id": "79b7596b-48ee-494b-943c-870261c9d550",
+              "name": "jours",
+              "value": "={{ $json.property_fr_quence_contr_le_d_viation_jours }}",
+              "type": "number"
+            },
+            {
+              "id": "1ee038f7-9d96-4911-8701-f628e6f96a03",
+              "name": "New Date",
+              "value": "={{ $('Edit Webhook').item.json[\"New Date\"] }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1040,
+        320
+      ],
+      "id": "567e5ce2-5529-4792-8124-3459a5dc81a3",
+      "name": "Edit Date Deviation",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === Code Node n8n — New Date (fallback now) → Date de fin sur jour ouvré (UTC) ===\nconst items = $input.all();\nconst out = [];\n\n// Helpers UTC\nconst MS_PER_DAY = 24 * 60 * 60 * 1000;\nfunction parseISODateOnly(s) { return s ? new Date(`${s}T00:00:00Z`) : null; }\nfunction toISODateOnly(dUtc) { return dUtc.toISOString().slice(0, 10); }\nfunction addDaysUTC(dUtc, n) {\n  const d = new Date(Date.UTC(dUtc.getUTCFullYear(), dUtc.getUTCMonth(), dUtc.getUTCDate()));\n  d.setUTCDate(d.getUTCDate() + n);\n  return d;\n}\nfunction nextWorkingDayUTC(dUtc) {\n  let res = new Date(Date.UTC(dUtc.getUTCFullYear(), dUtc.getUTCMonth(), dUtc.getUTCDate()));\n  const dow = res.getUTCDay(); // 0=dim, 6=sam\n  if (dow === 6) res = addDaysUTC(res, 2); // samedi -> lundi\n  else if (dow === 0) res = addDaysUTC(res, 1); // dimanche -> lundi\n  return res;\n}\n\nfor (const item of items) {\n  const data = item.json || {};\n  const jours = Number.isFinite(Number(data.jours)) ? Number(data.jours) : 0;\n\n  // 1) New Date: si start null -> aujourd'hui, sinon conserver\n  const newDateProp = data[\"New Date\"];\n  const todayStr = new Date().toISOString().slice(0, 10);\n  const newDateStartStr = newDateProp?.date?.start || todayStr;\n\n  const newDateOut = {\n    id: newDateProp?.id || \"date_id\",\n    type: \"date\",\n    date: { start: newDateStartStr, end: null, time_zone: null }\n  };\n\n  // 2) Date de fin = New Date + jours (calendaire), puis ajustée jour ouvré\n  const base = parseISODateOnly(newDateStartStr) || parseISODateOnly(todayStr);\n  const candidateEnd = addDaysUTC(base, jours);\n  const endWorking = nextWorkingDayUTC(candidateEnd);\n  const endOutStr = toISODateOnly(endWorking);\n\n  // Logs utiles\n  console.log(\"=== WF Fin ===\", {\n    newDateStartStr,\n    jours,\n    date_fin_out: endOutStr\n  });\n\n  out.push({\n    json: {\n      ...data,\n      \"New Date\": newDateOut,\n      \"Date de fin\": { start: endOutStr, end: null, time_zone: null }\n    }\n  });\n}\n\nreturn out;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        320
+      ],
+      "id": "8907e331-1d75-467c-ab36-7c9210db87c9",
+      "name": "Code Date Deviation",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Get page Deviation').item.json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Dernier contrôle déviation|date",
+              "date": "={{ $json[\"New Date\"].date.start }}"
+            },
+            {
+              "key": "Prochain contrôle déviation|date",
+              "date": "={{ $json[\"Date de fin\"].start }}"
+            },
+            {
+              "key": "Maintenance Request|checkbox"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1424,
+        320
+      ],
+      "id": "e0c0ed98-5cc8-43f2-8be8-10c2db9789bb",
+      "name": "Update page Deviation",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id_page }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        848,
+        560
+      ],
+      "id": "8d365af3-46a7-4a27-ac95-00321f6c985b",
+      "name": "Get page Calibration",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a5d8f122-4dc7-41aa-96cb-443a50651b7a",
+              "name": "Date de début",
+              "value": "={{ $json.property_dernier_etalonnage }}",
+              "type": "object"
+            },
+            {
+              "id": "4c3cb38e-57b5-442b-acee-b75da9ed103a",
+              "name": "Date de fin",
+              "value": "={{ $json.property_prochain_etalonnage }}",
+              "type": "object"
+            },
+            {
+              "id": "79b7596b-48ee-494b-943c-870261c9d550",
+              "name": "jours",
+              "value": "={{ $json.property_frequence_talonnage_jours }}",
+              "type": "number"
+            },
+            {
+              "id": "1ee038f7-9d96-4911-8701-f628e6f96a03",
+              "name": "New Date",
+              "value": "={{ $('Edit Webhook').item.json[\"New Date\"] }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1040,
+        560
+      ],
+      "id": "c8f86ae9-5ffb-4932-81bd-0ec2c2c88312",
+      "name": "Edit Date  Calibration",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === Code Node n8n — New Date (fallback now) → Date de fin sur jour ouvré (UTC) ===\nconst items = $input.all();\nconst out = [];\n\n// Helpers UTC\nconst MS_PER_DAY = 24 * 60 * 60 * 1000;\nfunction parseISODateOnly(s) { return s ? new Date(`${s}T00:00:00Z`) : null; }\nfunction toISODateOnly(dUtc) { return dUtc.toISOString().slice(0, 10); }\nfunction addDaysUTC(dUtc, n) {\n  const d = new Date(Date.UTC(dUtc.getUTCFullYear(), dUtc.getUTCMonth(), dUtc.getUTCDate()));\n  d.setUTCDate(d.getUTCDate() + n);\n  return d;\n}\nfunction nextWorkingDayUTC(dUtc) {\n  let res = new Date(Date.UTC(dUtc.getUTCFullYear(), dUtc.getUTCMonth(), dUtc.getUTCDate()));\n  const dow = res.getUTCDay(); // 0=dim, 6=sam\n  if (dow === 6) res = addDaysUTC(res, 2); // samedi -> lundi\n  else if (dow === 0) res = addDaysUTC(res, 1); // dimanche -> lundi\n  return res;\n}\n\nfor (const item of items) {\n  const data = item.json || {};\n  const jours = Number.isFinite(Number(data.jours)) ? Number(data.jours) : 0;\n\n  // 1) New Date: si start null -> aujourd'hui, sinon conserver\n  const newDateProp = data[\"New Date\"];\n  const todayStr = new Date().toISOString().slice(0, 10);\n  const newDateStartStr = newDateProp?.date?.start || todayStr;\n\n  const newDateOut = {\n    id: newDateProp?.id || \"date_id\",\n    type: \"date\",\n    date: { start: newDateStartStr, end: null, time_zone: null }\n  };\n\n  // 2) Date de fin = New Date + jours (calendaire), puis ajustée jour ouvré\n  const base = parseISODateOnly(newDateStartStr) || parseISODateOnly(todayStr);\n  const candidateEnd = addDaysUTC(base, jours);\n  const endWorking = nextWorkingDayUTC(candidateEnd);\n  const endOutStr = toISODateOnly(endWorking);\n\n  // Logs utiles\n  console.log(\"=== WF Fin ===\", {\n    newDateStartStr,\n    jours,\n    date_fin_out: endOutStr\n  });\n\n  out.push({\n    json: {\n      ...data,\n      \"New Date\": newDateOut,\n      \"Date de fin\": { start: endOutStr, end: null, time_zone: null }\n    }\n  });\n}\n\nreturn out;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        560
+      ],
+      "id": "0e724ba9-b453-47cc-b8a5-98d7c5774787",
+      "name": "Code Date  Calibration",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Get page Calibration').item.json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Dernier etalonnage|date",
+              "date": "={{ $json[\"New Date\"].date.start }}"
+            },
+            {
+              "key": "Prochain etalonnage|date",
+              "date": "={{ $json[\"Date de fin\"].start }}"
+            },
+            {
+              "key": "Étalonnage Request|checkbox"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1424,
+        560
+      ],
+      "id": "7215faf0-fe87-4d4f-92da-9cd7051a1b58",
+      "name": "Update page  Calibration",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Nph7coAgeAm16pwp",
+          "mode": "list",
+          "cachedResultName": "Logger - Send to Notion"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1632,
+        816
+      ],
+      "id": "836922b6-9e03-45cd-bdc7-e400f3cb5605",
+      "name": "Execute Logger - Send to Notion"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2320,
+        48
+      ],
+      "id": "806d9d34-bdac-469b-8ab8-50bf266bc5fa",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Get page Certificat').item.json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Certificat Request|checkbox"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1424,
+        -192
+      ],
+      "id": "de9a58bd-fd53-4823-b02a-71c2ebf97643",
+      "name": "Update page Certificat",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id_page }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        848,
+        -192
+      ],
+      "id": "bd1b89e1-e2a3-4e9f-8de0-942c161c0db3",
+      "name": "Get page Certificat",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "content": "## Scan de Master-taches et tris des données\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/)",
+        "height": 336,
+        "width": 848,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -416,
+        -16
+      ],
+      "typeVersion": 1,
+      "id": "07d2465d-abfa-4b19-b86d-cc81c1858479",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Trigger Webhook Notion & settings\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/)",
+        "height": 336,
+        "width": 608,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1024,
+        -16
+      ],
+      "typeVersion": 1,
+      "id": "fde44fb1-695b-40ee-b830-1ebb60ea2f48",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Mise à jours des échéanciers\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/)",
+        "height": 1248,
+        "width": 2128,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        432,
+        -496
+      ],
+      "typeVersion": 1,
+      "id": "e7f87ecc-8268-4307-a27a-a947ed57ed52",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Debuging report & Log entry\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/)",
+        "height": 272,
+        "width": 1456
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        432,
+        752
+      ],
+      "typeVersion": 1,
+      "id": "8a74705f-cb7a-420d-95e5-d8214c708699",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Master Tâche": {
+      "main": [
+        [
+          {
+            "node": "Log Meta (expressions)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Update Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Get page Qualité",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get page Certificat",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get page Maintenance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get page Deviation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get page Calibration",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get page Qualité": {
+      "main": [
+        [
+          {
+            "node": "Edit Date Qualité",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Date Qualité": {
+      "main": [
+        [
+          {
+            "node": "Code Date Qualité",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Date Qualité": {
+      "main": [
+        [
+          {
+            "node": "Update page Qualité",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get page Maintenance": {
+      "main": [
+        [
+          {
+            "node": "Edit Date Maintenance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Date Maintenance": {
+      "main": [
+        [
+          {
+            "node": "Code Date Maintenance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update page Qualité": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Date Maintenance": {
+      "main": [
+        [
+          {
+            "node": "Update page maintenance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update page maintenance": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Update Master Tâche",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Meta (expressions)": {
+      "main": [
+        [
+          {
+            "node": "Start Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Log": {
+      "main": [
+        [
+          {
+            "node": "Edit Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Snapshot3": {
+      "main": [
+        [
+          {
+            "node": "Update Log9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finish Log": {
+      "main": [
+        [
+          {
+            "node": "Execute Logger - Send to Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One Item": {
+      "main": [
+        [
+          {
+            "node": "Finish Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log9": {
+      "main": [
+        [
+          {
+            "node": "Master Tâche Erreur",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Master Tâche Erreur": {
+      "main": [
+        [
+          {
+            "node": "One Item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get page Deviation": {
+      "main": [
+        [
+          {
+            "node": "Edit Date Deviation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Date Deviation": {
+      "main": [
+        [
+          {
+            "node": "Code Date Deviation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Date Deviation": {
+      "main": [
+        [
+          {
+            "node": "Update page Deviation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update page Deviation": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get page Calibration": {
+      "main": [
+        [
+          {
+            "node": "Edit Date  Calibration",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Date  Calibration": {
+      "main": [
+        [
+          {
+            "node": "Code Date  Calibration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Date  Calibration": {
+      "main": [
+        [
+          {
+            "node": "Update page  Calibration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update page  Calibration": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Master Tâche": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update page Certificat": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get page Certificat": {
+      "main": [
+        [
+          {
+            "node": "Update page Certificat",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2d0262ae-6f98-4291-8fc8-822d07c9d067",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "af83b3ea93bc43d0c5ac63a56a75bfd2e58c747f1d5aca065acb21b4a4d3daa3"
+  },
+  "id": "jtm0nLkWCfxb8UiZ",
+  "tags": [
+    {
+      "updatedAt": "2025-09-06T19:25:39.210Z",
+      "createdAt": "2025-09-06T19:25:39.210Z",
+      "id": "CdtcPzMAv4wzT0qJ",
+      "name": "Signal Webhook"
+    },
+    {
+      "updatedAt": "2025-09-06T19:26:15.626Z",
+      "createdAt": "2025-09-06T19:26:15.626Z",
+      "id": "IiQPxQDr17aCyYdG",
+      "name": "Réassigner échéances"
+    }
+  ]
+}

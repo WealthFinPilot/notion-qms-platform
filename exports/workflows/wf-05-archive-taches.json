@@ -1,0 +1,2399 @@
+{
+  "name": "WorkFlow 05",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "months",
+              "triggerAtHour": 4
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1792,
+        64
+      ],
+      "id": "6e430061-c26c-4c3b-9842-eabe29026276",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_log.workflow",
+              "value": "={{$workflow.name}}"
+            },
+            {
+              "name": "_log.executionId",
+              "value": "={{$execution.id}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "927634ca-82b4-4c5d-9e1f-2214e06f4835",
+      "name": "Log Meta (expressions)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -1600,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const startedAt = new Date().toISOString();\n  i.json._log = {\n    runId: startedAt,\n    workflow: i.json._log?.workflow || null,\n    executionId: i.json._log?.executionId || null,\n    startedAt,\n    ok: 0,\n    ko: 0,\n    actions: [],\n    failedNodes: {}\n  };\n  return i;\n});"
+      },
+      "id": "33e5550a-c554-499f-a97d-a00196b8038d",
+      "name": "Start Log",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -1408,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "70162d56-91ce-41df-9f0f-3b4948eb443d",
+      "name": "Update Log1",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        2320,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{ ($workflow.name || 'Unknown Workflow') + \" - \" + ($json._log?.actions?.find(action => !action.ok)?.node || Object.keys($json._log?.failedNodes || {})[0] || 'UnknownNode') }}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "66eb22dd-9ab5-4f8d-93ce-5efd72d4db30",
+      "name": "Log Snapshot",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -1136,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_MASTER_TACHES}}",
+          "mode": "list",
+          "cachedResultName": "Master Tâches",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_MASTER_TACHES}}"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "État|status",
+              "condition": "equals",
+              "statusValue": "Terminé"
+            },
+            {
+              "key": "État|status",
+              "condition": "equals",
+              "statusValue": "Échec"
+            },
+            {
+              "key": "État|status",
+              "condition": "equals",
+              "statusValue": "Annulé"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -1136,
+        64
+      ],
+      "id": "b432622e-9a0c-4e23-a24a-ed6b9d892561",
+      "name": "Get Master Tâche",
+      "executeOnce": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "efae6215-ab89-425a-be05-e377416c3bb8",
+              "name": "ResponsableID",
+              "value": "={{ $json.properties.Responsable.relation[0].id }}",
+              "type": "string"
+            },
+            {
+              "id": "350d8ae7-7078-40fc-bf58-cf006e807378",
+              "name": "DépartementID",
+              "value": "={{ $json.properties[\"Départements\"].relation[0].id }}",
+              "type": "string"
+            },
+            {
+              "id": "063beaa0-1f64-43f0-8676-1c14d881023c",
+              "name": "ÉquipeID",
+              "value": "={{(() => {\n  const rel = $json.properties[\"Équipe\"].relation;\n  if (Array.isArray(rel) && rel.length > 0) {\n    return rel.map(item => item.id).join(', '); // Tous les IDs séparés par virgule\n  }\n  return null;\n})()}}",
+              "type": "string"
+            },
+            {
+              "id": "3e435e3b-00f2-41b0-865a-e5535bc00dfe",
+              "name": "État",
+              "value": "={{ $json.properties[\"État\"].status.name }}",
+              "type": "string"
+            },
+            {
+              "id": "18caa5f9-35be-425c-ad60-050606ee3716",
+              "name": "Date de planification",
+              "value": "={{ $json.properties[\"Date de planification\"] }}",
+              "type": "object"
+            },
+            {
+              "id": "9140d778-4e06-4017-b845-a2fd25e2b4c2",
+              "name": "Date complété",
+              "value": "={{ $json.properties[\"Date complété\"] }}",
+              "type": "object"
+            },
+            {
+              "id": "ad7f458b-46b6-4cbc-940c-98a77fb0973d",
+              "name": "Date de créeation",
+              "value": "={{ $json.properties[\"Date de créeation\"] }}",
+              "type": "object"
+            },
+            {
+              "id": "9e9d0e1f-678d-45a6-a289-384870d62f0d",
+              "name": "Dead line",
+              "value": "={{ $json.properties['Dead line'] }}",
+              "type": "object"
+            },
+            {
+              "id": "77d7e6fa-0896-4571-81a3-6a4f46f2c5a5",
+              "name": "Types de tache",
+              "value": "={{ $json.properties[\"Types de tache\"].relation[0].id }}",
+              "type": "string"
+            },
+            {
+              "id": "389e5fa5-363b-43c0-8a20-b64ef1129e51",
+              "name": "Tâcheid",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "097f5cd9-6657-47df-bf12-4f678127b7b8",
+              "name": "property_r_f_rence_n8n",
+              "value": "={{ $json.properties[\"*Référence n8n*\"].rich_text[0].text.content }}",
+              "type": "string"
+            },
+            {
+              "id": "401cdbfd-48ff-4302-a374-33251e4e4fcb",
+              "name": "Verification",
+              "value": "={{ $json.properties.Verification.verification.state }}",
+              "type": "string"
+            },
+            {
+              "id": "e9baf552-1d5b-4ec3-890d-abedb46b58f6",
+              "name": "Approbateur",
+              "value": "={{ $json.properties.Approbateur.people[0].name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -912,
+        64
+      ],
+      "id": "b8f1fac3-c6ee-4ff9-853d-2bd165e1946c",
+      "name": "Edit Master Tâche",
+      "notesInFlow": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e67ae3b0-afc9-4d0b-9947-7adde1350480",
+              "leftValue": "={{ (() => {\n  const dateField = new Date($json[\"Date complété\"].date.start); // ta propriété de base\n  dateField.setDate(dateField.getDate() + 30);     // +30 jours\n  return new Date() > dateField;                   // true si now est après\n})() }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -496,
+        64
+      ],
+      "id": "e4febe6e-ef86-48ec-a758-80a0c5d0c2d2",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0307d5cd-263c-453f-a879-5d5410e60ba8",
+                    "leftValue": "={{ $json[\"Nom de tâche\"] }}",
+                    "rightValue": "Qualité",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Qualité"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a1ab2e96-53c4-41de-a086-e62725abd6a4",
+                    "leftValue": "={{ $json[\"Type de tâche\"] }}",
+                    "rightValue": "Vérification Certificat",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Certificat"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1fb81719-bddc-4e51-b762-dc96e05bf310",
+                    "leftValue": "={{ $json[\"Type de tâche\"] }}",
+                    "rightValue": "Maintenance Préventive",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Maintenance1"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e3714a31-2328-413d-91ae-ec9ae629beb7",
+                    "leftValue": "={{ $json[\"Type de tâche\"] }}",
+                    "rightValue": "Maintenance Curative",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Maintenance2"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json[\"Nom de tâche\"] }}",
+                    "rightValue": "Calibration",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "687b7303-4005-4fd2-bf91-5810fc218085"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Calibration"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "9fad257b-139a-44be-9441-64f4876c8bb2",
+                    "leftValue": "={{ $json[\"Type de tâche\"] }}",
+                    "rightValue": "Vérification Étallonage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Vérification"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "fd600414-3ea7-4d7d-9a37-51898333b3f1",
+                    "leftValue": "={{ $json[\"Type de tâche\"] }}",
+                    "rightValue": "Contrôle Déviation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Déviation"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e1781591-2fca-4124-bbe6-3948e757e2c2",
+                    "leftValue": "={{ $json[\"Nom de tâche\"] }}",
+                    "rightValue": "Tâche",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Tâche basique"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "allMatchingOutputs": false
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        800,
+        -64
+      ],
+      "id": "b9f6ac81-8aad-48ca-8456-6468253afe87",
+      "name": "Switch",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "350d8ae7-7078-40fc-bf58-cf006e807378",
+              "name": "Tâche",
+              "value": "={{ $('Code').item.json.parsed_data.nom_tache }}",
+              "type": "string"
+            },
+            {
+              "id": "3e435e3b-00f2-41b0-865a-e5535bc00dfe",
+              "name": "État",
+              "value": "={{ $('Edit Master Tâche').item.json[\"État\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "18caa5f9-35be-425c-ad60-050606ee3716",
+              "name": "Date de planification",
+              "value": "={{ $('Code').item.json.property_date_de_planification }}",
+              "type": "object"
+            },
+            {
+              "id": "9140d778-4e06-4017-b845-a2fd25e2b4c2",
+              "name": "Date complété",
+              "value": "={{ $('Code').item.json[\"Date complété\"] }}",
+              "type": "object"
+            },
+            {
+              "id": "ad7f458b-46b6-4cbc-940c-98a77fb0973d",
+              "name": "Date de créeation",
+              "value": "={{ $('Code').item.json[\"Dead line\"] }}",
+              "type": "object"
+            },
+            {
+              "id": "9e9d0e1f-678d-45a6-a289-384870d62f0d",
+              "name": "Dead line",
+              "value": "={{ $('Edit Master Tâche').item.json[\"Dead line\"] }}",
+              "type": "object"
+            },
+            {
+              "id": "bc8e9ac0-f529-4707-bdef-c490a9d701cc",
+              "name": "Nom de tâche",
+              "value": "={{ $('Code').item.json.parsed_data.nom_tache }}",
+              "type": "string"
+            },
+            {
+              "id": "ee1623dd-05f6-4625-92cd-d025affffed7",
+              "name": "Base mère",
+              "value": "={{ $('Code').item.json.parsed_data.id_database }}",
+              "type": "string"
+            },
+            {
+              "id": "a3bc15e7-acaa-4889-9399-82b5431a4c76",
+              "name": "Page mère",
+              "value": "={{ $('Code').item.json.parsed_data.id_page }}",
+              "type": "string"
+            },
+            {
+              "id": "4cef21a0-7fcd-44bf-b081-4d8aea601e57",
+              "name": "Fournisseur",
+              "value": "={{ $('Code').item.json.parsed_data.id_fournisseur }}",
+              "type": "string"
+            },
+            {
+              "id": "a1c0f16b-356f-48c8-a8c9-0b3d279f2b42",
+              "name": "Type de tâche",
+              "value": "={{ $('HTTP Type tache').item.json.properties.Nom.title[0].text.content }}",
+              "type": "string"
+            },
+            {
+              "id": "a31bc7ca-5390-47fb-84f9-4a8d8fbcb3e9",
+              "name": "Département",
+              "value": "={{ $('Edit Master Tâche').item.json[\"DépartementID\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "6f68fbdb-d779-4192-a68c-0f5367bbd5d9",
+              "name": "Ticket",
+              "value": "={{ $('Code').item.json.parsed_data.ticket }}",
+              "type": "number"
+            },
+            {
+              "id": "9dba622b-0307-47f0-9761-ac567436516f",
+              "name": "Verification",
+              "value": "={{ $('Edit Master Tâche').item.json.Verification }}",
+              "type": "string"
+            },
+            {
+              "id": "d7e6a55c-b7bd-4581-b2cb-3b01a018cb59",
+              "name": "Approbateur",
+              "value": "={{ $('Edit Master Tâche').item.json.Approbateur }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        368,
+        48
+      ],
+      "id": "aa01c621-8949-49c4-8b58-cc775c224ac1",
+      "name": "Edit Tâche",
+      "notesInFlow": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "32be5dac-6a96-430c-863f-e04a5ac0b469",
+      "name": "Update Log",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        592,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst processedItems = [];\n\nfor (const item of items) {\n  // Récupération de la propriété \"property_r_f_rence_n8n\"\n  const textData = item.json.property_r_f_rence_n8n || '';\n  \n  // Initialisation des variables\n  let parsedData = {\n    nom_tache: '',\n    id_database: '',\n    id_page: '',\n    id_fournisseur: '', // Seulement pour les certificats\n    ticket: null        // NOUVEAU : numéro de ticket\n  };\n  \n  if (textData) {\n    // DEBUG : Vérifier le format exact du texte\n    console.log(\"Texte brut:\", textData);\n    console.log(\"Contient \\\\n littéral:\", textData.includes('\\\\n'));\n    console.log(\"Contient saut de ligne:\", textData.includes('\\n'));\n    \n    // Normalisation : Remplacer les \\n littéraux par de vrais sauts de ligne\n    const normalizedText = textData.replace(/\\\\n/g, '\\n');\n    console.log(\"Texte normalisé:\", normalizedText);\n    \n    // Découpage du texte par lignes (après normalisation)\n    const lignes = normalizedText.split('\\n');\n    \n    // [1] Nom de la tâche (première ligne)\n    if (lignes[0]) {\n      parsedData.nom_tache = lignes[0].trim();\n    }\n    \n    // Parsing des lignes suivantes\n    for (let i = 1; i < lignes.length; i++) {\n      const ligne = lignes[i].trim();\n      \n      // [2] ID Database\n      if (ligne.startsWith('ID Database:')) {\n        parsedData.id_database = ligne.replace('ID Database:', '').trim();\n      }\n      \n      // [3] ID Page\n      if (ligne.startsWith('ID Page:')) {\n        parsedData.id_page = ligne.replace('ID Page:', '').trim();\n      }\n      \n      // [4] ID Fournisseur (uniquement pour les certificats)\n      if (ligne.startsWith('ID Fournisseur :')) {\n        parsedData.id_fournisseur = ligne.replace('ID Fournisseur :', '').trim();\n      }\n      \n      // [5] NOUVEAU : Ticket (extraction du numéro)\n      if (ligne.startsWith('Ticket :') || ligne.startsWith('Ticket:')) {\n        const ticketText = ligne.replace(/Ticket\\s*:\\s*/i, '').trim();\n        const ticketNumber = parseInt(ticketText, 10);\n        \n        // Vérification que c'est bien un nombre valide\n        if (!isNaN(ticketNumber)) {\n          parsedData.ticket = ticketNumber;\n          console.log(`Ticket extrait: ${ticketNumber}`);\n        } else {\n          console.log(`Erreur parsing ticket: \"${ticketText}\" n'est pas un nombre valide`);\n        }\n      }\n    }\n  }\n  \n  // LOGIQUE CORRIGÉE : Gestion de la date de planification  \n  let datePlanification = item.json[\"Date de planification\"];\n  \n  // Vérifier si la date de planification est null (dans l'objet .date)\n  if (!datePlanification || datePlanification.date === null || datePlanification.date === undefined) {\n    const dateCreation = item.json[\"Date de créeation\"];\n    \n    if (dateCreation && dateCreation.created_time) {\n      // Convertir created_time ISO vers format date objet Notion\n      const dateOnly = dateCreation.created_time.split('T')[0]; // \"2025-09-03T23:41:00.000Z\" → \"2025-09-03\"\n      \n      // Reconstruire l'objet complet avec la nouvelle date\n      datePlanification = {\n        ...datePlanification, // Garde id, type, etc.\n        \"date\": {\n          \"start\": dateOnly,\n          \"end\": null,\n          \"time_zone\": null\n        }\n      };\n      \n      console.log(`Date planification mise à jour depuis created_time: ${dateOnly}`);\n    }\n  }\n  \n  // Détermination du type de base d'archive basé sur le nom de tâche\n  let type_archive = '';\n  switch(parsedData.nom_tache.toLowerCase()) {\n    case 'calibration':\n      type_archive = 'Archive_Calibration';\n      break;\n    case 'maintenance':\n      type_archive = 'Archive_Maintenance';\n      break;\n    case 'deviation':\n      type_archive = 'Archive_Deviation';\n      break;\n    case 'certificat':\n      type_archive = 'Archive_Certificat';\n      break;\n    case 'qualité':\n    case 'qualite':\n      type_archive = 'Archive_Qualite';\n      break;\n    case 'tâche':\n    case 'tache':\n      type_archive = 'Archive_Taches_Recurrentes';\n      break;\n    default:\n      type_archive = 'Archive_Autres';\n  }\n  \n  // Ajout des données parsées à l'item\n  processedItems.push({\n    json: {\n      ...item.json,\n      // MISE À JOUR de la date de planification\n      property_date_de_planification: datePlanification,\n      // Données parsées structurées\n      parsed_data: parsedData,\n      // Variables directement exploitables pour la suite du workflow\n      nom_tache: parsedData.nom_tache,\n      id_database_origine: parsedData.id_database,\n      id_page_origine: parsedData.id_page,\n      id_fournisseur: parsedData.id_fournisseur,\n      ticket_number: parsedData.ticket,  // NOUVEAU : ticket comme number\n      type_archive: type_archive,\n      // Boolean pour identifier les certificats\n      is_certificat: parsedData.nom_tache.toLowerCase() === 'certificat'\n    }\n  });\n}\n\nreturn processedItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        0
+      ],
+      "id": "44bf41a2-9744-40b3-9e69-ecb9a71babb9",
+      "name": "Code"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        128
+      ],
+      "id": "c80d8102-f65f-43c8-bf33-185b9b63ad71",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "aPTwM9HqpwCbuavW",
+          "mode": "list",
+          "cachedResultName": "WorkFlow 05.01"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2112,
+        -512
+      ],
+      "id": "96b3849f-653b-4b8d-9953-bab304db0d47",
+      "name": "WorkFlow 05.01",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "KOU18Gv3gwCTQRJT",
+          "mode": "list",
+          "cachedResultName": "WorkFlow 05.02"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2112,
+        -144
+      ],
+      "id": "1b2adba3-34a6-4a4f-9cdb-624b0ba15556",
+      "name": "WorkFlow 05.02",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "dBMan0heaFJKNe7B",
+          "mode": "list",
+          "cachedResultName": "WorkFlow 05.03"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2112,
+        64
+      ],
+      "id": "f2835f61-32b7-4d4b-8595-b556d67bc247",
+      "name": "WorkFlow 05.03",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "i6WlS43KV0MGrXpC",
+          "mode": "list",
+          "cachedResultName": "WorkFlow 05.04"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2112,
+        400
+      ],
+      "id": "76c6cbef-0771-40f0-a11d-0a0896c0c6c9",
+      "name": "WorkFlow 05.04",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "7464a641-235b-43d6-8d2c-7d239c06c3a2",
+      "name": "Update Log16",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "4c506893-8b99-4fd0-84ad-943f08b3b390",
+      "name": "Update Log18",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "34a9b4dd-3328-4ccb-ba10-752ad5467aad",
+      "name": "Update Log19",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        -512
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.notion.com/v1/pages/{{ $('Edit Master Tâche').item.json[\"Types de tache\"] }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -112,
+        64
+      ],
+      "id": "0057f9bf-0efa-407f-b6a7-98722436627e",
+      "name": "HTTP Type tache",
+      "alwaysOutputData": true,
+      "notesInFlow": false,
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "4897ca18-3bb7-407a-b2c8-c2cc1114cf5f",
+      "name": "Update Log20",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "f093ca88-a9e2-4f3c-a7a2-e2bf94f5637a",
+      "name": "Update Log4",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -704,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "efae6215-ab89-425a-be05-e377416c3bb8",
+              "name": "ResponsableID",
+              "value": "={{ $('Edit Master Tâche').item.json.ResponsableID || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "350d8ae7-7078-40fc-bf58-cf006e807378",
+              "name": "Tâche",
+              "value": "={{ $json.name || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "063beaa0-1f64-43f0-8676-1c14d881023c",
+              "name": "ÉquipeID",
+              "value": "={{ $('Edit Master Tâche').item.json[\"ÉquipeID\"] || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "3e435e3b-00f2-41b0-865a-e5535bc00dfe",
+              "name": "État",
+              "value": "={{ $('Edit Master Tâche').item.json[\"État\"] || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "18caa5f9-35be-425c-ad60-050606ee3716",
+              "name": "Date de planification",
+              "value": "={{ $('Edit Tâche').item.json[\"Date de planification\"] || \"\"}}",
+              "type": "object"
+            },
+            {
+              "id": "9140d778-4e06-4017-b845-a2fd25e2b4c2",
+              "name": "Date complété",
+              "value": "={{ $('Edit Tâche').item.json[\"Date complété\"] || \"\"}}",
+              "type": "object"
+            },
+            {
+              "id": "ad7f458b-46b6-4cbc-940c-98a77fb0973d",
+              "name": "Date de créeation",
+              "value": "={{ $('Edit Tâche').item.json[\"Date de créeation\"] || \"\"}}",
+              "type": "object"
+            },
+            {
+              "id": "7a36bcf2-73db-4182-b19a-210ead71d660",
+              "name": "Ticket",
+              "value": "={{ $('Edit Tâche').item.json.Ticket || \"\"}}",
+              "type": "number"
+            },
+            {
+              "id": "9e9d0e1f-678d-45a6-a289-384870d62f0d",
+              "name": "Dead line",
+              "value": "={{ $('Edit Tâche').item.json[\"Dead line\"] || \"\"}}",
+              "type": "object"
+            },
+            {
+              "id": "ee1623dd-05f6-4625-92cd-d025affffed7",
+              "name": "Base mère",
+              "value": "={{ $('Edit Tâche').item.json[\"Base mère\"] || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "a3bc15e7-acaa-4889-9399-82b5431a4c76",
+              "name": "Page mère",
+              "value": "={{ $('Edit Tâche').item.json[\"Page mère\"] || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "4cef21a0-7fcd-44bf-b081-4d8aea601e57",
+              "name": "Fournisseur",
+              "value": "={{ $('Edit Tâche').item.json.Fournisseur || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "a1c0f16b-356f-48c8-a8c9-0b3d279f2b42",
+              "name": "Type de tâche",
+              "value": "={{ $('Edit Tâche').item.json[\"Type de tâche\"] || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "2d8da833-6a28-455f-bd1d-b7d1b21d29af",
+              "name": "Departement",
+              "value": "={{ $('Edit Tâche').item.json[\"Département\"] || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "1702da5b-71ea-464a-9b60-7129c0e11925",
+              "name": "Note",
+              "value": "={{ $json.property_note || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "74a32bd4-abdd-421d-9cdf-adedc69b526d",
+              "name": "Tâcheid",
+              "value": "={{ $('Edit Master Tâche').item.json[\"Tâcheid\"] || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "e1bf518d-7760-4037-889b-7389661014af",
+              "name": "Créateur",
+              "value": "={{ $json.property_cr_ateur || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "7db9b1ab-5b27-464a-b7e1-546a8ba551ca",
+              "name": "Priorité",
+              "value": "={{ $json.property_priorit || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "4991291b-6d97-45db-b745-852fe9e02bd4",
+              "name": "Mention",
+              "value": "={{ $json.property_mention  || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "fec226af-af72-4164-a99d-e60995f4119c",
+              "name": "Verification",
+              "value": "={{ $('Edit Tâche').item.json.Verification  || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "527bc722-e7aa-4dfb-8d37-58138230c87b",
+              "name": "Approbateur",
+              "value": "={{ $('Edit Tâche').item.json.Approbateur  || \"\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1888,
+        -144
+      ],
+      "id": "7efa3179-1616-4174-8314-6a5fbf2d2a74",
+      "name": "Edit Certificat",
+      "notesInFlow": false,
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{ ($workflow.name || 'Unknown Workflow') + \" - \" + ($json._log?.actions?.find(action => !action.ok)?.node || Object.keys($json._log?.failedNodes || {})[0] || 'UnknownNode') }}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5d688604-bbbb-4197-9786-525a9cc07620",
+      "name": "Log Snapshot11",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        128,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Edit Master Tâche').item.json[\"Tâcheid\"] }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1696,
+        -144
+      ],
+      "id": "4aef4bb3-9d03-4da7-b522-c240a7f6db92",
+      "name": "Get Createur Certificat",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Edit Master Tâche').item.json[\"Tâcheid\"] }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1696,
+        -512
+      ],
+      "id": "358fb90a-f82a-4eae-87d3-3785141299d0",
+      "name": "Get Createur Qualité",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "efae6215-ab89-425a-be05-e377416c3bb8",
+              "name": "ResponsableID",
+              "value": "={{ $('Edit Master Tâche').item.json.ResponsableID }}",
+              "type": "string"
+            },
+            {
+              "id": "350d8ae7-7078-40fc-bf58-cf006e807378",
+              "name": "Tâche",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "063beaa0-1f64-43f0-8676-1c14d881023c",
+              "name": "ÉquipeID",
+              "value": "={{ $('Edit Master Tâche').item.json[\"ÉquipeID\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "3e435e3b-00f2-41b0-865a-e5535bc00dfe",
+              "name": "État",
+              "value": "={{ $('Edit Master Tâche').item.json[\"État\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "18caa5f9-35be-425c-ad60-050606ee3716",
+              "name": "Date de planification",
+              "value": "={{ $('Edit Tâche').item.json[\"Date de planification\"] }}",
+              "type": "object"
+            },
+            {
+              "id": "9140d778-4e06-4017-b845-a2fd25e2b4c2",
+              "name": "Date complété",
+              "value": "={{ $('Edit Tâche').item.json[\"Date complété\"] }}",
+              "type": "object"
+            },
+            {
+              "id": "ad7f458b-46b6-4cbc-940c-98a77fb0973d",
+              "name": "Date de créeation",
+              "value": "={{ $('Edit Tâche').item.json[\"Date de créeation\"] }}",
+              "type": "object"
+            },
+            {
+              "id": "7a36bcf2-73db-4182-b19a-210ead71d660",
+              "name": "Ticket",
+              "value": "={{ $('Edit Tâche').item.json.Ticket }}",
+              "type": "number"
+            },
+            {
+              "id": "9e9d0e1f-678d-45a6-a289-384870d62f0d",
+              "name": "Dead line",
+              "value": "={{ $('Edit Tâche').item.json[\"Dead line\"] }}",
+              "type": "object"
+            },
+            {
+              "id": "ee1623dd-05f6-4625-92cd-d025affffed7",
+              "name": "Base mère",
+              "value": "={{ $('Edit Tâche').item.json[\"Base mère\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "a3bc15e7-acaa-4889-9399-82b5431a4c76",
+              "name": "Page mère",
+              "value": "={{ $('Edit Tâche').item.json[\"Page mère\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "4cef21a0-7fcd-44bf-b081-4d8aea601e57",
+              "name": "Fournisseur",
+              "value": "={{ $('Edit Tâche').item.json.Fournisseur }}",
+              "type": "string"
+            },
+            {
+              "id": "a1c0f16b-356f-48c8-a8c9-0b3d279f2b42",
+              "name": "Type de tâche",
+              "value": "={{ $('Edit Tâche').item.json[\"Type de tâche\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "2d8da833-6a28-455f-bd1d-b7d1b21d29af",
+              "name": "Departement",
+              "value": "={{ $('Edit Tâche').item.json[\"Département\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "1702da5b-71ea-464a-9b60-7129c0e11925",
+              "name": "Note",
+              "value": "={{ $json.property_note }}",
+              "type": "string"
+            },
+            {
+              "id": "74a32bd4-abdd-421d-9cdf-adedc69b526d",
+              "name": "Tâcheid",
+              "value": "={{ $('Edit Master Tâche').item.json[\"Tâcheid\"] || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "e1bf518d-7760-4037-889b-7389661014af",
+              "name": "Créateur",
+              "value": "={{ $json.property_cr_ateur || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "7db9b1ab-5b27-464a-b7e1-546a8ba551ca",
+              "name": "Priorité",
+              "value": "={{ $json.property_priorit || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "09345ca1-7b34-4a95-b84d-80aeed8d8051",
+              "name": "Approbateur",
+              "value": "={{ $('Edit Master Tâche').item.json.Approbateur || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "a175226a-77ba-4ca8-85b6-a61899186910",
+              "name": "Mention",
+              "value": "={{ $json.property_mention || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "bdccf1e9-d6f7-48d0-9fe3-f656b5fbbe31",
+              "name": "Verification",
+              "value": "={{ $('Edit Tâche').item.json.Verification || \"\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1888,
+        -512
+      ],
+      "id": "afd629b0-ebfe-4311-9cb3-7d1a79ce7456",
+      "name": "Edit Qualité",
+      "notesInFlow": false,
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "efae6215-ab89-425a-be05-e377416c3bb8",
+              "name": "ResponsableID",
+              "value": "={{ $('Edit Master Tâche').item.json.ResponsableID }}",
+              "type": "string"
+            },
+            {
+              "id": "350d8ae7-7078-40fc-bf58-cf006e807378",
+              "name": "Tâche",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "063beaa0-1f64-43f0-8676-1c14d881023c",
+              "name": "ÉquipeID",
+              "value": "={{ $('Edit Master Tâche').item.json[\"ÉquipeID\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "3e435e3b-00f2-41b0-865a-e5535bc00dfe",
+              "name": "État",
+              "value": "={{ $('Edit Master Tâche').item.json[\"État\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "18caa5f9-35be-425c-ad60-050606ee3716",
+              "name": "Date de planification",
+              "value": "={{ $('Edit Tâche').item.json[\"Date de planification\"] }}",
+              "type": "object"
+            },
+            {
+              "id": "9140d778-4e06-4017-b845-a2fd25e2b4c2",
+              "name": "Date complété",
+              "value": "={{ $('Edit Tâche').item.json[\"Date complété\"] }}",
+              "type": "object"
+            },
+            {
+              "id": "ad7f458b-46b6-4cbc-940c-98a77fb0973d",
+              "name": "Date de créeation",
+              "value": "={{ $('Edit Tâche').item.json[\"Date de créeation\"] }}",
+              "type": "object"
+            },
+            {
+              "id": "7a36bcf2-73db-4182-b19a-210ead71d660",
+              "name": "Ticket",
+              "value": "={{ $('Edit Tâche').item.json.Ticket }}",
+              "type": "number"
+            },
+            {
+              "id": "9e9d0e1f-678d-45a6-a289-384870d62f0d",
+              "name": "Dead line",
+              "value": "={{ $('Edit Tâche').item.json[\"Dead line\"] }}",
+              "type": "object"
+            },
+            {
+              "id": "ee1623dd-05f6-4625-92cd-d025affffed7",
+              "name": "Base mère",
+              "value": "={{ $('Edit Tâche').item.json[\"Base mère\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "a3bc15e7-acaa-4889-9399-82b5431a4c76",
+              "name": "Page mère",
+              "value": "={{ $('Edit Tâche').item.json[\"Page mère\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "4cef21a0-7fcd-44bf-b081-4d8aea601e57",
+              "name": "Fournisseur",
+              "value": "={{ $('Edit Tâche').item.json.Fournisseur }}",
+              "type": "string"
+            },
+            {
+              "id": "a1c0f16b-356f-48c8-a8c9-0b3d279f2b42",
+              "name": "Type de tâche",
+              "value": "={{ $('Edit Tâche').item.json[\"Type de tâche\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "2d8da833-6a28-455f-bd1d-b7d1b21d29af",
+              "name": "Departement",
+              "value": "={{ $('Edit Tâche').item.json[\"Département\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "1702da5b-71ea-464a-9b60-7129c0e11925",
+              "name": "Note",
+              "value": "={{ $json.property_note }}",
+              "type": "string"
+            },
+            {
+              "id": "74a32bd4-abdd-421d-9cdf-adedc69b526d",
+              "name": "Tâcheid",
+              "value": "={{ $('Edit Master Tâche').item.json[\"Tâcheid\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "e1bf518d-7760-4037-889b-7389661014af",
+              "name": "Créateur",
+              "value": "={{ $json.property_cr_ateur || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "7db9b1ab-5b27-464a-b7e1-546a8ba551ca",
+              "name": "Priorité",
+              "value": "={{ $json.property_priorit || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "0e15cf72-1ee0-4b85-9988-27c0cb377545",
+              "name": "property_mention",
+              "value": "={{ $json.property_mention || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "aa26592a-c4cb-4c5b-947b-663a7b924b17",
+              "name": "Verification",
+              "value": "={{ $('Edit Master Tâche').item.json.Verification || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "0fba6746-8d71-4cf2-b674-4af2395ba487",
+              "name": "Approbateur",
+              "value": "={{ $('Edit Master Tâche').item.json.Approbateur || \"\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1888,
+        400
+      ],
+      "id": "ee81a31f-afb2-47cb-8008-32e1a68e8e75",
+      "name": "Edit Tâche générique",
+      "notesInFlow": false,
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Edit Master Tâche').item.json[\"Tâcheid\"] }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1696,
+        400
+      ],
+      "id": "ac14d0b2-f045-4935-a281-3dcfbd60749a",
+      "name": "Get Createur Tâche Generique",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "efae6215-ab89-425a-be05-e377416c3bb8",
+              "name": "ResponsableID",
+              "value": "={{ $('Edit Master Tâche').item.json.ResponsableID || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "350d8ae7-7078-40fc-bf58-cf006e807378",
+              "name": "Tâche",
+              "value": "={{ $json.name || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "063beaa0-1f64-43f0-8676-1c14d881023c",
+              "name": "ÉquipeID",
+              "value": "={{ $('Edit Master Tâche').item.json[\"ÉquipeID\"] || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "3e435e3b-00f2-41b0-865a-e5535bc00dfe",
+              "name": "État",
+              "value": "={{ $('Edit Master Tâche').item.json[\"État\"] || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "18caa5f9-35be-425c-ad60-050606ee3716",
+              "name": "Date de planification",
+              "value": "={{ $('Edit Tâche').item.json[\"Date de planification\"] || \"\"}}",
+              "type": "object"
+            },
+            {
+              "id": "9140d778-4e06-4017-b845-a2fd25e2b4c2",
+              "name": "Date complété",
+              "value": "={{ $('Edit Tâche').item.json[\"Date complété\"] || \"\"}}",
+              "type": "object"
+            },
+            {
+              "id": "ad7f458b-46b6-4cbc-940c-98a77fb0973d",
+              "name": "Date de créeation",
+              "value": "={{ $('Edit Tâche').item.json[\"Date de créeation\"] || \"\"}}",
+              "type": "object"
+            },
+            {
+              "id": "7a36bcf2-73db-4182-b19a-210ead71d660",
+              "name": "Ticket",
+              "value": "={{ $('Edit Tâche').item.json.Ticket || \"\"}}",
+              "type": "number"
+            },
+            {
+              "id": "9e9d0e1f-678d-45a6-a289-384870d62f0d",
+              "name": "Dead line",
+              "value": "={{ $('Edit Tâche').item.json[\"Dead line\"] || \"\"}}",
+              "type": "object"
+            },
+            {
+              "id": "ee1623dd-05f6-4625-92cd-d025affffed7",
+              "name": "Base mère",
+              "value": "={{ $('Edit Tâche').item.json[\"Base mère\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "a3bc15e7-acaa-4889-9399-82b5431a4c76",
+              "name": "Page mère",
+              "value": "={{ $('Edit Tâche').item.json[\"Page mère\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "4cef21a0-7fcd-44bf-b081-4d8aea601e57",
+              "name": "Fournisseur",
+              "value": "={{ $('Edit Tâche').item.json.Fournisseur }}",
+              "type": "string"
+            },
+            {
+              "id": "a1c0f16b-356f-48c8-a8c9-0b3d279f2b42",
+              "name": "Type de tâche",
+              "value": "={{ $('Edit Tâche').item.json[\"Type de tâche\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "2d8da833-6a28-455f-bd1d-b7d1b21d29af",
+              "name": "Departement",
+              "value": "={{ $('Edit Tâche').item.json[\"Département\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "1702da5b-71ea-464a-9b60-7129c0e11925",
+              "name": "Note",
+              "value": "={{ $json.property_note || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "74a32bd4-abdd-421d-9cdf-adedc69b526d",
+              "name": "Tâcheid",
+              "value": "={{ $('Edit Master Tâche').item.json[\"Tâcheid\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "e1bf518d-7760-4037-889b-7389661014af",
+              "name": "Créateur",
+              "value": "={{ $json.property_cr_ateur || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "7db9b1ab-5b27-464a-b7e1-546a8ba551ca",
+              "name": "Priorité",
+              "value": "={{ $json.property_priorit || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "376a0a19-7f6a-456d-8039-f0bd9c026369",
+              "name": "Mention",
+              "value": "={{ $json.property_mention || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "fc16c5a7-a9b2-4d07-90e8-cae0af5390cf",
+              "name": "Verification",
+              "value": "={{ $('Edit Tâche').item.json.Verification || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "24d86c58-48c9-4d00-8c4c-2f4bf8a50cf0",
+              "name": "Approbateur",
+              "value": "={{ $('Edit Tâche').item.json.Approbateur || \"\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1888,
+        64
+      ],
+      "id": "2665507d-6944-42d9-9a7b-2a88d2ec315e",
+      "name": "Edit Tâche Equipement",
+      "notesInFlow": false,
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Edit Master Tâche').item.json[\"Tâcheid\"] }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1696,
+        64
+      ],
+      "id": "45305d5d-748c-4917-a080-67adf7127d4a",
+      "name": "Get Createur Equipement",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "numberInputs": 7
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3136,
+        -96
+      ],
+      "id": "1408dd8f-033f-40dc-af35-e60a32300401",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Nph7coAgeAm16pwp",
+          "mode": "list",
+          "cachedResultName": "Logger - Send to Notion"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        3760,
+        -16
+      ],
+      "id": "9070c5ad-7e79-47c2-94c5-37bf236fadb5",
+      "name": "Execute Logger - Send to Notion"
+    },
+    {
+      "parameters": {
+        "functionCode": "const i = items[0];\nconst log = i.json._log || {};\nlog.finishedAt = new Date().toISOString();\n\nconst start = new Date(log.startedAt || log.runId || Date.now()).getTime();\nconst end = new Date(log.finishedAt).getTime();\nlog.durationSec = Math.round((end - start) / 1000);\n\n// 🎯 CORRECTION : Extraire les noms de nœuds uniques des échecs\nconst failedNodeNames = [];\nconst uniqueErrorMessages = [];\n\n// Parcourir les actions pour identifier les échecs\nif (log.actions && Array.isArray(log.actions)) {\n  log.actions.forEach(action => {\n    if (!action.ok) {\n      // Ajouter le nom du nœud s'il n'est pas déjà présent\n      if (!failedNodeNames.includes(action.node)) {\n        failedNodeNames.push(action.node);\n      }\n      \n      // Ajouter le message d'erreur s'il n'est pas déjà présent\n      if (action.msg && !uniqueErrorMessages.includes(action.msg)) {\n        uniqueErrorMessages.push(action.msg);\n      }\n    }\n  });\n}\n\n// 🎯 RÉSULTATS CORRIGÉS\nlog.failedNodesList = failedNodeNames; // Noms uniques des nœuds en échec\nlog.uniqueErrorMessages = uniqueErrorMessages; // Messages d'erreur uniques\nlog.errorSummary = uniqueErrorMessages.join(' | '); // Compilation des erreurs\n\n// Stats améliorées\nlog.stats = {\n  totalProcessed: log.ok + log.ko,\n  successCount: log.ok,\n  failureCount: log.ko,\n  successRate: `${Math.round((log.ok / (log.ok + log.ko)) * 100)}%`,\n  uniqueFailedNodes: failedNodeNames.length,\n  distinctErrors: uniqueErrorMessages.length\n};\n\ni.json._log = log;\nreturn [i];"
+      },
+      "id": "b8c93865-f4f5-482a-8c6b-2a856a7d008c",
+      "name": "Finish Log1",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        3552,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Consolidation COMPLÈTE des logs\nconst logData = {\n  workflow: $('Log Meta (expressions)').first().json._log?.workflow || \"WorkFlow 01\",\n  executionId: $execution.id,\n  startedAt: $('Start Log').first().json._log?.startedAt,\n  finishedAt: new Date().toISOString(),\n  runId: $('Start Log').first().json._log?.runId,\n  \n  // Consolidation des compteurs\n  ok: $input.all().reduce((sum, item) => sum + (item.json._log?.ok || 0), 0),\n  ko: $input.all().reduce((sum, item) => sum + (item.json._log?.ko || 0), 0),\n  failedNodes: $input.all().flatMap(item => item.json._log?.failedNodes || []),\n  \n  // Logique Actions\n  actions: (() => {\n    const koCount = $input.all().reduce((sum, item) => sum + (item.json._log?.ko || 0), 0);\n    if (koCount === 0) {\n      return [{ msg: \"Pass\" }];\n    } else {\n      const allActions = $input.all().flatMap(item => item.json._log?.actions || []);\n      return allActions.filter(action => action.msg !== \"Pass\");\n    }\n  })()\n};\n\nreturn [{ json: { _log: logData } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3344,
+        -16
+      ],
+      "id": "5a7ddc49-466b-429a-8c4c-4fb2214abcb3",
+      "name": "One Item1"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "3d39a20f-c125-4d0f-8260-366df4ad2db4",
+      "name": "Update Log2",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        2320,
+        -512
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "af770339-d322-4260-bb40-076d85ce384a",
+      "name": "Update Log3",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        2320,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "ad8f4762-3d88-41f4-a67e-931e35c57d4c",
+      "name": "Update Log5",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        2320,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "8899067b-afe0-4b36-943d-f313b14809a3",
+      "name": "Update Log6",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        2320,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "95218572-436b-40fe-8f29-d883f1a4e451",
+      "name": "Update Log7",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        2320,
+        -320
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{ ($workflow.name || 'Unknown Workflow') + \" - \" + ($json._log?.actions?.find(action => !action.ok)?.node || Object.keys($json._log?.failedNodes || {})[0] || 'UnknownNode') }}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "72afe5f4-b4ad-4286-a98a-fa79a8b168b9",
+      "name": "Log Snapshot1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        1888,
+        -320
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "b4d3b036-31bd-48b8-b0af-44c5ec4d324a",
+      "name": "Update Log8",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        2320,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{ ($workflow.name || 'Unknown Workflow') + \" - \" + ($json._log?.actions?.find(action => !action.ok)?.node || Object.keys($json._log?.failedNodes || {})[0] || 'UnknownNode') }}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "22ac8566-9b87-466a-8623-791a7b9cf848",
+      "name": "Log Snapshot2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        1888,
+        240
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Log Meta (expressions)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Meta (expressions)": {
+      "main": [
+        [
+          {
+            "node": "Start Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Log": {
+      "main": [
+        [
+          {
+            "node": "Get Master Tâche",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Update Log1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Master Tâche": {
+      "main": [
+        [
+          {
+            "node": "Edit Master Tâche",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Master Tâche": {
+      "main": [
+        [
+          {
+            "node": "Update Log4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Tâche": {
+      "main": [
+        [
+          {
+            "node": "Update Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "HTTP Type tache",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Update Log19",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log18",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log20",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log20",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log20",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log20",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log20",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log16",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log16",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log16": {
+      "main": [
+        [
+          {
+            "node": "Get Createur Tâche Generique",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log18": {
+      "main": [
+        [
+          {
+            "node": "Get Createur Certificat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log19": {
+      "main": [
+        [
+          {
+            "node": "Get Createur Qualité",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Type tache": {
+      "main": [
+        [
+          {
+            "node": "Log Snapshot11",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WorkFlow 05.01": {
+      "main": [
+        [
+          {
+            "node": "Update Log2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WorkFlow 05.02": {
+      "main": [
+        [
+          {
+            "node": "Update Log3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WorkFlow 05.03": {
+      "main": [
+        [
+          {
+            "node": "Update Log5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log20": {
+      "main": [
+        [
+          {
+            "node": "Get Createur Equipement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WorkFlow 05.04": {
+      "main": [
+        [
+          {
+            "node": "Update Log6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log4": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Certificat": {
+      "main": [
+        [
+          {
+            "node": "WorkFlow 05.02",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Snapshot11": {
+      "main": [
+        [
+          {
+            "node": "Edit Tâche",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Createur Certificat": {
+      "main": [
+        [
+          {
+            "node": "Edit Certificat",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Createur Qualité": {
+      "main": [
+        [
+          {
+            "node": "Edit Qualité",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Qualité": {
+      "main": [
+        [
+          {
+            "node": "WorkFlow 05.01",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Tâche générique": {
+      "main": [
+        [
+          {
+            "node": "WorkFlow 05.04",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Createur Tâche Generique": {
+      "main": [
+        [
+          {
+            "node": "Edit Tâche générique",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Tâche Equipement": {
+      "main": [
+        [
+          {
+            "node": "WorkFlow 05.03",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Createur Equipement": {
+      "main": [
+        [
+          {
+            "node": "Edit Tâche Equipement",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finish Log1": {
+      "main": [
+        [
+          {
+            "node": "Execute Logger - Send to Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One Item1": {
+      "main": [
+        [
+          {
+            "node": "Finish Log1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log6": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Update Log5": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Update Log3": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Update Log2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "One Item1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Snapshot1": {
+      "main": [
+        [
+          {
+            "node": "Update Log7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Snapshot2": {
+      "main": [
+        [
+          {
+            "node": "Update Log8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "Update Log8": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Update Log7": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "69017f25-a76b-46d4-81d9-1118dd49d0dc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "af83b3ea93bc43d0c5ac63a56a75bfd2e58c747f1d5aca065acb21b4a4d3daa3"
+  },
+  "id": "xVE7MZAlQXnKd2Jy",
+  "tags": [
+    {
+      "createdAt": "2025-08-26T22:10:40.037Z",
+      "updatedAt": "2025-08-26T22:10:40.037Z",
+      "id": "41B38HIWO9KNrCRH",
+      "name": "Archivage"
+    },
+    {
+      "createdAt": "2025-09-05T21:38:39.254Z",
+      "updatedAt": "2025-09-05T21:38:39.254Z",
+      "id": "qX1NL4obFNWYnM3o",
+      "name": "Scan Master Tâche"
+    }
+  ]
+}

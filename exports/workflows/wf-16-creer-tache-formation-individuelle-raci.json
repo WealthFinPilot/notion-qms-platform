@@ -1,0 +1,617 @@
+{
+  "name": "WorkFlow 16",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_MASTER_EMPLOYES}}",
+          "mode": "list",
+          "cachedResultName": "Master Employés",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_MASTER_EMPLOYES}}"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Actif|checkbox",
+              "condition": "equals",
+              "checkboxValue": true
+            },
+            {
+              "key": "Utilisateur|people",
+              "condition": "contains",
+              "peopleValue": "={{ $json.body.data.properties[\"Répondant\"].people[0].id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        176,
+        -224
+      ],
+      "id": "e6d62fa4-2073-45ce-a02e-a195d8e43f45",
+      "name": "01 Get Master Employé",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "{{WEBHOOK_PATH_WF16}}",
+        "options": {
+          "responseData": "success"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -304,
+        16
+      ],
+      "id": "06adb37f-9e3a-481b-a50a-a1f7c74b5d5c",
+      "name": "Add formation to Focus",
+      "webhookId": "{{WEBHOOK_ID_WF16}}"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        464,
+        -16
+      ],
+      "id": "be21d4a9-3bd0-42a4-acc4-1311e0cd01d3",
+      "name": "02 Merge"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d58ae05c-9522-4ab1-b0cb-ce8e8ab05b85",
+              "leftValue": "={{ $json.properties.Utilisateur.people[0].id }}",
+              "rightValue": "={{ $json.body.data.properties[\"Répondant\"].people[0].id }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        -16
+      ],
+      "id": "596238b1-2644-4f89-8933-e9d520925f3d",
+      "name": "03 If Match"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2ffe120e-6f74-4a2b-b2ec-dc19b87560fe",
+              "name": "id_formation",
+              "value": "={{ $json.body.data.id }}",
+              "type": "string"
+            },
+            {
+              "id": "3a9a8240-99af-47e3-8208-4868cedcf791",
+              "name": "Titre",
+              "value": "={{ $json.body.data.properties.Inscriptions.title[0].text.content }} {{ $json.body.data.properties[\"Répondant\"].people[0].name }}",
+              "type": "string"
+            },
+            {
+              "id": "19bb7289-61b4-4faf-9a7a-0dbf9b870fe5",
+              "name": "Plateforme",
+              "value": "={{ $json.body.data.properties.Plateforme.select.name }}",
+              "type": "string"
+            },
+            {
+              "id": "60823b23-da8c-4a59-9d94-38221dbf83e1",
+              "name": "Durée (h)",
+              "value": "={{ $json.body.data.properties[\"Durée (h)\"].number }}h",
+              "type": "string"
+            },
+            {
+              "id": "345d68e7-3005-4f86-9598-b07775af9b6a",
+              "name": "Description",
+              "value": "={{ $json.body.data.properties.Description.rich_text[0].text.content }}",
+              "type": "string"
+            },
+            {
+              "id": "07f75a1f-0666-42e0-a47d-455a462fde00",
+              "name": "Date de début",
+              "value": "={{ $json.body.data.properties[\"Date de début\"] }}",
+              "type": "object"
+            },
+            {
+              "id": "45b88073-c460-4d72-9374-d2c8978dbcbe",
+              "name": "Date de fin",
+              "value": "={{ $json.body.data.properties[\"Date de fin\"] }}",
+              "type": "object"
+            },
+            {
+              "id": "dd15fad3-88e1-43bf-8611-a1b3535f2661",
+              "name": "Lieu",
+              "value": "={{ $json.body.data.properties.Lieu }}",
+              "type": "object"
+            },
+            {
+              "id": "068de0a8-5229-46ba-a20b-68c47d9fd77c",
+              "name": "url_page",
+              "value": "={{ $json.body.data.url }}",
+              "type": "string"
+            },
+            {
+              "id": "a946d757-063a-4de3-b3b2-9728d19ecf83",
+              "name": "URL_Formation",
+              "value": "={{ $json.body.data.properties.URL }}",
+              "type": "object"
+            },
+            {
+              "id": "82c3d41c-1cfd-417f-ae52-50b453ebfee3",
+              "name": "Département",
+              "value": "={{ $json.properties[\"Département\"].rollup.array }}",
+              "type": "array"
+            },
+            {
+              "id": "0f9abb2e-1ffd-48de-9536-5cdc1d0dd178",
+              "name": "Responsable direct",
+              "value": "={{ $json.properties[\"Responsable direct\"].relation }}",
+              "type": "array"
+            },
+            {
+              "id": "08409d70-c9d5-451f-953b-88db8e3f407a",
+              "name": "Répondant",
+              "value": "={{ $json.body.data.properties[\"Répondant\"].people[0].id }}",
+              "type": "string"
+            },
+            {
+              "id": "df358854-bf27-423c-bfac-66d3eb97aa86",
+              "name": "id_responsable",
+              "value": "={{ $json.properties.id_responsable.rollup.array[0].people[0].id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        960,
+        -32
+      ],
+      "id": "07abbef0-1077-495f-8f1a-0519ac1c62c8",
+      "name": "04 Edit for Focus"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst item = $input.item.json;\n\n// ==================== TRAITEMENT DÉPARTEMENT ====================\nconst departementArray = item.Département || [];\n\n// Extraire tous les IDs de département\nconst departementIds = departementArray.flatMap(dept => {\n  if (dept.type === 'relation' && Array.isArray(dept.relation)) {\n    return dept.relation.map(rel => rel.id);\n  }\n  return [];\n});\n\n// ==================== TRAITEMENT RESPONSABLE DIRECT ====================\nconst responsableDirectArray = item['Responsable direct'] || [];\nconst responsableDirectId = $input.first().json.id_responsable || $input.first().json[\"Répondant\"];\nconst repondantId = item.Répondant || null;\n\n// ==================== RETOUR ====================\nreturn [{\n  json: {\n    ...item, // Conserver toutes les données originales\n    departementIds: departementIds, // Array d'IDs\n    responsableDirectId: responsableDirectId, // String ID\n    // Info debug\n    _debug: {\n      totalDepartements: departementIds.length,\n      hasResponsableDirect: responsableDirectArray.length > 0,\n      usedRepondant: responsableDirectArray.length === 0\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        -32
+      ],
+      "id": "696d4bdb-e4fa-466c-b738-7b871c4d552b",
+      "name": "05 compil data"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_MASTER_TACHES}}",
+          "mode": "list",
+          "cachedResultName": "Master Tâches",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_MASTER_TACHES}}"
+        },
+        "title": "={{ $json.Lieu }}",
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Date de planification|date",
+              "includeTime": false,
+              "date": "={{ $now }}",
+              "timezone": "America/Montreal"
+            },
+            {
+              "key": "Dead line|date",
+              "includeTime": false,
+              "date": "={{ $json[\"Date de fin\"].date.start }}",
+              "timezone": "America/Montreal"
+            },
+            {
+              "key": "Note|rich_text",
+              "textContent": "={{ $json.Description }}"
+            },
+            {
+              "key": "État|status",
+              "statusValue": "Plannifié"
+            },
+            {
+              "key": "Priorité|select",
+              "selectValue": "Faible"
+            },
+            {
+              "key": "Personnel Ressource|people",
+              "peopleValue": "={{ $json[\"Répondant\"] }}"
+            },
+            {
+              "key": "Approbateur|people",
+              "peopleValue": "={{ $json.id_responsable }}"
+            },
+            {
+              "key": "Nom|title",
+              "title": "={{ $json.Titre }}"
+            }
+          ]
+        },
+        "blockUi": {
+          "blockValues": [
+            {
+              "type": "bulleted_list_item",
+              "richText": true,
+              "text": {
+                "text": [
+                  {
+                    "text": "={{ $json.Titre }}",
+                    "isLink": true,
+                    "textLink": "={{ $json.URL_Formation.url }}",
+                    "annotationUi": {
+                      "color": "blue"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "bulleted_list_item",
+              "textContent": "=Durée: {{ $json[\"Durée (h)\"] }}"
+            },
+            {
+              "type": "bulleted_list_item",
+              "richText": true,
+              "text": {
+                "text": [
+                  {
+                    "textType": "mention",
+                    "mentionType": "page",
+                    "page": "{{NOTION_ID_GENERIC_09}}",
+                    "annotationUi": {
+                      "color": "yellow"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "bulleted_list_item",
+              "richText": true,
+              "text": {
+                "text": [
+                  {
+                    "text": "={{ $json.Lieu.place.address}}",
+                    "annotationUi": {}
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1408,
+        -32
+      ],
+      "id": "241ee140-dc13-4ffb-aace-0ff4629697cf",
+      "name": "06 create Tâche",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id_formation }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "État|status",
+              "statusValue": "En cours"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        2064,
+        -240
+      ],
+      "id": "33ca44ca-da74-4931-88a7-df2566e48f5b",
+      "name": "07 Updae Formation",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.notion.com/v1/pages/{{ $json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  JSON.stringify((() => {\n    // Relation fixe\n    const fixedRelation = [{ id: '{{NOTION_ID_GENERIC_08}}' }];\n\n    // ✅ Array d'IDs -> relation [{id},{id}]\n    const departementIds = $('05 compil data').item.json.departementIds || [];\n    const departementRelation = Array.isArray(departementIds)\n      ? departementIds.filter(Boolean).map(id => ({ id }))\n      : [];\n\n    // ✅ Déjà au bon format: [{ id: \"...\" }]\n    // (ou fallback si tu as aussi responsableDirectId ailleurs)\n    const responsableArr = $('05 compil data').item.json[\"Responsable direct\"];\n    const responsableDirectId = $('05 compil data').item.json.responsableDirectId;\n\n    const responsableRelation = Array.isArray(responsableArr) && responsableArr.length\n      ? responsableArr.map(r => ({ id: r.id })).filter(r => r.id)\n      : (responsableDirectId ? [{ id: responsableDirectId }] : []);\n\n    return {\n      properties: {\n        FUUU: { relation: fixedRelation },\n\n        // Responsable (one-way)\n        pXDv: { relation: responsableRelation },\n\n        // Départements (multi)\n        ':Rn_': { relation: departementRelation },\n      }\n    };\n  })())\n}}\n",
+        "options": {
+          "batching": {
+            "batch": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1632,
+        -32
+      ],
+      "id": "7e2d8ac0-9c90-4429-82a6-423439e8c2a0",
+      "name": "07 HTTP Set others",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1840,
+        -240
+      ],
+      "id": "2c6c350e-b4c2-4be0-8582-3765e08f86c3",
+      "name": "08 Merge"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f1452cbf-febb-4c8a-92bd-094c3c12fedb",
+              "leftValue": "={{ $json.body.data.properties[\"État\"].status.name }}",
+              "rightValue": "Pas commencé",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -80,
+        16
+      ],
+      "id": "71eef456-f84d-4730-87f7-591c04974d0b",
+      "name": "If statut Ok"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "01 Get Master Employé": {
+      "main": [
+        [
+          {
+            "node": "02 Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add formation to Focus": {
+      "main": [
+        [
+          {
+            "node": "If statut Ok",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02 Merge": {
+      "main": [
+        [
+          {
+            "node": "03 If Match",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03 If Match": {
+      "main": [
+        [
+          {
+            "node": "04 Edit for Focus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04 Edit for Focus": {
+      "main": [
+        [
+          {
+            "node": "05 compil data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05 compil data": {
+      "main": [
+        [
+          {
+            "node": "06 create Tâche",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "08 Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06 create Tâche": {
+      "main": [
+        [
+          {
+            "node": "07 HTTP Set others",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "07 Updae Formation": {
+      "main": [
+        []
+      ]
+    },
+    "07 HTTP Set others": {
+      "main": [
+        [
+          {
+            "node": "08 Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "08 Merge": {
+      "main": [
+        [
+          {
+            "node": "07 Updae Formation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If statut Ok": {
+      "main": [
+        [
+          {
+            "node": "01 Get Master Employé",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "02 Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "0d0e7e7f-5166-4121-b39c-3ef34632b7e4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "af83b3ea93bc43d0c5ac63a56a75bfd2e58c747f1d5aca065acb21b4a4d3daa3"
+  },
+  "id": "StJOCNnBVuhiEQEA",
+  "tags": [
+    {
+      "updatedAt": "2025-12-23T16:06:44.487Z",
+      "createdAt": "2025-12-23T16:06:44.487Z",
+      "id": "JmPJMnZvogpXhcYp",
+      "name": "Formation - Tâche"
+    }
+  ]
+}

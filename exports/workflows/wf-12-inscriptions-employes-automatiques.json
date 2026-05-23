@@ -1,0 +1,1758 @@
+{
+  "name": "WorkFlow 12",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond1",
+              "leftValue": "={{ $json.property_tat }}",
+              "rightValue": "Pas commencé",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "1a7ce288-bb7e-4ba8-9106-7053d70cb6cf",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9e4781bd-d188-44d3-b707-4a46f3ff32bd",
+      "name": "05 IF Has Catalogue",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -2272,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cataloguePage = $input.first().json;\nconst InstancesID = $('04 set instances after split').first().json.idInstances;\nconst Nb_users = $('04 set instances after split').first().json.Nb_users;\n\n// Extraire le Responsable (propriété people)\nconst ResponsablesArray = cataloguePage.properties?.Responsable?.people || [];\nconst Responsables = ResponsablesArray.length > 0 ? ResponsablesArray[0].id : null;\n\n// Extraire les IDs utilisateurs (rollup de people avec show_unique)\nconst userRollup = cataloguePage.properties?.['ID utilisateur']?.rollup;\nlet userIds = [];\n\nif (userRollup?.type === 'array' && userRollup.array) {\n  const allUserIds = userRollup.array.flatMap(item => {\n    if (item.type === 'people' && item.people) {\n      return item.people.map(person => person.id);\n    }\n    return [];\n  });\n  userIds = [...new Set(allUserIds)];\n}\n\n// Extraire les documents (relation Master Documentations Entreprise)\nconst documentsRelation = cataloguePage.properties?.['Master Documentations Entreprise']?.relation || [];\nconst documents = documentsRelation.map(rel => rel.id);\n\n// Extraire le nom (propriété title)\nconst titleArray = cataloguePage.properties?.Nom?.title || [];\nconst catalogueName = titleArray.length > 0 ? titleArray[0].plain_text : '';\n\n// Extraire l'ID de \"Nos Formations\"\nconst formationsRelation = cataloguePage.properties?.['Nos Formations']?.relation || [];\nconst formationId = formationsRelation.length > 0 ? formationsRelation[0].id : null;\n\n// Extraire le Lieu (propriété place)\nconst lieuProperty = cataloguePage.properties?.Lieu?.place || null;\nconst lieu = lieuProperty ? {\n  lat: lieuProperty.lat,\n  lon: lieuProperty.lon,\n  name: lieuProperty.name,\n  address: lieuProperty.address,\n  aws_place_id: lieuProperty.aws_place_id,\n  google_place_id: lieuProperty.google_place_id\n} : null;\n\n// Retourner un item par utilisateur avec toutes les infos\nreturn userIds.map((userId, index) => ({\n  json: {\n    userId: userId,\n    userIndex: index + 1,\n    totalUsers: userIds.length,\n    documents: documents,\n    totalDocuments: documents.length,\n    hasDocuments: documents.length > 0,\n    cataloguePageId: cataloguePage.id,\n    catalogueName: catalogueName,\n    Responsable: Responsables,\n    formationId: formationId,\n    lieu: lieu, // Objet lieu complet\n    InstancesID: InstancesID,\n    Nb_users: Nb_users,\n  }\n}));"
+      },
+      "id": "ddc463b1-71db-4441-a919-ff8dc05f58db",
+      "name": "07 Extract Type IDs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1824,
+        368
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond2",
+              "leftValue": "={{ $json.userId }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "cb6bae78-29d0-4799-aaae-63a82f0b435d",
+      "name": "08 IF Has Type Poste",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1584,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Récupérer le premier item complet\nconst firstItem = $input.first().json;\n\n// Extraire l'identifiant unique (format Notion unique_id)\nconst identifiantObj = firstItem.properties?.Identifiant || firstItem.Identifiant;\nconst prefix = identifiantObj?.unique_id?.prefix || '';\nconst number = identifiantObj?.unique_id?.number || '';\nconst idUSER = $input.first().json.properties.Utilisateur.people[0].id || '';\nconst identifiant = `${prefix}${number}`;\n\n// Extraire le nom\nconst name = $('09 - Set Inscription').first().json.name || firstItem.name || '';\n\n// Créer le texte concaténé\nconst concatenatedText = `${name} ${identifiant}`;\n\nreturn [{\n  json: {\n    name_employe: idUSER, // Conserver l'ID si nécessaire\n    identifiant: identifiant, // \"EMP1\"\n    name: name,\n    concatenatedText: concatenatedText, // \"John Doe EMP1\"\n  }\n}];"
+      },
+      "id": "75e25974-135a-4afc-812c-d2bdc2f29782",
+      "name": "11 Expand Employees",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -880,
+        384
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0697196f-e399-4332-9d86-b7397af13da2",
+              "name": "email",
+              "value": "={{ $json.userId }}",
+              "type": "string"
+            },
+            {
+              "id": "b275e0fe-1a68-43f4-9397-63f7e12b92e7",
+              "name": "emailIndex",
+              "value": "={{ $json.userIndex }}",
+              "type": "number"
+            },
+            {
+              "id": "819b00ff-e001-4ffc-b2ed-fdb55fe5236f",
+              "name": "totalEmails",
+              "value": "={{ $json.totalUsers }}",
+              "type": "number"
+            },
+            {
+              "id": "6d9b7aec-3db7-49e7-a11d-00ed3e6affd2",
+              "name": "documents",
+              "value": "={{ $json.documents }}",
+              "type": "array"
+            },
+            {
+              "id": "3a5d81f5-87d6-42ff-99b1-713a87e67ae2",
+              "name": "totalDocuments",
+              "value": "={{ $json.totalDocuments }}",
+              "type": "number"
+            },
+            {
+              "id": "b4c8d868-8c90-4679-b93d-9a138caeef73",
+              "name": "hasDocuments",
+              "value": "={{ $json.hasDocuments }}",
+              "type": "boolean"
+            },
+            {
+              "id": "8fd169fc-279f-42c6-9df9-b740cfe8e5b1",
+              "name": "name",
+              "value": "={{ $('04 set instances after split').item.json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "a5051367-8eca-4724-9e9a-4f2198b5c64a",
+              "name": "ordre_de_passage",
+              "value": "={{ $('06 Get Module page').item.json.properties[\"Ordre de passage\"].number }}",
+              "type": "number"
+            },
+            {
+              "id": "afa93592-2ba2-47dd-90c9-c7c532a2c046",
+              "name": "nb_heure",
+              "value": "={{ $('06 Get Module page').item.json.properties[\"Durée (h)\"].number }}",
+              "type": "number"
+            },
+            {
+              "id": "e10e6359-ea58-4854-addd-60ccf1182772",
+              "name": "date_de_debut",
+              "value": "={{ $('06 Get Module page').item.json.properties[\"Date de début\"].date }}",
+              "type": "object"
+            },
+            {
+              "id": "3e7817bd-f2a4-4ff3-8d63-2383e98bf8d0",
+              "name": "date_de_fin",
+              "value": "={{ $('06 Get Module page').item.json.properties[\"Date de fin\"].date }}",
+              "type": "object"
+            },
+            {
+              "id": "4ee19707-9613-42a2-aa69-88bc3f0d9777",
+              "name": "niveau",
+              "value": "={{ $('06 Get Module page').item.json.properties.Niveau.select.name }}",
+              "type": "string"
+            },
+            {
+              "id": "b86d3a64-0e3a-45b1-9c15-aa7690c2db90",
+              "name": "format",
+              "value": "={{ $('06 Get Module page').item.json.properties.Format.select.name }}",
+              "type": "string"
+            },
+            {
+              "id": "a2353582-d6fb-4cbd-9f62-01f3f46cf89b",
+              "name": "formateur",
+              "value": "={{ $('06 Get Module page').item.json.properties.Formateur.select.name }}",
+              "type": "string"
+            },
+            {
+              "id": "f172e2fc-b86f-49e4-9ffc-dcdab1b18837",
+              "name": "periode_jours",
+              "value": "={{ $('06 Get Module page').item.json.properties[\"Periode (jours)\"].formula.number }}",
+              "type": "number"
+            },
+            {
+              "id": "c362ffb6-d33b-4a43-a5d6-6da4a42a53f7",
+              "name": "obligatoire",
+              "value": "={{ $('06 Get Module page').item.json.properties.Obligatoire.checkbox }}",
+              "type": "boolean"
+            },
+            {
+              "id": "f0f04581-2a8c-4bfd-be4a-74a3f7453898",
+              "name": "plateforme",
+              "value": "={{ $('06 Get Module page').item.json.properties.Plateforme.select.name }}",
+              "type": "string"
+            },
+            {
+              "id": "75e35e51-3734-43cf-960b-5d1bb2070230",
+              "name": "embauche",
+              "value": "={{ $('06 Get Module page').item.json.properties[\"Jours après embauche\"].number }}",
+              "type": "number"
+            },
+            {
+              "id": "4f4af8af-cb7f-474c-95cc-27543d5a0905",
+              "name": "nos_formations",
+              "value": "={{ $('06 Get Module page').item.json.properties[\"Nos Formations\"].relation[0].id }}",
+              "type": "string"
+            },
+            {
+              "id": "b0b9f0cb-21ae-4f43-a357-5e9d117112b4",
+              "name": "description",
+              "value": "={{ $('06 Get Module page').item.json.properties.Description.rich_text[0].text.content }}",
+              "type": "string"
+            },
+            {
+              "id": "bf8c5d8f-f0c6-480d-a35a-a2d2e06b01f9",
+              "name": "documentations_entreprise",
+              "value": "={{ $('07 Extract Type IDs').item.json.documents }}",
+              "type": "array"
+            },
+            {
+              "id": "d49c85a4-b2cc-46f2-872e-197223bc9707",
+              "name": "Responsable",
+              "value": "={{ $('07 Extract Type IDs').item.json.Responsable }}",
+              "type": "string"
+            },
+            {
+              "id": "5ef8fd21-0e6f-4b6d-ab4f-8fa42eaa6416",
+              "name": "url",
+              "value": "={{ $('06 Get Module page').item.json.properties.URL.url }}",
+              "type": "string"
+            },
+            {
+              "id": "d6afd750-ec8a-4fae-8773-6fccb4f311ed",
+              "name": "lieu",
+              "value": "={{ $json.lieu }}",
+              "type": "object"
+            },
+            {
+              "id": "f6c943b1-a044-45da-96b8-a630c1bc7345",
+              "name": "InstancesID",
+              "value": "={{ $json.InstancesID }}",
+              "type": "string"
+            },
+            {
+              "id": "6235d158-7954-4e24-b4f9-95737a26a40f",
+              "name": "Nb_users",
+              "value": "={{ $json.Nb_users }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1344,
+        352
+      ],
+      "id": "b11856b7-c63f-4f8f-81cd-4d6aac522240",
+      "name": "09 - Set Inscription"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.pageId }} ",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -3440,
+        432
+      ],
+      "id": "6e716687-398b-4439-bc54-64530dd0f83b",
+      "name": "02 Get instances",
+      "executeOnce": false,
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c0f7ee6d-3b54-46ab-a7b4-a52345bb996c",
+              "name": "name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "1f655105-531f-4414-a7c8-eb5a7843f47a",
+              "name": "property_tat",
+              "value": "={{ $json.property_tat }}",
+              "type": "string"
+            },
+            {
+              "id": "9571ec3b-8255-429b-88f7-243317dd212d",
+              "name": "id",
+              "value": "={{ $json.property_modules_formations[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "6ba7a5b9-2a66-4cbd-8182-d38a732e57e9",
+              "name": "idInstances",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "1c176d13-a4e8-4e7c-ab7a-3045f3c04173",
+              "name": "Nb_users",
+              "value": "={{ $json.property_n8n_cr_es }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3184,
+        432
+      ],
+      "id": "8ba753f8-c509-4871-a540-42f928625cb4",
+      "name": "03 set instances"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_MASTER_EMPLOYES}}",
+          "mode": "list",
+          "cachedResultName": "Master Employés",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_MASTER_EMPLOYES}}"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Actif|checkbox",
+              "condition": "equals",
+              "checkboxValue": true
+            },
+            {
+              "key": "Utilisateur|people",
+              "condition": "contains",
+              "peopleValue": "={{ $json.email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -1120,
+        400
+      ],
+      "id": "7a7e77c1-8e57-431e-a80f-18abdbb76fdd",
+      "name": "10 Master employe",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_INSCRIPTIONS_AUX_FORMATIONS}}",
+          "mode": "list",
+          "cachedResultName": "Inscriptions aux formations",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_INSCRIPTIONS_AUX_FORMATIONS}}"
+        },
+        "returnAll": true,
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Inscriptions|title",
+              "condition": "equals",
+              "titleValue": "={{ $json.concatenatedText }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -704,
+        400
+      ],
+      "id": "11b597f1-4757-44e6-b427-0228f777a2fd",
+      "name": "12 Get Inscription",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0697196f-e399-4332-9d86-b7397af13da2",
+              "name": "Check_employe",
+              "value": "={{ Object.keys($json).length }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -480,
+        384
+      ],
+      "id": "65e19db6-421a-44c4-89f2-8d59a5e30a0a",
+      "name": "13 - Check return employe"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 3,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -240,
+        160
+      ],
+      "id": "a40df555-909e-447f-82b9-2bdb466177b0",
+      "name": "14 Merge"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond3",
+              "leftValue": "={{ $json.Check_employe }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "227d0b83-aae3-4068-a88d-248fef1f254e",
+      "name": "15 IF Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        0,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_INSCRIPTIONS_AUX_FORMATIONS}}",
+          "mode": "list",
+          "cachedResultName": "Inscriptions aux formations",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_INSCRIPTIONS_AUX_FORMATIONS}}"
+        },
+        "title": "={{ $('11 Expand Employees').item.json.concatenatedText }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Date de début|date",
+              "includeTime": false,
+              "date": "={{ $json.date_de_debut.start }}"
+            },
+            {
+              "key": "Durée (h)|number",
+              "numberValue": "={{ $json.nb_heure }}"
+            },
+            {
+              "key": "Format|select",
+              "selectValue": "={{ $json.format }}"
+            },
+            {
+              "key": "Niveau|select",
+              "selectValue": "={{ $json.niveau }}"
+            },
+            {
+              "key": "Formateur|select",
+              "selectValue": "={{ $json.formateur }}"
+            },
+            {
+              "key": "Obligatoire|checkbox",
+              "checkboxValue": "={{ $json.obligatoire }}"
+            },
+            {
+              "key": "Date de fin|date",
+              "date": "={{ $json.date_de_fin.start }}"
+            },
+            {
+              "key": "Plateforme|select",
+              "selectValue": "={{ $json.plateforme }}"
+            },
+            {
+              "key": "Ordre de passage|number",
+              "numberValue": "={{ $json.ordre_de_passage }}"
+            },
+            {
+              "key": "URL|url",
+              "ignoreIfEmpty": true,
+              "urlValue": "={{ $json.url }}"
+            },
+            {
+              "key": "Répondant|people",
+              "peopleValue": "={{ $json.name_employe }}"
+            },
+            {
+              "key": "Description|rich_text",
+              "textContent": "={{ $json.description }}"
+            },
+            {
+              "key": "Responsable|people",
+              "peopleValue": "={{ $json.Responsable }}"
+            }
+          ]
+        },
+        "options": {
+          "iconType": "emoji",
+          "icon": "🎓"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        400
+      ],
+      "id": "b74fe268-e871-45b4-a41b-cb6d04998f87",
+      "name": "16 create user inscription",
+      "retryOnFail": true,
+      "notesInFlow": false,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "simple": false
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -2080,
+        368
+      ],
+      "id": "724f8108-5fbf-4e35-9f3c-d97a996e6b58",
+      "name": "06 Get Module page",
+      "retryOnFail": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "id": "026c2de7-abb0-4dd9-8ab0-b11e87ad03fb",
+      "name": "Split Instances",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -2672,
+        624
+      ],
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c0f7ee6d-3b54-46ab-a7b4-a52345bb996c",
+              "name": "name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "1f655105-531f-4414-a7c8-eb5a7843f47a",
+              "name": "property_tat",
+              "value": "={{ $json.property_tat }}",
+              "type": "string"
+            },
+            {
+              "id": "9571ec3b-8255-429b-88f7-243317dd212d",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "51fead07-00a0-4568-93d3-5531251b4e6f",
+              "name": "idInstances",
+              "value": "={{ $json.idInstances }}",
+              "type": "string"
+            },
+            {
+              "id": "32baefe9-dd30-4552-adb9-543f2d0d61db",
+              "name": "Nb_users",
+              "value": "={{ $json.Nb_users || 0 }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2464,
+        640
+      ],
+      "id": "bb043d3c-b2fc-4805-963f-8f7cc1ceb405",
+      "name": "04 set instances after split"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "clashHandling": {
+            "values": {
+              "resolveClash": "preferInput1",
+              "mergeMode": "shallowMerge"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        448,
+        256
+      ],
+      "id": "95636033-6384-46d7-aecc-94179c69d167",
+      "name": "17 Merge"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.notion.com/v1/pages/{{ $json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ \n  JSON.stringify((() => {\n    const Lieu = $json.lieu;\n    \n    const documents = Array.from(\n      new Set($json.documentations_entreprise || [])\n    ).map(id => ({ id }));\n    \n    return {\n      properties: {\n        'EFUy': { relation: documents },\n        ...(Lieu && {\n          '|Jpy': { \n            place: {\n              lat: Lieu.lat,\n              lon: Lieu.lon,\n              name: Lieu.name,\n              address: Lieu.address,\n              aws_place_id: Lieu.aws_place_id\n            }\n          }\n        }),\n        '\\\\lzX': { relation: [{ id: $json.nos_formations }] }\n      }\n    };\n  })())\n}}",
+        "options": {
+          "batching": {
+            "batch": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        672,
+        400
+      ],
+      "id": "8c0f9be9-2226-4745-8889-0f43abef2593",
+      "name": "18 HTTP Inscriptions",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "ID documents : EFUy\nID Formation : %5ClzX\nID Lieu : %7CJpy"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Récupérer les infos du Split in Batches\nconst splitInfo = $('Split Instances').context;\nconst splitData = splitInfo?.nodesData?.['Split Instances']?.[0];\nconst batchSize = splitData?.batchSize || 1;\nconst currentBatchIndex = splitData?.batchIndex || 0;\nconst InstancesID = $('17 Merge').first().json.InstancesID;\nconst Totalemail = $('17 Merge').first().json.totalEmails;\n\n// Calculer l'offset basé sur le batch\nconst batchOffset = currentBatchIndex * batchSize;\n\n// Index dans le batch actuel\nconst items = $input.all();\nconst localIndex = items.findIndex(item => \n  JSON.stringify(item.json) === JSON.stringify($input.item.json)\n);\n\nconst safeLocalIndex = localIndex >= 0 ? localIndex : 0;\n\n// Index global\nconst globalIndex = batchOffset + safeLocalIndex;\n\n// Valeur initiale\nconst initialValue = $('17 Merge').first().json.Nb_users || 0;\nconst incrementValue = initialValue + globalIndex + 1; // ← +1 ici\n\nreturn [{\n  json: {\n    ...$input.item.json,\n    incrementValue: incrementValue,\n    itemPosition: globalIndex + 1,\n    InstancesID: InstancesID,\n    Totalemail: Totalemail,\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        400
+      ],
+      "id": "dd20bc34-1e8e-4b29-aa48-c3b7fc208732",
+      "name": "19 increment users",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.InstancesID }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "n8n__Créées|number",
+              "numberValue": "={{ $json.incrementValue }}"
+            },
+            {
+              "key": "Nb de participant|number",
+              "numberValue": "={{ $json.Totalemail }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        400
+      ],
+      "id": "babeb0b5-bcc0-4e6c-baac-39a996fc08e2",
+      "name": "20 Update instances",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Récupérer les infos du Split in Batches\nconst splitInfo = $('Split Instances').context;\nconst splitData = splitInfo?.nodesData?.['Split Instances']?.[0];\nconst batchSize = splitData?.batchSize || 1;\nconst currentBatchIndex = splitData?.batchIndex || 0;\nconst InstancesID = $('09 - Set Inscription').first().json.InstancesID;\n\n// Calculer l'offset basé sur le batch\nconst batchOffset = currentBatchIndex * batchSize;\n\n// Index dans le batch actuel\nconst items = $input.all();\nconst localIndex = items.findIndex(item => \n  JSON.stringify(item.json) === JSON.stringify($input.item.json)\n);\n\n// Sécurité : si localIndex n'est pas trouvé\nconst safeLocalIndex = localIndex >= 0 ? localIndex : 0;\n\n// Index global\nconst globalIndex = batchOffset + safeLocalIndex;\n\n// Valeur initiale\nconst initialValue = 0;\nconst incrementerror = initialValue + globalIndex;\n\nreturn [{\n  json: {\n    ...$input.item.json,\n    incrementerror: incrementerror,\n    itemerror: globalIndex + 1,\n    InstancesID: InstancesID,\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1120,
+        656
+      ],
+      "id": "9f349810-fbe9-414c-b7f3-bd82a0f8ff6c",
+      "name": "error 1 increment user",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.InstancesID }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "n8n__Ignorées|number",
+              "numberValue": "={{ $json.itemerror }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -880,
+        656
+      ],
+      "id": "e31a69ed-dc8c-4ff4-a1bb-359449f35472",
+      "name": "error 2 Update instances",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -2080,
+        -64
+      ],
+      "id": "04d577fe-4f95-42d9-9c29-3d47a1787c6b",
+      "name": "21 Get results instances",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "07477794-56cd-44cd-9285-2bbc7e426c98",
+              "leftValue": "={{ $json.property_n8n_cr_es }}",
+              "rightValue": "={{ $json.property_nb_de_participant }}",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1840,
+        -64
+      ],
+      "id": "0f82d29a-6409-4a1f-a73e-f85b1a379801",
+      "name": "22 If missing",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "n8n__Dernière exécution|date",
+              "date": "={{ $now }}",
+              "timezone": "America/Montreal"
+            },
+            {
+              "key": "n8n__Inscriptions générées|checkbox",
+              "checkboxValue": true
+            },
+            {
+              "key": "État|status",
+              "statusValue": "Plannifiée"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -1584,
+        -208
+      ],
+      "id": "3a88ec0a-8761-4141-9dcf-9419f2e93d46",
+      "name": "23a Update instances",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fd178cb6-9315-4e8c-81c7-5730b9e9a669",
+              "leftValue": "={{ $json.body.data.properties[\"État\"].status.name }}",
+              "rightValue": "Pas commencé",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "ecaabce9-bcb6-4e3d-b1b1-72d1b2475787",
+              "leftValue": "={{ $json.body.data.properties.Actif.checkbox }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "5d325fbb-2263-4f0c-b8fc-850243da1f83",
+              "leftValue": "={{ $json.body.data.properties[\"n8n__Inscriptions générées\"].checkbox }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "2ccdc9f7-eae4-4dcd-af76-126728e92fec",
+              "leftValue": "={{ $json.body.data.properties[\"Date de début\"].date.start }}",
+              "rightValue": "",
+              "operator": {
+                "type": "dateTime",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "e0264025-6c52-4b00-8102-ebe82c78e51a",
+              "leftValue": "={{ $json.body.data.properties[\"Date de fin\"].date.start }}",
+              "rightValue": "",
+              "operator": {
+                "type": "dateTime",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -3440,
+        800
+      ],
+      "id": "51c3139f-03c9-4289-858b-f5078b1d5d4b",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c0f7ee6d-3b54-46ab-a7b4-a52345bb996c",
+              "name": "name",
+              "value": "={{ $json.body.data.properties.Instance.title[0].text.content }}",
+              "type": "string"
+            },
+            {
+              "id": "1f655105-531f-4414-a7c8-eb5a7843f47a",
+              "name": "property_tat",
+              "value": "={{ $json.body.data.properties[\"État\"].status.name }}",
+              "type": "string"
+            },
+            {
+              "id": "9571ec3b-8255-429b-88f7-243317dd212d",
+              "name": "id",
+              "value": "={{ $json.body.data.properties[\"🎓 MODULES - Formations\"].relation[0].id }}",
+              "type": "string"
+            },
+            {
+              "id": "6ba7a5b9-2a66-4cbd-8182-d38a732e57e9",
+              "name": "idInstances",
+              "value": "={{ $json.body.data.id }}",
+              "type": "string"
+            },
+            {
+              "id": "1c176d13-a4e8-4e7c-ab7a-3045f3c04173",
+              "name": "Nb_users",
+              "value": "={{ $json.body.data.properties[\"n8n__Créées\"].number || 0 }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3184,
+        768
+      ],
+      "id": "d6e30903-8c7e-4e07-8bcd-01a1ca99f0f4",
+      "name": "03 set instances1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -2960,
+        1024
+      ],
+      "id": "aaa08f0d-3f18-403e-954a-9b9e4fdd31c1",
+      "name": "No Operation"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.body.data.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Statut|status",
+              "statusValue": "={{ $json.body.data.properties.Statut.status.name }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -3184,
+        1024
+      ],
+      "id": "2d5fa88b-eaa0-4e70-99f6-330d0fba1f57",
+      "name": "24 Get results instances",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "07477794-56cd-44cd-9285-2bbc7e426c98",
+              "leftValue": "={{ $json.property_n8n_cr_es }}",
+              "rightValue": "={{ $json.property_nb_de_participant }}",
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            },
+            {
+              "id": "ff4b945f-c498-460d-9ddb-d9d73f9dea72",
+              "leftValue": "={{ $json.property_n8n_ignor_es }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1584,
+        96
+      ],
+      "id": "0897bef2-5acd-4acd-b57d-a246a19ca0c3",
+      "name": "23b If missing",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "n8n__Dernière exécution|date",
+              "date": "={{ $now }}",
+              "timezone": "America/Montreal"
+            },
+            {
+              "key": "Statut|status",
+              "statusValue": "Bloqué"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -1344,
+        80
+      ],
+      "id": "0842a5e3-2d00-48a6-9898-8cd8f65a1ce5",
+      "name": "23b Update instances",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -3888,
+        432
+      ],
+      "id": "5e5144e9-2b48-4417-a56a-1fc2d6f41acf",
+      "name": "Wait",
+      "webhookId": "{{WEBHOOK_ID_WF12}}"
+    },
+    {
+      "parameters": {
+        "jsCode": "const pageId = $input.first().json.body.data.id;\n\n// Le node Notion Get Page suivant récupérera la page à jour\nreturn [{\n  json: {\n    pageId: pageId\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3664,
+        432
+      ],
+      "id": "afc34e13-6221-4d8b-85d4-880f70ad5eb7",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "multipleMethods": true,
+        "httpMethod": [
+          "POST"
+        ],
+        "path": "{{WEBHOOK_PATH_WF12}}",
+        "options": {
+          "responseData": "succsess"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3632,
+        800
+      ],
+      "id": "8cadbae8-1a27-44cb-b729-ab39d65bfda2",
+      "name": "Webhook Button",
+      "webhookId": "{{WEBHOOK_ID_WF12_2}}",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "multipleMethods": true,
+        "httpMethod": [
+          "POST"
+        ],
+        "path": "{{WEBHOOK_PATH_WF12}}",
+        "options": {
+          "responseData": "succsess"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -4112,
+        432
+      ],
+      "id": "9ccd5966-2206-448d-9a89-d27e861fe2ca",
+      "name": "New instance",
+      "webhookId": "{{WEBHOOK_ID_WF12_2}}",
+      "executeOnce": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "05 IF Has Catalogue": {
+      "main": [
+        [
+          {
+            "node": "06 Get Module page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Split Instances",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "07 Extract Type IDs": {
+      "main": [
+        [
+          {
+            "node": "08 IF Has Type Poste",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08 IF Has Type Poste": {
+      "main": [
+        [
+          {
+            "node": "09 - Set Inscription",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Split Instances",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 Expand Employees": {
+      "main": [
+        [
+          {
+            "node": "12 Get Inscription",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "14 Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "02 Get instances": {
+      "main": [
+        [
+          {
+            "node": "03 set instances",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03 set instances": {
+      "main": [
+        [
+          {
+            "node": "Split Instances",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "09 - Set Inscription": {
+      "main": [
+        [
+          {
+            "node": "10 Master employe",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "14 Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 Master employe": {
+      "main": [
+        [
+          {
+            "node": "11 Expand Employees",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "error 1 increment user",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12 Get Inscription": {
+      "main": [
+        [
+          {
+            "node": "13 - Check return employe",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "error 1 increment user",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13 - Check return employe": {
+      "main": [
+        [
+          {
+            "node": "14 Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "14 Merge": {
+      "main": [
+        [
+          {
+            "node": "15 IF Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15 IF Exists": {
+      "main": [
+        [
+          {
+            "node": "16 create user inscription",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "17 Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "error 1 increment user",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "16 create user inscription": {
+      "main": [
+        [
+          {
+            "node": "17 Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "error 1 increment user",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06 Get Module page": {
+      "main": [
+        [
+          {
+            "node": "07 Extract Type IDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Instances": {
+      "main": [
+        [
+          {
+            "node": "21 Get results instances",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "04 set instances after split",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04 set instances after split": {
+      "main": [
+        [
+          {
+            "node": "05 IF Has Catalogue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "17 Merge": {
+      "main": [
+        [
+          {
+            "node": "18 HTTP Inscriptions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "18 HTTP Inscriptions": {
+      "main": [
+        [
+          {
+            "node": "19 increment users",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "error 1 increment user",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "19 increment users": {
+      "main": [
+        [
+          {
+            "node": "20 Update instances",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "20 Update instances": {
+      "main": [
+        [
+          {
+            "node": "Split Instances",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "error 1 increment user",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "error 1 increment user": {
+      "main": [
+        [
+          {
+            "node": "error 2 Update instances",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "error 2 Update instances": {
+      "main": [
+        [
+          {
+            "node": "Split Instances",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "21 Get results instances": {
+      "main": [
+        [
+          {
+            "node": "22 If missing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "22 If missing": {
+      "main": [
+        [
+          {
+            "node": "23a Update instances",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "23b If missing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "03 set instances1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "24 Get results instances",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03 set instances1": {
+      "main": [
+        [
+          {
+            "node": "Split Instances",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "24 Get results instances": {
+      "main": [
+        [
+          {
+            "node": "No Operation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "23b If missing": {
+      "main": [
+        [
+          {
+            "node": "23b Update instances",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Webhook Button": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New instance": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "02 Get instances",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "fixed",
+    "timezone": "America/Toronto",
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "timeSavedPerExecution": 1
+  },
+  "versionId": "418aa54a-f987-4de5-b490-bb44805f7dbd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "af83b3ea93bc43d0c5ac63a56a75bfd2e58c747f1d5aca065acb21b4a4d3daa3"
+  },
+  "id": "2qVwZpEqVSv6XzvP",
+  "tags": [
+    {
+      "updatedAt": "2025-12-17T20:50:19.533Z",
+      "createdAt": "2025-12-17T20:50:19.533Z",
+      "id": "aY2gxFiyHoiBgJkC",
+      "name": "Formation - Inscriptions"
+    }
+  ]
+}

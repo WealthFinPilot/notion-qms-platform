@@ -1,0 +1,925 @@
+{
+  "name": "WorkFlow 02",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "months",
+              "triggerAtHour": 4
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        464,
+        -48
+      ],
+      "id": "6d478e7e-0d9b-46c2-8698-6e1150c147c7",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_log.workflow",
+              "value": "={{$workflow.name}}"
+            },
+            {
+              "name": "_log.executionId",
+              "value": "={{$execution.id}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "23249eb1-67de-4c5e-b3af-5bbaf04fcb7f",
+      "name": "Log Meta (expressions)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        672,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const startedAt = new Date().toISOString();\n  i.json._log = {\n    runId: startedAt,\n    workflow: i.json._log?.workflow || null,\n    executionId: i.json._log?.executionId || null,\n    startedAt,\n    ok: 0,\n    ko: 0,\n    actions: [],\n    failedNodes: {}\n  };\n  return i;\n});"
+      },
+      "id": "439894a7-58fa-43a4-9274-054debc7276d",
+      "name": "Start Log",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        896,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0ff44095-4d62-4f1f-bfb9-2e388a445177",
+              "name": "ResponsableID",
+              "value": "={{ $('Get Certificat1').item.json.properties[\"Responsable Certificat\"].relation[0].id }}",
+              "type": "string"
+            },
+            {
+              "id": "0e44ba96-4d9d-4136-a501-9f05d295a723",
+              "name": "Ressource",
+              "value": "={{ $json.properties.Ressources.url }}",
+              "type": "string"
+            },
+            {
+              "id": "18982cbc-326a-43eb-a3c6-4de2a0fd1fe8",
+              "name": "FournisseurID",
+              "value": "={{ $('Get Certificat1').item.json.properties[\"Master Fournisseurs\"].relation[0].id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1424,
+        -48
+      ],
+      "id": "64fab1c9-71f6-4fa9-bf55-01ea8a928a8d",
+      "name": "Edit Certificat",
+      "notesInFlow": false,
+      "alwaysOutputData": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5b9d675b-f310-4d38-8702-a54be31c4fc3",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f58754f5-864b-4399-9c99-9fb132aaad1b",
+              "name": "name",
+              "value": "={{ $('Get Certificat2').item.json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "649b3fc3-21c3-49c1-90fe-f7ffe19dac8b",
+              "name": "property_ressources",
+              "value": "={{ $('Get Certificat2').item.json.property_ressources }}",
+              "type": "string"
+            },
+            {
+              "id": "a772f876-d663-4c8f-aaae-75887fda765a",
+              "name": "property_contr_le_certificat",
+              "value": "={{ $('Get Certificat2').item.json.property_contr_le_certificat }}",
+              "type": "string"
+            },
+            {
+              "id": "fc146c4a-d723-4d12-902d-8f4e8cceb478",
+              "name": "property_date_due",
+              "value": "={{ $('Get Certificat2').item.json.property_date_due }}",
+              "type": "object"
+            },
+            {
+              "id": "366690af-0831-48a6-9443-0509cb47d774",
+              "name": "Request",
+              "value": "={{ $('Get Certificat2').item.json.property_certificat_request }}",
+              "type": "boolean"
+            },
+            {
+              "id": "7dfff0c8-c3b5-4a22-a398-687579fe4fc0",
+              "name": "ResponsableID",
+              "value": "={{ $('Edit Certificat').item.json.ResponsableID }}",
+              "type": "string"
+            },
+            {
+              "id": "815a5b7f-50f5-44fb-9c3e-184ffeecc47d",
+              "name": "Ressource",
+              "value": "={{ $('Edit Certificat').item.json.Ressource }}",
+              "type": "string"
+            },
+            {
+              "id": "3829dd80-6740-4b7d-ad80-a5c35e49ea96",
+              "name": "FournisseurID",
+              "value": "={{ $json.property_master_fournisseurs[0] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2192,
+        -64
+      ],
+      "id": "6687322a-cd08-43de-90d2-62ada32e411b",
+      "name": "Edit Certificat1",
+      "notesInFlow": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_CERTIFICATS_FOURNISSEURS}}",
+          "mode": "list",
+          "cachedResultName": "Certificats Fournisseurs",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_CERTIFICATS_FOURNISSEURS}}"
+        },
+        "returnAll": true,
+        "simple": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        -48
+      ],
+      "id": "e3f7874c-ee17-4200-a32b-cd320b485d70",
+      "name": "Get Certificat1",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Master Fournisseur : 40%5Bsd"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_CERTIFICATS_FOURNISSEURS}}",
+          "mode": "list",
+          "cachedResultName": "Certificats Fournisseurs",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_CERTIFICATS_FOURNISSEURS}}"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1696,
+        -48
+      ],
+      "id": "c26fb28c-f280-45ef-bada-4f3c33eb2f11",
+      "name": "Get Certificat2",
+      "executeOnce": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "914db486-7189-4138-a940-bb7bb6b17c91",
+              "leftValue": "={{ $json.property_contr_le_certificat }}",
+              "rightValue": "=📝 à valider",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "7f2d53da-733f-4ffc-b7cf-b7a4745ea403",
+              "leftValue": "={{ $json.Request }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "aa646d5e-6523-4088-b3df-3fad80bca75c",
+              "leftValue": "={{ $json.property_date_due }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2400,
+        -64
+      ],
+      "id": "9cd321b6-67b0-4019-9909-452b88080124",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "batchSize": 5,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2384,
+        176
+      ],
+      "id": "be335902-72e0-4ae1-8cfb-58894f29120e",
+      "name": "Loop Over Items",
+      "retryOnFail": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{$prevNode.name}}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b7210ec5-3bda-4dd2-b990-732c2150ebce",
+      "name": "Log Snapshot3",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        2112,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "7a8ead8b-468d-40ff-8ceb-e5d302ed0731",
+      "name": "Update Log3",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1952,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "e117c747-201f-4f4c-b500-31d92e6f03e8",
+      "name": "Update Log",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        2880,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "447a5eef-60ff-471c-8f62-6b3f2154dadf",
+      "name": "Update Log4",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        2160,
+        432
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3344,
+        576
+      ],
+      "id": "b5dad519-0eb8-4d3c-80e5-907c19752464",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        4032,
+        -32
+      ],
+      "id": "1ae639c4-c12d-48e8-9676-e60c29354e7d",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Nph7coAgeAm16pwp",
+          "mode": "list",
+          "cachedResultName": "Logger - Send to Notion"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        4624,
+        -16
+      ],
+      "id": "bbe2ffd4-85ee-4412-9897-35214c5a3e57",
+      "name": "Execute Logger - Send to Notion"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5b9d675b-f310-4d38-8702-a54be31c4fc3",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f58754f5-864b-4399-9c99-9fb132aaad1b",
+              "name": "name",
+              "value": "={{ $('Get Certificat2').item.json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "649b3fc3-21c3-49c1-90fe-f7ffe19dac8b",
+              "name": "property_ressources",
+              "value": "={{ $('Get Certificat2').item.json.property_ressources }}",
+              "type": "string"
+            },
+            {
+              "id": "a772f876-d663-4c8f-aaae-75887fda765a",
+              "name": "property_contr_le_certificat",
+              "value": "={{ $('Get Certificat2').item.json.property_contr_le_certificat }}",
+              "type": "string"
+            },
+            {
+              "id": "fc146c4a-d723-4d12-902d-8f4e8cceb478",
+              "name": "property_date_due",
+              "value": "={{ $('Get Certificat2').item.json.property_date_due }}",
+              "type": "object"
+            },
+            {
+              "id": "366690af-0831-48a6-9443-0509cb47d774",
+              "name": "Request",
+              "value": "={{ $('Get Certificat2').item.json.property_certificat_request }}",
+              "type": "boolean"
+            },
+            {
+              "id": "7dfff0c8-c3b5-4a22-a398-687579fe4fc0",
+              "name": "ResponsableID",
+              "value": "={{ $('Edit Certificat').item.json.ResponsableID }}",
+              "type": "string"
+            },
+            {
+              "id": "815a5b7f-50f5-44fb-9c3e-184ffeecc47d",
+              "name": "Ressource",
+              "value": "={{ $('Edit Certificat').item.json.Ressource }}",
+              "type": "string"
+            },
+            {
+              "id": "3829dd80-6740-4b7d-ad80-a5c35e49ea96",
+              "name": "FournisseurID",
+              "value": "={{ $('Edit Certificat1').item.json.FournisseurID }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3088,
+        240
+      ],
+      "id": "35ba7308-c158-42eb-a1c4-8608fe5bbdc9",
+      "name": "Edit Certificat2",
+      "notesInFlow": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "b2b36bd3-d2e6-4a03-b826-330c7efeae63",
+      "name": "Update Log5",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        3504,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{ ($workflow.name || 'Unknown Workflow') + \" - \" + ($json._log?.actions?.find(action => !action.ok)?.node || Object.keys($json._log?.failedNodes || {})[0] || 'UnknownNode') }}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e673f47e-1414-4dc0-acb3-cc753ecb2f5a",
+      "name": "Log Snapshot",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "2e81f42b-d1cc-4c1d-8a65-862a8fbd4f6e",
+      "name": "Update Log2",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const i = items[0];\nconst log = i.json._log || {};\nlog.finishedAt = new Date().toISOString();\n\nconst start = new Date(log.startedAt || log.runId || Date.now()).getTime();\nconst end = new Date(log.finishedAt).getTime();\nlog.durationSec = Math.round((end - start) / 1000);\n\n// 🎯 CORRECTION : Extraire les noms de nœuds uniques des échecs\nconst failedNodeNames = [];\nconst uniqueErrorMessages = [];\n\n// Parcourir les actions pour identifier les échecs\nif (log.actions && Array.isArray(log.actions)) {\n  log.actions.forEach(action => {\n    if (!action.ok) {\n      // Ajouter le nom du nœud s'il n'est pas déjà présent\n      if (!failedNodeNames.includes(action.node)) {\n        failedNodeNames.push(action.node);\n      }\n      \n      // Ajouter le message d'erreur s'il n'est pas déjà présent\n      if (action.msg && !uniqueErrorMessages.includes(action.msg)) {\n        uniqueErrorMessages.push(action.msg);\n      }\n    }\n  });\n}\n\n// 🎯 RÉSULTATS CORRIGÉS\nlog.failedNodesList = failedNodeNames; // Noms uniques des nœuds en échec\nlog.uniqueErrorMessages = uniqueErrorMessages; // Messages d'erreur uniques\nlog.errorSummary = uniqueErrorMessages.join(' | '); // Compilation des erreurs\n\n// Stats améliorées\nlog.stats = {\n  totalProcessed: log.ok + log.ko,\n  successCount: log.ok,\n  failureCount: log.ko,\n  successRate: `${Math.round((log.ok / (log.ok + log.ko)) * 100)}%`,\n  uniqueFailedNodes: failedNodeNames.length,\n  distinctErrors: uniqueErrorMessages.length\n};\n\ni.json._log = log;\nreturn [i];"
+      },
+      "id": "897af704-43ec-4b30-b894-c0baa85fb5c2",
+      "name": "Finish Log",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        4432,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Consolidation COMPLÈTE des logs\nconst logData = {\n  workflow: $('Log Meta (expressions)').first().json._log?.workflow || \"WorkFlow 01\",\n  executionId: $execution.id,\n  startedAt: $('Start Log').first().json._log?.startedAt,\n  finishedAt: new Date().toISOString(),\n  runId: $('Start Log').first().json._log?.runId,\n  \n  // Consolidation des compteurs\n  ok: $input.all().reduce((sum, item) => sum + (item.json._log?.ok || 0), 0),\n  ko: $input.all().reduce((sum, item) => sum + (item.json._log?.ko || 0), 0),\n  failedNodes: $input.all().flatMap(item => item.json._log?.failedNodes || []),\n  \n  // Logique Actions\n  actions: (() => {\n    const koCount = $input.all().reduce((sum, item) => sum + (item.json._log?.ko || 0), 0);\n    if (koCount === 0) {\n      return [{ msg: \"Pass\" }];\n    } else {\n      const allActions = $input.all().flatMap(item => item.json._log?.actions || []);\n      return allActions.filter(action => action.msg !== \"Pass\");\n    }\n  })()\n};\n\nreturn [{ json: { _log: logData } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4224,
+        -16
+      ],
+      "id": "3e75e53a-33d6-435d-b370-f771be11e5d4",
+      "name": "One Item"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "JRduRVzWHtHDooRk",
+          "mode": "list",
+          "cachedResultName": "WorkFlow 02.01"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        3296,
+        240
+      ],
+      "id": "ce99e657-63d9-47fa-9b2f-0f696b8a66a1",
+      "name": "Workflow 02.01",
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Log Meta (expressions)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Meta (expressions)": {
+      "main": [
+        [
+          {
+            "node": "Start Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Log": {
+      "main": [
+        [
+          {
+            "node": "Get Certificat1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Certificat": {
+      "main": [
+        [
+          {
+            "node": "Get Certificat2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Certificat1": {
+      "main": [
+        [
+          {
+            "node": "Edit Certificat",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Certificat2": {
+      "main": [
+        [
+          {
+            "node": "Update Log3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Certificat1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Log Snapshot3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Update Log",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Snapshot3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log3": {
+      "main": [
+        [
+          {
+            "node": "Edit Certificat1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log": {
+      "main": [
+        [
+          {
+            "node": "Edit Certificat2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log4": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "One Item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Certificat2": {
+      "main": [
+        [
+          {
+            "node": "Workflow 02.01",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log5": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Update Log2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "One Item": {
+      "main": [
+        [
+          {
+            "node": "Finish Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finish Log": {
+      "main": [
+        [
+          {
+            "node": "Execute Logger - Send to Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow 02.01": {
+      "main": [
+        [
+          {
+            "node": "Update Log5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "167661db-0efe-4e74-8f90-e8c2b2b4f83d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "af83b3ea93bc43d0c5ac63a56a75bfd2e58c747f1d5aca065acb21b4a4d3daa3"
+  },
+  "id": "KzsADm4gzoQWzTkn",
+  "tags": [
+    {
+      "createdAt": "2025-08-14T02:16:11.616Z",
+      "updatedAt": "2025-08-14T02:16:11.616Z",
+      "id": "1OOcQbUVIxPSDlKG",
+      "name": "Certificat Fournisseur"
+    },
+    {
+      "createdAt": "2025-09-05T21:34:33.550Z",
+      "updatedAt": "2025-09-05T21:34:33.550Z",
+      "id": "LZmLOxWE5K3Pq3XN",
+      "name": "Scan Certificat"
+    }
+  ]
+}

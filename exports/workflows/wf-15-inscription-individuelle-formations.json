@@ -1,0 +1,693 @@
+{
+  "name": "WorkFlow 15",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_INSCRIPTIONS_AUX_FORMATIONS}}",
+          "mode": "list",
+          "cachedResultName": "Inscriptions aux formations",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_INSCRIPTIONS_AUX_FORMATIONS}}"
+        },
+        "title": "={{ $json.NewName }}",
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Date de début|date",
+              "includeTime": false,
+              "date": "={{ $json.date_de_debut }}"
+            },
+            {
+              "key": "Durée (h)|number",
+              "numberValue": "={{ $json.nb_heure }}"
+            },
+            {
+              "key": "Format|select",
+              "selectValue": "={{ $json.format }}"
+            },
+            {
+              "key": "Niveau|select",
+              "selectValue": "={{ $json.niveau }}"
+            },
+            {
+              "key": "Formateur|select",
+              "selectValue": "={{ $json.formateur }}"
+            },
+            {
+              "key": "Obligatoire|checkbox",
+              "checkboxValue": "={{ $json.obligatoire }}"
+            },
+            {
+              "key": "Date de fin|date",
+              "date": "={{ $json.date_de_fin }}"
+            },
+            {
+              "key": "Plateforme|select",
+              "selectValue": "={{ $json.plateforme }}"
+            },
+            {
+              "key": "Ordre de passage|number",
+              "numberValue": "={{ $json.ordre_de_passage }}"
+            },
+            {
+              "key": "URL|url",
+              "ignoreIfEmpty": true,
+              "urlValue": "={{ $json.url }}"
+            },
+            {
+              "key": "Répondant|people",
+              "peopleValue": "={{ $json.email }}"
+            },
+            {
+              "key": "Description|rich_text",
+              "textContent": "={{ $json.description }}"
+            },
+            {
+              "key": "Responsable|people",
+              "peopleValue": "={{ $json.Responsable }}"
+            },
+            {
+              "key": "Formation indv|checkbox",
+              "checkboxValue": true
+            }
+          ]
+        },
+        "options": {
+          "iconType": "emoji",
+          "icon": "🎓"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        160,
+        400
+      ],
+      "id": "09d58cb6-cc5c-4667-9eee-5d7f2e9a7c91",
+      "name": "16 create user inscription",
+      "retryOnFail": true,
+      "notesInFlow": false,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "clashHandling": {
+            "values": {
+              "resolveClash": "preferInput1",
+              "mergeMode": "shallowMerge"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        448,
+        256
+      ],
+      "id": "5494c810-d96b-44dc-8fb3-94886773c532",
+      "name": "17 Merge"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.notion.com/v1/pages/{{ $json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ \n  JSON.stringify((() => {\n    const Lieu = $json.lieu;\n    \n    const documents = Array.from(\n      new Set($json.documents || [])\n    ).map(id => ({ id }));\n    \n    return {\n      properties: {\n        'EFUy': { relation: documents },\n        ...(Lieu && {\n          '|Jpy': { \n            place: {\n              lat: $json.lieu.place.lat,\n              lon: $json.lieu.place.lon,\n              name: $json.lieu.place.name,\n              address: $json.lieu.place.address,\n              aws_place_id: $json.lieu.place.aws_place_id,\n            }\n          }\n        }),\n        '\\\\lzX': { relation: [{ id: $json.nos_formations }] },\n      }\n    };\n  })())\n}}",
+        "options": {
+          "batching": {
+            "batch": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        672,
+        400
+      ],
+      "id": "ed6f7bcf-c791-4f4b-b6bc-39b2321cfa55",
+      "name": "18 HTTP Inscriptions",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "notes": "ID documents : EFUy\nID Formation : %5ClzX\nID Lieu : %7CJpy"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "{{WEBHOOK_PATH_WF15}}",
+        "options": {
+          "responseData": "success"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1808,
+        432
+      ],
+      "id": "1dfad0e8-cc7a-444b-af9d-a98da084eda1",
+      "name": "Webhook",
+      "webhookId": "{{WEBHOOK_ID_WF15}}"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "40ecedbd-66db-449e-8152-5d774c88088d",
+              "name": "id",
+              "value": "={{ $json.body.data.id }}",
+              "type": "string"
+            },
+            {
+              "id": "9d5af1d4-528f-4041-9b0a-8747de9105ac",
+              "name": "Identifiant",
+              "value": "={{ $json.body.data.properties.Identifiant.unique_id.prefix }}-{{ $json.body.data.properties.Identifiant.unique_id.number }}",
+              "type": "string"
+            },
+            {
+              "id": "69b63117-94d3-41e1-a39f-82342c46f1e2",
+              "name": "Type de poste",
+              "value": "={{ $json.body.data.properties[\"Type de poste\"].relation }}",
+              "type": "array"
+            },
+            {
+              "id": "8579d64d-5f67-4294-9969-1d7530fac9cf",
+              "name": "people",
+              "value": "={{ $json.body.data.properties.Utilisateur.people[0].id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1568,
+        432
+      ],
+      "id": "79f6f3ae-003a-4bc0-b971-a7e1162207be",
+      "name": "01 set Employé",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond1",
+              "leftValue": "={{ $json.people }}",
+              "rightValue": "Pas commencé",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "1a7ce288-bb7e-4ba8-9106-7053d70cb6cf",
+              "leftValue": "={{ $json[\"Type de poste\"] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "d312c0a9-9824-418c-aa3a-cd29026a57e0",
+              "leftValue": "={{ $json.Identifiant }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "09ed3283-52f1-4f28-b487-80829f3e3a6d",
+      "name": "02 IF Has Catalogue",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1328,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_MODULES_FORMATIONS}}",
+          "mode": "list",
+          "cachedResultName": "MODULES - Formations",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_MODULES_FORMATIONS}}"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Actif|checkbox",
+              "condition": "equals",
+              "checkboxValue": true
+            },
+            {
+              "key": "Obligatoire|checkbox",
+              "condition": "equals",
+              "checkboxValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -1072,
+        240
+      ],
+      "id": "fd79d8a2-4fd5-4bcf-b067-5323b2acdf2c",
+      "name": "03 Get Module",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {
+          "fuzzyCompare": false
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -832,
+        400
+      ],
+      "id": "67c8a257-9d8f-4b16-9a40-3d9bfa1f780d",
+      "name": "Merge 1",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Rollup pris sur le 1er item (si c'est bien la \"page module\" commune)\nconst rollupArray = $input.first().json.properties?.[\"ID utilisateur\"]?.rollup?.array || [];\n\n// Extraire les IDs people du rollup\nconst peopleIdsInRollup = rollupArray.flatMap(r => {\n  if (r.type === 'people' && Array.isArray(r.people)) {\n    return r.people.map(p => p.id);\n  }\n  return [];\n});\n\n// Filtrer les items dont people est dans le rollup\nconst filteredItems = items.filter(item => {\n  const peopleId = item.json.people; // <-- adapte si c'est item.json.people.id\n  return peopleIdsInRollup.includes(peopleId);\n});\n\n// Pour chaque item filtré, fabriquer un NewName unique\nreturn filteredItems.map(item => {\n  const formName =\n    item.json.properties?.Nom?.title?.[0]?.plain_text\n    ?? $input.first().json.properties?.Nom?.title?.[0]?.plain_text\n    ?? \"Sans nom\";\n\n  // identifiant unique par item : priorité à un champ \"Identifiant\" de l'item,\n  // sinon fallback sur l'id people\n  const numId = item.json.Identifiant ?? item.json.people ?? \"NA\";\n\n  const newName = `${formName} - Formation indv - ${numId}`;\n\n  return {\n    json: {\n      ...item.json,\n      NewName: newName,\n    },\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -576,
+        400
+      ],
+      "id": "d2ceda76-d672-47ed-9be8-02f39ad7f634",
+      "name": "04 Only Match User",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond3",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a0fcef3c-0f5d-43b5-87de-0e13d396f7cb",
+      "name": "05 IF Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -336,
+        400
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0697196f-e399-4332-9d86-b7397af13da2",
+              "name": "email",
+              "value": "={{ $json.people }}",
+              "type": "string"
+            },
+            {
+              "id": "b275e0fe-1a68-43f4-9397-63f7e12b92e7",
+              "name": "emailIndex",
+              "value": "=1",
+              "type": "number"
+            },
+            {
+              "id": "819b00ff-e001-4ffc-b2ed-fdb55fe5236f",
+              "name": "totalEmails",
+              "value": "=1",
+              "type": "number"
+            },
+            {
+              "id": "6d9b7aec-3db7-49e7-a11d-00ed3e6affd2",
+              "name": "documents",
+              "value": "={{ $json.properties[\"Master Documentations Entreprise\"]?.relation ?? [] }}",
+              "type": "array"
+            },
+            {
+              "id": "a5051367-8eca-4724-9e9a-4f2198b5c64a",
+              "name": "ordre_de_passage",
+              "value": "={{ $json.properties[\"Ordre de passage\"].number }}",
+              "type": "number"
+            },
+            {
+              "id": "afa93592-2ba2-47dd-90c9-c7c532a2c046",
+              "name": "nb_heure",
+              "value": "={{ $json.properties[\"Durée (h)\"].number }}",
+              "type": "number"
+            },
+            {
+              "id": "e10e6359-ea58-4854-addd-60ccf1182772",
+              "name": "date_de_debut",
+              "value": "={{ $now.toISODate() }}",
+              "type": "string"
+            },
+            {
+              "id": "3e7817bd-f2a4-4ff3-8d63-2383e98bf8d0",
+              "name": "date_de_fin",
+              "value": "={{$now.plus({ days: $json.properties['Jours après embauche'].number }).toISODate() }}",
+              "type": "string"
+            },
+            {
+              "id": "4ee19707-9613-42a2-aa69-88bc3f0d9777",
+              "name": "niveau",
+              "value": "={{ $json.properties.Niveau.select.name }}",
+              "type": "string"
+            },
+            {
+              "id": "b86d3a64-0e3a-45b1-9c15-aa7690c2db90",
+              "name": "format",
+              "value": "={{ $json.properties.Format.select.name }}",
+              "type": "string"
+            },
+            {
+              "id": "a2353582-d6fb-4cbd-9f62-01f3f46cf89b",
+              "name": "formateur",
+              "value": "={{ $json.properties.Formateur.select.name }}",
+              "type": "string"
+            },
+            {
+              "id": "c362ffb6-d33b-4a43-a5d6-6da4a42a53f7",
+              "name": "obligatoire",
+              "value": "=true",
+              "type": "boolean"
+            },
+            {
+              "id": "f0f04581-2a8c-4bfd-be4a-74a3f7453898",
+              "name": "plateforme",
+              "value": "={{ $json.properties.Plateforme.select.name }}",
+              "type": "string"
+            },
+            {
+              "id": "4f4af8af-cb7f-474c-95cc-27543d5a0905",
+              "name": "nos_formations",
+              "value": "={{ $json.properties[\"Nos Formations\"].relation[0].id }}",
+              "type": "string"
+            },
+            {
+              "id": "b0b9f0cb-21ae-4f43-a357-5e9d117112b4",
+              "name": "description",
+              "value": "={{ $json.properties.Description.rich_text[0].text.content }}",
+              "type": "string"
+            },
+            {
+              "id": "5ef8fd21-0e6f-4b6d-ab4f-8fa42eaa6416",
+              "name": "url",
+              "value": "={{ $json.properties.URL.url }}",
+              "type": "string"
+            },
+            {
+              "id": "d6afd750-ec8a-4fae-8773-6fccb4f311ed",
+              "name": "lieu",
+              "value": "={{ $json.properties.Lieu }}",
+              "type": "object"
+            },
+            {
+              "id": "6235d158-7954-4e24-b4f9-95737a26a40f",
+              "name": "Nb_users",
+              "value": "=0",
+              "type": "number"
+            },
+            {
+              "id": "11dbc954-a606-4341-a43a-9108bbff40a8",
+              "name": "Responsable",
+              "value": "={{ $json.properties.Responsable.people[0].id }}",
+              "type": "string"
+            },
+            {
+              "id": "10a351f0-b860-4ae4-8420-9e8dd23d6a1f",
+              "name": "Nos Formations",
+              "value": "={{ $json.properties[\"Nos Formations\"].relation[0].id }}",
+              "type": "string"
+            },
+            {
+              "id": "ff4aa018-bd1a-45ad-8430-5fcdcca0613a",
+              "name": "NewName",
+              "value": "={{ $json.NewName }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -80,
+        384
+      ],
+      "id": "5249b8be-abf7-4883-9afd-f4163f95c132",
+      "name": "06 - Set Inscription",
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "16 create user inscription": {
+      "main": [
+        [
+          {
+            "node": "17 Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        []
+      ]
+    },
+    "17 Merge": {
+      "main": [
+        [
+          {
+            "node": "18 HTTP Inscriptions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "18 HTTP Inscriptions": {
+      "main": [
+        [],
+        []
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "01 set Employé",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "01 set Employé": {
+      "main": [
+        [
+          {
+            "node": "02 IF Has Catalogue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02 IF Has Catalogue": {
+      "main": [
+        [
+          {
+            "node": "03 Get Module",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge 1",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        []
+      ]
+    },
+    "03 Get Module": {
+      "main": [
+        [
+          {
+            "node": "Merge 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge 1": {
+      "main": [
+        [
+          {
+            "node": "04 Only Match User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04 Only Match User": {
+      "main": [
+        [
+          {
+            "node": "05 IF Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05 IF Exists": {
+      "main": [
+        [
+          {
+            "node": "06 - Set Inscription",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "06 - Set Inscription": {
+      "main": [
+        [
+          {
+            "node": "16 create user inscription",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "17 Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "fixed",
+    "timezone": "America/Toronto",
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "timeSavedPerExecution": 1
+  },
+  "versionId": "a1e6ff08-70d0-47ad-8161-1b06fda5e60d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "af83b3ea93bc43d0c5ac63a56a75bfd2e58c747f1d5aca065acb21b4a4d3daa3"
+  },
+  "id": "noZEPTsiqldusuoQ",
+  "tags": [
+    {
+      "updatedAt": "2025-12-17T20:50:19.533Z",
+      "createdAt": "2025-12-17T20:50:19.533Z",
+      "id": "aY2gxFiyHoiBgJkC",
+      "name": "Formation - Inscriptions"
+    },
+    {
+      "updatedAt": "2025-12-19T19:34:49.379Z",
+      "createdAt": "2025-12-19T19:34:49.379Z",
+      "id": "9KIShZxhTvawzOtv",
+      "name": "Nouvel employé"
+    }
+  ]
+}

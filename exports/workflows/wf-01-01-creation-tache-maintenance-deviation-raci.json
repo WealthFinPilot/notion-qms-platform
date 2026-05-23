@@ -1,0 +1,2499 @@
+{
+  "name": "Workflow 01.01",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        464,
+        544
+      ],
+      "id": "b61fb377-4c20-42b3-9c77-d4b3160dffff",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "97f6f57b-fecf-4bc4-b488-05a1a81b5207",
+              "name": "operateursIDs",
+              "value": "={{ $('Obtenir Opérateur').item.json.property_op_rateurs }}",
+              "type": "array"
+            },
+            {
+              "id": "825e0a72-7b28-4044-8fa1-709c017b4748",
+              "name": "=Responsable maintenance",
+              "value": "={{ $('WorkFlow 01').item.json[\"Responsable maintenance\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "14344bae-7b96-427c-899c-eb5352f42901",
+              "name": "id",
+              "value": "={{ $('Tache Maintenance').item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "b5ce5320-7bf6-423c-b873-f9ee86a0df6b",
+              "name": "Département",
+              "value": "={{ $('WorkFlow 01').item.json[\"Département\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1872,
+        -608
+      ],
+      "id": "da88256a-5cbb-484f-b460-86c2af9f9abb",
+      "name": "Obtenir les Operateurs",
+      "notesInFlow": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('WorkFlow 01').item.json[\"IdProcédé\"] }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1616,
+        -592
+      ],
+      "id": "fe75b97d-a074-4ab7-a155-3f47685897b6",
+      "name": "Obtenir Opérateur",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_MASTER_TACHES}}",
+          "mode": "list",
+          "cachedResultName": "Master Tâches",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_MASTER_TACHES}}"
+        },
+        "title": "=",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Nom|title",
+              "title": "=Maintenance - {{ $json.name }}"
+            },
+            {
+              "key": "État|status",
+              "statusValue": "Pas commencé"
+            },
+            {
+              "key": "Priorité|select",
+              "selectValue": "={{ $json.property_statut_maintenance }}"
+            },
+            {
+              "key": "Dead line|date",
+              "includeTime": false,
+              "date": "={{ $json.property_prochaine_maintenance.start }}"
+            },
+            {
+              "key": "*Référence n8n*|rich_text",
+              "textContent": "=Maintenance\nID Database: {{NOTION_DB_ID_MASTER_EQUIPEMENTS}}\nID Page: {{ $json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        -592
+      ],
+      "id": "59655257-0cda-4020-a1ee-00d6a7e466a2",
+      "name": "Tache Maintenance",
+      "retryOnFail": false,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "893b2bc6-4555-466e-b29f-9d8fae7cd2d2",
+              "leftValue": "={{ $json.property_maintenance_request }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        48,
+        -160
+      ],
+      "id": "ed0eefd0-c223-4a7c-8d0b-a042d01a60c1",
+      "name": "If",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "WorkFlow 01",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -1024,
+        -32
+      ],
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.notion.com/v1/pages/{{ $json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ \n  JSON.stringify((() => {\n    // Relation fixe\n    const fixedRelation = [{ id: '{{NOTION_ID_GENERIC_03}}' }];\n  const Departement = $json[\"Département\"];\n\n    // Récupération et suppression des doublons\n    const operateursIDs = Array.from(\n      new Set($json.operateursIDs || [])\n    ).map(id => ({ id }));\n\n    // ID Responsable (one-way)\n    const responsableId = $json[\"Responsable maintenance\"];\n\n    // Payload PATCH\n    return {\n      properties: {\n        FUUU: { relation: fixedRelation },\n        'ehl{': { relation: operateursIDs },\n        pXDv: { relation: [{ id: responsableId }] },\n        ':Rn_' : { relation: [{ id: Departement }] },\n      }\n    };\n  })())\n}}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2064,
+        -592
+      ],
+      "id": "5f0a13b8-c840-4a5c-96dd-51e41abfa0c5",
+      "name": "Maintenance préventive",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "{{NOTION_ID_GENERIC_03}}\nFUUU\nehl%7B\npXDv"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.notion.com/v1/blocks/{{ $json.id }}/children",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{(() => {\n  const equipementName = $('WorkFlow 01').item.json.name; // Nom page DB B\n  const equipementUrl = $('WorkFlow 01').item.json.urlPageEquipement; // URL format Notion avec slug\n\n  return {\n    children: [\n      {\n        object: 'block',\n        type: 'paragraph',\n        paragraph: {\n          rich_text: [\n            { type: 'text', text: { content: '🔗 Équipement lié : ' } },\n            { type: 'text', text: { content: equipementName, link: { url: equipementUrl } } }\n          ]\n        }\n      },\n    ]\n  };\n})()}}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2320,
+        -592
+      ],
+      "id": "5c53d3ca-665b-452c-a3f7-25967bc1a555",
+      "name": "Maintenance Lien",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "{{NOTION_ID_GENERIC_02}}\nFUUU\nehl%7B\npXDv"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "97f6f57b-fecf-4bc4-b488-05a1a81b5207",
+              "name": "operateursIDs",
+              "value": "={{ $('Obtenir Opérateur1').item.json.property_op_rateurs }}",
+              "type": "array"
+            },
+            {
+              "id": "825e0a72-7b28-4044-8fa1-709c017b4748",
+              "name": "=Responsable maintenance",
+              "value": "={{ $('WorkFlow 01').item.json[\"Responsable maintenance\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "14344bae-7b96-427c-899c-eb5352f42901",
+              "name": "id",
+              "value": "={{ $('Tache Deviation').item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "c3d302a3-e61e-4b60-9d11-a65872087263",
+              "name": "Département",
+              "value": "={{ $('WorkFlow 01').item.json[\"Département\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1872,
+        80
+      ],
+      "id": "b9267c5c-d7e5-49c6-866c-51fbb1369f31",
+      "name": "Obtenir les Operateurs1",
+      "notesInFlow": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('WorkFlow 01').item.json[\"IdProcédé\"] }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1632,
+        80
+      ],
+      "id": "7ef0aff0-a683-4bc4-a6f7-fd63f5b32691",
+      "name": "Obtenir Opérateur1",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_MASTER_TACHES}}",
+          "mode": "list",
+          "cachedResultName": "Master Tâches",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_MASTER_TACHES}}"
+        },
+        "title": "=",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Nom|title",
+              "title": "=Contrôle Déviation - {{ $json.name }}"
+            },
+            {
+              "key": "État|status",
+              "statusValue": "Pas commencé"
+            },
+            {
+              "key": "Dead line|date",
+              "includeTime": false,
+              "date": "={{ $json.property_prochain_contr_le_d_viation.start }}"
+            },
+            {
+              "key": "Priorité|select",
+              "selectValue": "={{ $json.property_statut_d_viation }}"
+            },
+            {
+              "key": "*Référence n8n*|rich_text",
+              "textContent": "=Deviation\nID Database: {{NOTION_DB_ID_MASTER_EQUIPEMENTS}} \nID Page: {{ $json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        464,
+        80
+      ],
+      "id": "d85cdf3e-272e-4b1c-bc2c-26e1c6bf5849",
+      "name": "Tache Deviation",
+      "retryOnFail": false,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.notion.com/v1/pages/{{ $json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ \n  JSON.stringify((() => {\n    // Relation fixe\n    const fixedRelation = [{ id: '{{NOTION_ID_GENERIC_04}}' }];\n    const Departement = $json[\"Département\"];\n\n    // Récupération et suppression des doublons\n    const operateursIDs = Array.from(\n      new Set($json.operateursIDs || [])\n    ).map(id => ({ id }));\n\n    // ID Responsable (one-way)\n    const responsableId = $json[\"Responsable maintenance\"];\n\n    // Payload PATCH\n    return {\n      properties: {\n        FUUU: { relation: fixedRelation },\n        'ehl{': { relation: operateursIDs },\n        pXDv: { relation: [{ id: responsableId }] },\n        ':Rn_' : { relation: [{ id: Departement }] },\n      }\n    };\n  })())\n}}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2080,
+        80
+      ],
+      "id": "d970899b-42db-41f3-9608-896be4c341dc",
+      "name": "Contrôle déviation",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "{{NOTION_ID_GENERIC_04}}\nFUUU\nehl%7B\npXDv"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.notion.com/v1/blocks/{{ $json.id }}/children",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{(() => {\n  const equipementName = $('WorkFlow 01').item.json.name; // Nom page DB B\n  const equipementUrl = $('WorkFlow 01').item.json.urlPageEquipement; // URL format Notion avec slug\n\n  return {\n    children: [\n      {\n        object: 'block',\n        type: 'paragraph',\n        paragraph: {\n          rich_text: [\n            { type: 'text', text: { content: '🔗 Équipement lié : ' } },\n            { type: 'text', text: { content: equipementName, link: { url: equipementUrl } } }\n          ]\n        }\n      },\n    ]\n  };\n})()}}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2336,
+        80
+      ],
+      "id": "cb176027-2605-4c84-ad47-644e9e71d8c6",
+      "name": "Deviation Lien",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "{{NOTION_ID_GENERIC_02}}\nFUUU\nehl%7B\npXDv"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        480,
+        -144
+      ],
+      "id": "73106777-da04-4d81-9629-952c6f839f40",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "893b2bc6-4555-466e-b29f-9d8fae7cd2d2",
+              "leftValue": "={{ $json.property_tat_contr_le_d_viation }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "d3178469-2a85-401b-9a62-8319392651e6",
+              "leftValue": "={{ $json.property_d_viation_request }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        48,
+        96
+      ],
+      "id": "d5186d34-1122-4a6f-b768-08a7d2159095",
+      "name": "Chemin Deviation",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n\n  // LIGNE 5 CORRIGÉE\n  const nodeName = $prevNode.name || 'UnknownNode';\n\n  const failed = !!i.json._hadError || !!i.json.error;\n\n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n\n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n\n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n\n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "7ccea7a8-bf68-4d5a-b5fc-a482c1a9ac4d",
+      "name": "Update Log",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        480,
+        -336
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n\n  // LIGNE 5 CORRIGÉE\n  const nodeName = $prevNode.name || 'UnknownNode';\n\n  const failed = !!i.json._hadError || !!i.json.error;\n\n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n\n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n\n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n\n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "0e1bbc95-7923-4d9c-a10d-56c06b848fae",
+      "name": "Update Log2",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        464,
+        352
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        4704,
+        -352
+      ],
+      "id": "e0ec737e-90ef-45df-9e7c-eb1e564899b6",
+      "name": "Merge"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        4720,
+        320
+      ],
+      "id": "349823fe-3c5a-4ec8-8c25-15ef45cf3617",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        5472,
+        -256
+      ],
+      "id": "65f3d088-457d-4375-8005-3f7cabded1f0",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n\n  // LIGNE 5 CORRIGÉE\n  const nodeName = $prevNode.name || 'UnknownNode';\n\n  const failed = !!i.json._hadError || !!i.json.error;\n\n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n\n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n\n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n\n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "39e387c9-e8a0-47ca-beb6-05ab0b3ad712",
+      "name": "Update Log8",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        4688,
+        -576
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n\n  // LIGNE 5 CORRIGÉE\n  const nodeName = $prevNode.name || 'UnknownNode';\n\n  const failed = !!i.json._hadError || !!i.json.error;\n\n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n\n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n\n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n\n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "032e8e9c-18c7-4606-bcee-3487e7838788",
+      "name": "Update Log13",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        4720,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.property_tat_maintenance }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "97ad5c33-0e71-4984-877c-146179ed1373"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Maintenance"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d5582b34-2624-47c2-b471-4f7c33c71212",
+                    "leftValue": "={{ $json.property_tat_contr_le_d_viation }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Deviation"
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -496,
+        -32
+      ],
+      "id": "3c3163cb-9ad2-4a3b-bc3c-8d5569d3b839",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{$prevNode.name}}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            },
+            {
+              "name": "SubName",
+              "value": "={{$workflow.name}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "40b022d9-76c4-49a2-aa5d-f8ad9887a404",
+      "name": "Log Snapshot1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -784,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const allLogs = $input.all();\n\nconst consolidated = {\n  workflow: allLogs[0].json._log?.workflow,\n  startedAt: allLogs[0].json._log?.startedAt,\n  finishedAt: new Date().toISOString(),\n  ok: allLogs.reduce((sum, item) => sum + (item.json._log?.ok || 0), 0),\n  ko: allLogs.reduce((sum, item) => sum + (item.json._log?.ko || 0), 0),\n  \n  // Récupération des nodes en échec (inchangé)\n  failedNodes: allLogs.reduce((acc, item) => {\n    if (item.json._hadError || item.json.error) {\n      const nodeName = item.json._lastNode || item.json.error?.name || 'UnknownNode';\n      acc[nodeName] = {\n        error: true,\n        message: item.json.error?.message || item.json._errMsg || 'Erreur inconnue'\n      };\n    }\n    return acc;\n  }, {}),\n  \n  // CORRECTION : Récupérer les vraies actions depuis _log.actions\n  actions: allLogs.reduce((acc, item) => {\n    // Récupérer les actions existantes dans _log.actions\n    const existingActions = item.json._log?.actions || [];\n    \n    // Ajouter les actions existantes\n    acc.push(...existingActions);\n    \n    // Si il y a une erreur globale sur cet item, ajouter une action d'erreur\n    if (item.json._hadError || item.json.error) {\n      const nodeName = item.json._lastNode || item.json.error?.name || 'UnknownNode';\n      acc.push({\n        node: nodeName,\n        ok: false,\n        msg: item.json.error?.message || item.json._errMsg || 'Erreur'\n      });\n    }\n    \n    return acc;\n  }, [])\n};\n\nreturn [{ json: { _log: consolidated } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5952,
+        -224
+      ],
+      "id": "4d2bd169-3a92-431b-9dac-8009158781f1",
+      "name": "Returns item1"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{ ($workflow.name || 'Unknown Workflow') + \" - \" + ($json._log?.actions?.find(action => !action.ok)?.node || Object.keys($json._log?.failedNodes || {})[0] || 'UnknownNode') }}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fa94ccb3-a1d1-4625-8259-3119b43300e2",
+      "name": "Log Snapshot2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        5728,
+        -224
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('WorkFlow 01').item.json.id }}",
+          "mode": "id"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Maintenance Request|checkbox",
+              "checkboxValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        2576,
+        -592
+      ],
+      "id": "e7fca2a4-ab59-44d2-a404-0133aec8fa90",
+      "name": "Request maintenance Done",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('WorkFlow 01').item.json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Déviation request|checkbox",
+              "checkboxValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        2592,
+        80
+      ],
+      "id": "98e06089-77b1-4378-b650-870d4a026b8b",
+      "name": "Request Deviation Done",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Traiter tous les blocs reçus (un seul ou plusieurs)\nconst allBlocks = $input.all();\nlet maintenanceBlockId = null;\n\nfor (const item of allBlocks) {\n  const block = item.json;\n  if (block.type === 'heading_1' && block.content === 'Maintenance') {\n    maintenanceBlockId = block.id;\n    break;\n  }\n}\n\nreturn [{\n  json: {\n    maintenanceBlockId: maintenanceBlockId,\n    totalBlocks: allBlocks.length\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3424,
+        -608
+      ],
+      "id": "612128a9-fc19-493f-866b-11f948837040",
+      "name": "Get Block maintenance",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "resource": "block",
+        "operation": "getAll",
+        "blockId": {
+          "__rl": true,
+          "value": "={{ $('WorkFlow 01').item.json.urlPageEquipement }}",
+          "mode": "url"
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        3232,
+        -592
+      ],
+      "id": "c51e543c-30c6-4228-bd71-948368063ed8",
+      "name": "Get blocks Maintenance",
+      "alwaysOutputData": false,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "block",
+        "operation": "getAll",
+        "blockId": {
+          "__rl": true,
+          "value": "={{ $json.maintenanceBlockId }}",
+          "mode": "id"
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        3632,
+        -592
+      ],
+      "id": "e6351af0-f645-4c78-a3b4-942cf7896fea",
+      "name": "Get To do maintenance",
+      "alwaysOutputData": false,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Préparer les blocs à copier\nconst childBlocks = $input.all();\n\n// Récupérer l'ID de la tâche créée - REMPLACEZ \"NOM_NODE_CREATION_TACHE\" par le vrai nom\nconst taskPageId = $('Tâche ID Maintenance').first().json[\"TâcheID\"];\n\n// Créer le heading \"Maintenance\"\nconst maintenanceHeading = {\n  \"type\": \"heading_1\",\n  \"heading_1\": {\n    \"rich_text\": [\n      {\n        \"type\": \"text\",\n        \"text\": {\n          \"content\": \"Maintenance\"\n        }\n      }\n    ]\n  }\n};\n\n// Préparer tous les blocs to_do\nconst todoBlocks = [];\nfor (const item of childBlocks) {\n  const block = item.json;\n  if (block.type === 'to_do') {\n    todoBlocks.push({\n      \"type\": \"to_do\",\n      \"to_do\": {\n        \"rich_text\": [\n          {\n            \"type\": \"text\",\n            \"text\": {\n              \"content\": block.content\n            }\n          }\n        ],\n        \"checked\": false\n      }\n    });\n  }\n}\n\nreturn [{\n  json: {\n    taskPageId: taskPageId,\n    maintenanceHeading: maintenanceHeading,\n    todoBlocks: todoBlocks,\n    totalTodos: todoBlocks.length\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3840,
+        -608
+      ],
+      "id": "acf72f06-0718-4fd8-b527-9ce3dc0c4dc3",
+      "name": "Writte To do Maintenance",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "resource": "block",
+        "blockId": {
+          "__rl": true,
+          "value": "={{ $json.taskPageId }}",
+          "mode": "id"
+        },
+        "blockUi": {
+          "blockValues": [
+            {
+              "type": "toggle",
+              "textContent": "={{ $json.maintenanceHeading.heading_1.rich_text[0].text.content }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        4048,
+        -592
+      ],
+      "id": "c74f30d2-7de0-4dd4-b325-d4c9721a8e39",
+      "name": "Create Block Maintenance",
+      "alwaysOutputData": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const todoBlocks = $('Writte To do Maintenance').first().json.todoBlocks;\n\nreturn [{\n  json: {\n    children: todoBlocks\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4240,
+        -608
+      ],
+      "id": "8c04d991-d444-43cc-9bdb-938d884fce7f",
+      "name": "Format body M",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "resource": "block",
+        "operation": "getAll",
+        "blockId": {
+          "__rl": true,
+          "value": "={{ $('WorkFlow 01').item.json.urlPageEquipement }}",
+          "mode": "url"
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        3248,
+        80
+      ],
+      "id": "762dde10-3e00-4138-b298-47633d1d3dcf",
+      "name": "Get blocks Déviation",
+      "alwaysOutputData": false,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Traiter tous les blocs reçus (un seul ou plusieurs)\nconst allBlocks = $input.all();\nlet maintenanceBlockId = null;\n\nfor (const item of allBlocks) {\n  const block = item.json;\n  if (block.type === 'heading_1' && block.content === 'Contrôle de la déviation') {\n    maintenanceBlockId = block.id;\n    break;\n  }\n}\n\nreturn [{\n  json: {\n    maintenanceBlockId: maintenanceBlockId,\n    totalBlocks: allBlocks.length\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3456,
+        80
+      ],
+      "id": "98fdc603-a314-48a2-b6c2-aa2e915dbe5e",
+      "name": "Get Block Déviation",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "resource": "block",
+        "operation": "getAll",
+        "blockId": {
+          "__rl": true,
+          "value": "={{ $json.maintenanceBlockId }}",
+          "mode": "id"
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        3664,
+        80
+      ],
+      "id": "69f0b42f-b2f3-4d3c-b35e-f3d4921fd25f",
+      "name": "Get To do Déviation",
+      "alwaysOutputData": false,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Préparer les blocs à copier\nconst childBlocks = $input.all();\n\n// Récupérer l'ID de la tâche créée - REMPLACEZ \"NOM_NODE_CREATION_TACHE\" par le vrai nom\nconst taskPageId = $('Tâche ID Deviation').first().json[\"TâcheID\"];\n\n// Créer le heading \"Maintenance\"\nconst maintenanceHeading = {\n  \"type\": \"heading_1\",\n  \"heading_1\": {\n    \"rich_text\": [\n      {\n        \"type\": \"text\",\n        \"text\": {\n          \"content\": \"Contrôle de la déviation\"\n        }\n      }\n    ]\n  }\n};\n\n// Préparer tous les blocs to_do\nconst todoBlocks = [];\nfor (const item of childBlocks) {\n  const block = item.json;\n  if (block.type === 'to_do') {\n    todoBlocks.push({\n      \"type\": \"to_do\",\n      \"to_do\": {\n        \"rich_text\": [\n          {\n            \"type\": \"text\",\n            \"text\": {\n              \"content\": block.content\n            }\n          }\n        ],\n        \"checked\": false\n      }\n    });\n  }\n}\n\nreturn [{\n  json: {\n    taskPageId: taskPageId,\n    maintenanceHeading: maintenanceHeading,\n    todoBlocks: todoBlocks,\n    totalTodos: todoBlocks.length\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3856,
+        80
+      ],
+      "id": "a6bc9c4d-e945-4a0e-8378-8c9957601ca9",
+      "name": "Writte To do Déviation",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "resource": "block",
+        "blockId": {
+          "__rl": true,
+          "value": "={{ $json.taskPageId }}",
+          "mode": "id"
+        },
+        "blockUi": {
+          "blockValues": [
+            {
+              "type": "toggle",
+              "textContent": "={{ $json.maintenanceHeading.heading_1.rich_text[0].text.content }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        4064,
+        80
+      ],
+      "id": "eccaa8a7-a94a-426c-9276-fbc284a76499",
+      "name": "Create Block Déviation",
+      "alwaysOutputData": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const todoBlocks = $('Writte To do Déviation').first().json.todoBlocks;\n\nreturn [{\n  json: {\n    children: todoBlocks\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4256,
+        80
+      ],
+      "id": "6f3e9e6a-0369-4565-a2d4-f0bd8da76d71",
+      "name": "Format body D",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "simple": false
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        688,
+        -592
+      ],
+      "id": "e4ca0412-4c29-46df-932f-6d9320c42939",
+      "name": "Get New Tâche Maintenance",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "*Référence n8n*|rich_text",
+              "textContent": "={{ $json.properties[\"*Référence n8n*\"].rich_text[0].plain_text }}\nTicket : {{ $json.properties.Ticket.unique_id.number }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        912,
+        -592
+      ],
+      "id": "d028c1f9-bf9b-40a0-ace9-82baebc6d4af",
+      "name": "Update Ticket Maintenance",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "simple": false
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        688,
+        80
+      ],
+      "id": "0b17eafb-91c9-44b9-b4e3-45b81504b136",
+      "name": "Get New Tâche Deviation",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "*Référence n8n*|rich_text",
+              "textContent": "={{ $json.properties[\"*Référence n8n*\"].rich_text[0].text.content }}\nTicket : {{ $json.properties.Ticket.unique_id.number }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        928,
+        80
+      ],
+      "id": "adefca33-aea7-4922-a0a6-f30f166ec21c",
+      "name": "Update Ticket Deviation",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.notion.com/v1/blocks/{{ $('Create Block Maintenance').first().json.results[0].id }}/children",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4432,
+        -592
+      ],
+      "id": "9b4c6229-10a7-43ce-a726-35ddbf5505f8",
+      "name": "HTTP Block Maintenance",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.notion.com/v1/blocks/{{ $('Create Block Déviation').first().json.results[0].id }}/children",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4448,
+        80
+      ],
+      "id": "f461c501-ecc7-45c3-bd39-464170d59876",
+      "name": "HTTP Block Deviation",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('WorkFlow 01').item.json[\"Responsable maintenance\"] }}",
+          "mode": "id"
+        },
+        "simple": false
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1136,
+        -592
+      ],
+      "id": "24099ab5-b10d-4e72-8732-fced93f54155",
+      "name": "Obtenir Approbateur maintenance",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n\n  // LIGNE 5 CORRIGÉE\n  const nodeName = $prevNode.name || 'UnknownNode';\n\n  const failed = !!i.json._hadError || !!i.json.error;\n\n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n\n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n\n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n\n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "37fd391c-1a32-4422-8c6b-26f1ff8dfbfe",
+      "name": "Update Log9",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        3232,
+        -784
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const allLogs = $input.all();\n\nconst consolidated = {\n  workflow: allLogs[0].json._log?.workflow,\n  startedAt: allLogs[0].json._log?.startedAt,\n  finishedAt: new Date().toISOString(),\n  ok: allLogs.reduce((sum, item) => sum + (item.json._log?.ok || 0), 0),\n  ko: allLogs.reduce((sum, item) => sum + (item.json._log?.ko || 0), 0),\n  \n  // Récupération des nodes en échec (inchangé)\n  failedNodes: allLogs.reduce((acc, item) => {\n    if (item.json._hadError || item.json.error) {\n      const nodeName = item.json._lastNode || item.json.error?.name || 'UnknownNode';\n      acc[nodeName] = {\n        error: true,\n        message: item.json.error?.message || item.json._errMsg || 'Erreur inconnue'\n      };\n    }\n    return acc;\n  }, {}),\n  \n  // CORRECTION : Récupérer les vraies actions depuis _log.actions\n  actions: allLogs.reduce((acc, item) => {\n    // Récupérer les actions existantes dans _log.actions\n    const existingActions = item.json._log?.actions || [];\n    \n    // Ajouter les actions existantes\n    acc.push(...existingActions);\n    \n    // Si il y a une erreur globale sur cet item, ajouter une action d'erreur\n    if (item.json._hadError || item.json.error) {\n      const nodeName = item.json._lastNode || item.json.error?.name || 'UnknownNode';\n      acc.push({\n        node: nodeName,\n        ok: false,\n        msg: item.json.error?.message || item.json._errMsg || 'Erreur'\n      });\n    }\n    \n    return acc;\n  }, [])\n};\n\nreturn [{ json: { _log: consolidated } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4688,
+        -784
+      ],
+      "id": "08f8bf7c-9c21-46f7-9d63-3464648952c0",
+      "name": "Returns item"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{ ($workflow.name || 'Unknown Workflow') + \" - \" + ($json._log?.actions?.find(action => !action.ok)?.node || Object.keys($json._log?.failedNodes || {})[0] || 'UnknownNode') }}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "32f85cf9-ef1d-4e78-a908-7591923afa0b",
+      "name": "Log Snapshot",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        4432,
+        -784
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f8d39570-c55e-41a3-85c2-b0767c7f0504",
+              "name": "TâcheID",
+              "value": "={{ $('Obtenir les Operateurs').item.json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3056,
+        -592
+      ],
+      "id": "e527418f-3e17-43e9-897a-39ea70069b4f",
+      "name": "Tâche ID Maintenance",
+      "notesInFlow": false,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Update Ticket Maintenance').item.json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Approbateur|people",
+              "peopleValue": "={{ $json.properties.Utilisateurs.rollup.array[0].people[0].id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1376,
+        -592
+      ],
+      "id": "c276ec81-fc81-46e0-896e-235a047db190",
+      "name": "Update Approbateur Maintenance",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Update Ticket Deviation').item.json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Approbateur|people",
+              "peopleValue": "={{ $json.properties.Utilisateurs.rollup.array[0].people[0].id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1376,
+        80
+      ],
+      "id": "25b26513-c76e-436d-9af3-5712bc61b1fe",
+      "name": "Update Approbateur Deviation",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('WorkFlow 01').item.json[\"Responsable contrôle déviation\"] }}",
+          "mode": "id"
+        },
+        "simple": false
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1136,
+        80
+      ],
+      "id": "b9799a57-dfa2-44fd-878a-239c536188d7",
+      "name": "Obtenir Approbateur Deviation",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2848,
+        -624
+      ],
+      "id": "009f4213-1cb5-41fc-b472-e84e002f1f14",
+      "name": "Loop Maintenance",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2864,
+        48
+      ],
+      "id": "89733c9d-6aae-4a24-a4ae-aae570f3ec58",
+      "name": "Loop Deviation",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f8d39570-c55e-41a3-85c2-b0767c7f0504",
+              "name": "TâcheID",
+              "value": "={{ $('Obtenir les Operateurs1').item.json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3072,
+        80
+      ],
+      "id": "bb5a76b9-26bc-4914-b0f3-11436a16d0b4",
+      "name": "Tâche ID Deviation",
+      "notesInFlow": false,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n\n  // LIGNE 5 CORRIGÉE\n  const nodeName = $prevNode.name || 'UnknownNode';\n\n  const failed = !!i.json._hadError || !!i.json.error;\n\n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n\n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n\n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n\n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "a5fc5645-20dc-441c-8449-bc70606dbc51",
+      "name": "Update Log10",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        3248,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const allLogs = $input.all();\n\nconst consolidated = {\n  workflow: allLogs[0].json._log?.workflow,\n  startedAt: allLogs[0].json._log?.startedAt,\n  finishedAt: new Date().toISOString(),\n  ok: allLogs.reduce((sum, item) => sum + (item.json._log?.ok || 0), 0),\n  ko: allLogs.reduce((sum, item) => sum + (item.json._log?.ko || 0), 0),\n  \n  // Récupération des nodes en échec (inchangé)\n  failedNodes: allLogs.reduce((acc, item) => {\n    if (item.json._hadError || item.json.error) {\n      const nodeName = item.json._lastNode || item.json.error?.name || 'UnknownNode';\n      acc[nodeName] = {\n        error: true,\n        message: item.json.error?.message || item.json._errMsg || 'Erreur inconnue'\n      };\n    }\n    return acc;\n  }, {}),\n  \n  // CORRECTION : Récupérer les vraies actions depuis _log.actions\n  actions: allLogs.reduce((acc, item) => {\n    // Récupérer les actions existantes dans _log.actions\n    const existingActions = item.json._log?.actions || [];\n    \n    // Ajouter les actions existantes\n    acc.push(...existingActions);\n    \n    // Si il y a une erreur globale sur cet item, ajouter une action d'erreur\n    if (item.json._hadError || item.json.error) {\n      const nodeName = item.json._lastNode || item.json.error?.name || 'UnknownNode';\n      acc.push({\n        node: nodeName,\n        ok: false,\n        msg: item.json.error?.message || item.json._errMsg || 'Erreur'\n      });\n    }\n    \n    return acc;\n  }, [])\n};\n\nreturn [{ json: { _log: consolidated } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4720,
+        -80
+      ],
+      "id": "6f23dbb5-a523-43f5-90bb-774e61b828eb",
+      "name": "Returns item2"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{ ($workflow.name || 'Unknown Workflow') + \" - \" + ($json._log?.actions?.find(action => !action.ok)?.node || Object.keys($json._log?.failedNodes || {})[0] || 'UnknownNode') }}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "83c57e21-7e47-43ef-b135-f42a13040f7f",
+      "name": "Log Snapshot3",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        4448,
+        -80
+      ],
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Obtenir les Operateurs": {
+      "main": [
+        [
+          {
+            "node": "Maintenance préventive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtenir Opérateur": {
+      "main": [
+        [
+          {
+            "node": "Obtenir les Operateurs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tache Maintenance": {
+      "main": [
+        [
+          {
+            "node": "Get New Tâche Maintenance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Tache Maintenance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WorkFlow 01": {
+      "main": [
+        [
+          {
+            "node": "Log Snapshot1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Maintenance préventive": {
+      "main": [
+        [
+          {
+            "node": "Maintenance Lien",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtenir les Operateurs1": {
+      "main": [
+        [
+          {
+            "node": "Contrôle déviation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtenir Opérateur1": {
+      "main": [
+        [
+          {
+            "node": "Obtenir les Operateurs1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tache Deviation": {
+      "main": [
+        [
+          {
+            "node": "Get New Tâche Deviation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contrôle déviation": {
+      "main": [
+        [
+          {
+            "node": "Deviation Lien",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Maintenance Lien": {
+      "main": [
+        [
+          {
+            "node": "Request maintenance Done",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chemin Deviation": {
+      "main": [
+        [
+          {
+            "node": "Tache Deviation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deviation Lien": {
+      "main": [
+        [
+          {
+            "node": "Request Deviation Done",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log2": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Log Snapshot2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Update Log8": {
+      "main": [
+        [
+          {
+            "node": "Loop Maintenance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log13": {
+      "main": [
+        [
+          {
+            "node": "Loop Deviation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Chemin Deviation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Snapshot1": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Snapshot2": {
+      "main": [
+        [
+          {
+            "node": "Returns item1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request maintenance Done": {
+      "main": [
+        [
+          {
+            "node": "Loop Maintenance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request Deviation Done": {
+      "main": [
+        [
+          {
+            "node": "Loop Deviation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Block maintenance": {
+      "main": [
+        [
+          {
+            "node": "Get To do maintenance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get blocks Maintenance": {
+      "main": [
+        [
+          {
+            "node": "Get Block maintenance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get To do maintenance": {
+      "main": [
+        [
+          {
+            "node": "Writte To do Maintenance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Writte To do Maintenance": {
+      "main": [
+        [
+          {
+            "node": "Create Block Maintenance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Block Maintenance": {
+      "main": [
+        [
+          {
+            "node": "Format body M",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format body M": {
+      "main": [
+        [
+          {
+            "node": "HTTP Block Maintenance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get blocks Déviation": {
+      "main": [
+        [
+          {
+            "node": "Get Block Déviation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Block Déviation": {
+      "main": [
+        [
+          {
+            "node": "Get To do Déviation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get To do Déviation": {
+      "main": [
+        [
+          {
+            "node": "Writte To do Déviation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Writte To do Déviation": {
+      "main": [
+        [
+          {
+            "node": "Create Block Déviation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Block Déviation": {
+      "main": [
+        [
+          {
+            "node": "Format body D",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format body D": {
+      "main": [
+        [
+          {
+            "node": "HTTP Block Deviation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get New Tâche Maintenance": {
+      "main": [
+        [
+          {
+            "node": "Update Ticket Maintenance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Ticket Maintenance": {
+      "main": [
+        [
+          {
+            "node": "Obtenir Approbateur maintenance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get New Tâche Deviation": {
+      "main": [
+        [
+          {
+            "node": "Update Ticket Deviation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Ticket Deviation": {
+      "main": [
+        [
+          {
+            "node": "Obtenir Approbateur Deviation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Block Maintenance": {
+      "main": [
+        [
+          {
+            "node": "Update Log8",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Block Deviation": {
+      "main": [
+        [
+          {
+            "node": "Update Log13",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtenir Approbateur maintenance": {
+      "main": [
+        [
+          {
+            "node": "Update Approbateur Maintenance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Returns item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log9": {
+      "main": [
+        [
+          {
+            "node": "Log Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Returns item": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tâche ID Maintenance": {
+      "main": [
+        [
+          {
+            "node": "Get blocks Maintenance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Approbateur Maintenance": {
+      "main": [
+        [
+          {
+            "node": "Obtenir Opérateur",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Approbateur Deviation": {
+      "main": [
+        [
+          {
+            "node": "Obtenir Opérateur1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtenir Approbateur Deviation": {
+      "main": [
+        [
+          {
+            "node": "Update Approbateur Deviation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Maintenance": {
+      "main": [
+        [
+          {
+            "node": "Update Log9",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Tâche ID Maintenance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tâche ID Deviation": {
+      "main": [
+        [
+          {
+            "node": "Get blocks Déviation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Deviation": {
+      "main": [
+        [
+          {
+            "node": "Update Log10",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Tâche ID Deviation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Snapshot3": {
+      "main": [
+        [
+          {
+            "node": "Returns item2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log10": {
+      "main": [
+        [
+          {
+            "node": "Log Snapshot3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Returns item2": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8b894a5d-9278-4661-91fc-a69f4c6c5133",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "af83b3ea93bc43d0c5ac63a56a75bfd2e58c747f1d5aca065acb21b4a4d3daa3"
+  },
+  "id": "3aJ4vDYXTjq5GlVk",
+  "tags": [
+    {
+      "createdAt": "2025-08-10T17:31:56.398Z",
+      "updatedAt": "2025-08-10T17:31:56.398Z",
+      "id": "76NLpNrjmE5vsXoO",
+      "name": "Equipement"
+    },
+    {
+      "createdAt": "2025-09-05T21:37:37.623Z",
+      "updatedAt": "2025-09-05T21:37:37.623Z",
+      "id": "wwUl3n9Uja3EcCWR",
+      "name": "Create Deviation"
+    },
+    {
+      "createdAt": "2025-09-05T21:37:47.870Z",
+      "updatedAt": "2025-09-05T21:37:47.870Z",
+      "id": "aNnmfotDLTFVx3fE",
+      "name": "Create Maintenance"
+    }
+  ]
+}

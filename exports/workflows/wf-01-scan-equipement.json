@@ -1,0 +1,1562 @@
+{
+  "name": "WorkFlow 01",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "months",
+              "triggerAtHour": 4
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2480,
+        16
+      ],
+      "id": "e0e57e43-22d5-4665-9107-63d6c832879d",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "68b8ba1a-295e-47fe-8608-dc302da1b3ad",
+              "leftValue": "={{ $('Get Master Equipement').item.json.property_statut }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "e6466e91-c5ec-433d-a47f-c9f8beda3e75",
+              "leftValue": "={{ $('Get Master Equipement').item.json.property_statut }}",
+              "rightValue": "🟢En service",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "efef1648-be83-4560-8cad-ba88af79c335",
+              "leftValue": "={{ $('Get Master Equipement').item.json.property_statut }}",
+              "rightValue": "🚫Quarantaine",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "aea1be98-4747-408b-8038-65a9e53ed6ce",
+              "leftValue": "={{ $('Master Equipement').item.json.property_talonnage_request }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        608,
+        0
+      ],
+      "id": "24d8d9b5-0e33-4500-929d-8a43b0701178",
+      "name": "If",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "54a9d5ba-2998-4791-b3c5-de5dff36a359",
+                    "leftValue": "={{ $json.property_statut }}",
+                    "rightValue": "🛑Non calibré",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Calibration1"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "abf853bf-9005-44ea-9dbb-8ca8a9294a3a",
+                    "leftValue": "={{ $json.property_statut }}",
+                    "rightValue": "⚠️Calibration requise",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Calibration2"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "8d02cbb0-cdc1-477a-9c51-de63bfce87fa",
+                    "leftValue": "={{ $json.property_statut }}",
+                    "rightValue": "🔴Non vérifié",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Calibration3"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "36369268-327d-4a7f-9af7-5c489ac4b691",
+                    "leftValue": "={{ $json.property_statut }}",
+                    "rightValue": "⚠️Vérification requise",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Calibration4"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "ignoreCase": true,
+          "renameFallbackOutput": "Maintenance et Deviation",
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1248,
+        -400
+      ],
+      "id": "d6f738c4-1655-48a0-afed-74f57a51e74b",
+      "name": "Switch",
+      "notesInFlow": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_MASTER_EQUIPEMENTS}}",
+          "mode": "list",
+          "cachedResultName": "Master Equipements",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_MASTER_EQUIPEMENTS}}"
+        },
+        "returnAll": true,
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Mise en Quarantaine|checkbox",
+              "condition": "does_not_equal",
+              "checkboxValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -1184,
+        16
+      ],
+      "id": "0add02ed-0c56-40a0-b5c1-32766b49a5e7",
+      "name": "Get Master Equipement",
+      "executeOnce": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2256,
+        480
+      ],
+      "id": "036f6ddb-8228-46e1-8d97-d1bc78663e57",
+      "name": "No Operation, do nothing",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "batchSize": 10,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -144,
+        -16
+      ],
+      "id": "8ae461f5-3472-4377-b7fa-50fedc6a9306",
+      "name": "Loop Over Items",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d046f6d8-60a4-437d-b883-b5d2afe8c2a1",
+              "name": "name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "ec144ca9-3d76-4cf5-a953-cd2544053199",
+              "name": "property_mod_le",
+              "value": "={{ $json.property_mod_le }}",
+              "type": "string"
+            },
+            {
+              "id": "c2c77f19-7593-4d74-839b-6be8ad62fa51",
+              "name": "property_test",
+              "value": "={{ $json.property_test }}",
+              "type": "string"
+            },
+            {
+              "id": "9a9687a1-cdf4-430b-bbad-6466dae1f267",
+              "name": "property_criticit",
+              "value": "={{ $json.property_criticit }}",
+              "type": "string"
+            },
+            {
+              "id": "5ca5a329-1fb7-4c21-a98a-e051560d4e18",
+              "name": "property_dernier_etalonnage",
+              "value": "={{ $json.property_dernier_etalonnage }}",
+              "type": "object"
+            },
+            {
+              "id": "9b8658a7-8adf-46ae-bf19-a30db19dc484",
+              "name": "property_date_due",
+              "value": "={{ $json.property_prochain_etalonnage }}",
+              "type": "object"
+            },
+            {
+              "id": "8d52d8c7-a37c-4cc8-906e-0f256f98658c",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "ee89fc7a-4052-4d7f-89b0-d1752cbec826",
+              "name": "urlPageEquipement",
+              "value": "={{ $json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "1a8f694f-0cdc-48ef-ae98-525f6485d817",
+              "name": "property_talonnage_request",
+              "value": "={{ $json.property_talonnage_request }}",
+              "type": "boolean"
+            },
+            {
+              "id": "1107bee7-b17f-48de-9df3-766cee316843",
+              "name": "property_maintenance_request",
+              "value": "={{ $json.property_maintenance_request }}",
+              "type": "boolean"
+            },
+            {
+              "id": "2651f08e-fde8-4ef2-ba94-60e0f5f5fe12",
+              "name": "property_plan_de_maintenance",
+              "value": "={{ $json.property_plan_de_maintenance }}",
+              "type": "boolean"
+            },
+            {
+              "id": "9b839528-980f-41d6-8207-cbd60d8961fb",
+              "name": "property_contr_le_d_viation_des_r_sultats",
+              "value": "={{ $json.property_contr_le_d_viation_des_r_sultats }}",
+              "type": "boolean"
+            },
+            {
+              "id": "16ec2ab2-5157-4e44-ae7b-64b5e624f292",
+              "name": "property_statut",
+              "value": "={{ $json.property_statut }}",
+              "type": "string"
+            },
+            {
+              "id": "773d3727-ae3d-4f85-9b9a-d9036d11c02d",
+              "name": "property_prochaine_maintenance",
+              "value": "={{ $json.property_prochaine_maintenance }}",
+              "type": "string"
+            },
+            {
+              "id": "685e15a6-2010-4aad-856f-17421d0c3408",
+              "name": "property_tat_contr_le_d_viation",
+              "value": "={{ $json.property_tat_contr_le_d_viation }}",
+              "type": "string"
+            },
+            {
+              "id": "515aa7c6-0bcb-4ce0-8451-e3bdc9620bb3",
+              "name": "property_prochain_contr_le_d_viation",
+              "value": "={{ $json.property_prochain_contr_le_d_viation }}",
+              "type": "object"
+            },
+            {
+              "id": "7992b092-eb8c-41a0-8cf6-2c6db1860c70",
+              "name": "property_prochaine_maintenance",
+              "value": "={{ $json.property_prochaine_maintenance }}",
+              "type": "object"
+            },
+            {
+              "id": "e9a08bb1-9918-4a5b-8aaa-d9b22ca10487",
+              "name": "property_tat_maintenance",
+              "value": "={{ $json.property_tat_maintenance }}",
+              "type": "string"
+            },
+            {
+              "id": "2d3378f8-53f5-4c6b-8c5f-b173f087a005",
+              "name": "property_d_viation_request",
+              "value": "={{ $json.property_d_viation_request }}",
+              "type": "boolean"
+            },
+            {
+              "id": "15267846-8386-4fe1-ab1b-1d97d9cdfbc2",
+              "name": "property_statut_calibration",
+              "value": "={{ $('Get Master Equipement').item.json.property_statut_calibration }}",
+              "type": "string"
+            },
+            {
+              "id": "9f8fba34-424f-4a65-bc60-9d2e862d5ab3",
+              "name": "property_statut_maintenance",
+              "value": "={{ $json.property_statut_maintenance }}",
+              "type": "string"
+            },
+            {
+              "id": "fa0fcc73-b711-44e8-b4c1-a167003fcf87",
+              "name": "property_statut_d_viation",
+              "value": "={{ $json.property_statut_d_viation }}",
+              "type": "string"
+            },
+            {
+              "id": "b6a33e40-7ca4-4bcb-97d0-8bd9044b1560",
+              "name": "property_etalonnage_requis",
+              "value": "={{ $json.property_etalonnage_requis }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "include": "selected",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -400,
+        0
+      ],
+      "id": "c214311c-abcf-41ac-8ba3-7321a92cab5a",
+      "name": "Master Equipement",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "3aJ4vDYXTjq5GlVk",
+          "mode": "list",
+          "cachedResultName": "Workflow 01.01"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2672,
+        0
+      ],
+      "id": "0a7f83af-224f-4066-9ee3-b43879fc338b",
+      "name": "WorkFlow 01.01",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_MASTER_EQUIPEMENTS}}",
+          "mode": "list",
+          "cachedResultName": "Master Equipements",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_MASTER_EQUIPEMENTS}}"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Mise en Quarantaine|checkbox",
+              "condition": "does_not_equal",
+              "checkboxValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -1760,
+        16
+      ],
+      "id": "6e213a40-3c1f-4ea4-beb6-bdcdaf74dc2e",
+      "name": "Get many database pages",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "efae6215-ab89-425a-be05-e377416c3bb8",
+              "name": "Responsable",
+              "value": "={{ $json.properties.Responsable.relation[0].id }}",
+              "type": "string"
+            },
+            {
+              "id": "350d8ae7-7078-40fc-bf58-cf006e807378",
+              "name": "IdProcédé",
+              "value": "={{ $json.properties[\"Types de procédé\"].relation[0].id }}",
+              "type": "string"
+            },
+            {
+              "id": "063beaa0-1f64-43f0-8676-1c14d881023c",
+              "name": "Responsable maintenance",
+              "value": "={{(() => {\n  const rel = $json.properties[\"Responsable maintenance\"]?.relation;\n  if (Array.isArray(rel) && rel.length > 0) {\n    return rel[0].id;\n  }\n  return null;\n})()}}",
+              "type": "string"
+            },
+            {
+              "id": "0ff44095-4d62-4f1f-bfb9-2e388a445177",
+              "name": "Responsable contrôle déviation",
+              "value": "={{(() => {\n  const rel = $json.properties[\"Responsable contrôle déviation\"]?.relation;\n  if (Array.isArray(rel) && rel.length > 0) {\n    return rel[0].id; // Récupère le premier ID lié\n  }\n  return null; // Si pas de relation\n})()}}",
+              "type": "string"
+            },
+            {
+              "id": "38d7a3e5-6525-45c6-997e-60b2f90dd095",
+              "name": "Département",
+              "value": "={{ $json.properties[\"Départements\"].relation[0].id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1456,
+        16
+      ],
+      "id": "2e9ac2e8-c3c0-4d5f-a916-4a88a18e86b9",
+      "name": "Edit Operateurs",
+      "notesInFlow": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d046f6d8-60a4-437d-b883-b5d2afe8c2a1",
+              "name": "name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "ec144ca9-3d76-4cf5-a953-cd2544053199",
+              "name": "property_mod_le",
+              "value": "={{ $json.property_mod_le }}",
+              "type": "string"
+            },
+            {
+              "id": "c2c77f19-7593-4d74-839b-6be8ad62fa51",
+              "name": "property_test",
+              "value": "={{ $json.property_test }}",
+              "type": "string"
+            },
+            {
+              "id": "9a9687a1-cdf4-430b-bbad-6466dae1f267",
+              "name": "property_criticit",
+              "value": "={{ $json.property_criticit }}",
+              "type": "string"
+            },
+            {
+              "id": "8d52d8c7-a37c-4cc8-906e-0f256f98658c",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "ee89fc7a-4052-4d7f-89b0-d1752cbec826",
+              "name": "urlPageEquipement",
+              "value": "={{ $json.urlPageEquipement }}",
+              "type": "string"
+            },
+            {
+              "id": "1107bee7-b17f-48de-9df3-766cee316843",
+              "name": "property_maintenance_request",
+              "value": "={{ $json.property_maintenance_request }}",
+              "type": "boolean"
+            },
+            {
+              "id": "16ec2ab2-5157-4e44-ae7b-64b5e624f292",
+              "name": "property_statut",
+              "value": "={{ $json.property_statut }}",
+              "type": "string"
+            },
+            {
+              "id": "685e15a6-2010-4aad-856f-17421d0c3408",
+              "name": "property_tat_contr_le_d_viation",
+              "value": "={{ $json.property_tat_contr_le_d_viation }}",
+              "type": "string"
+            },
+            {
+              "id": "515aa7c6-0bcb-4ce0-8451-e3bdc9620bb3",
+              "name": "property_prochain_contr_le_d_viation",
+              "value": "={{ $json.property_prochain_contr_le_d_viation }}",
+              "type": "object"
+            },
+            {
+              "id": "7992b092-eb8c-41a0-8cf6-2c6db1860c70",
+              "name": "property_prochaine_maintenance",
+              "value": "={{ $json.property_prochaine_maintenance }}",
+              "type": "object"
+            },
+            {
+              "id": "1b128e1e-5a9f-46ec-b954-1dcea047a0ba",
+              "name": "IdProcédé",
+              "value": "={{ $('Edit Operateurs').item.json['IdProcédé'] }}",
+              "type": "string"
+            },
+            {
+              "id": "c7def5c7-c981-43b1-aa2a-3cb810f9b7db",
+              "name": "Responsable maintenance",
+              "value": "={{ $('Edit Operateurs').item.json[\"Responsable maintenance\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "bc781c45-6ee7-4239-b424-8473ce10c612",
+              "name": "Responsable contrôle déviation",
+              "value": "={{ $('Edit Operateurs').item.json[\"Responsable contrôle déviation\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "799224c3-f97a-408a-8bd5-1c5fd0f55282",
+              "name": "property_tat_maintenance",
+              "value": "={{ $('Master Equipement').item.json.property_tat_maintenance }}",
+              "type": "string"
+            },
+            {
+              "id": "a3283479-48c1-4769-a8a5-e9aca756c92b",
+              "name": "property_d_viation_request",
+              "value": "={{ $json.property_d_viation_request }}",
+              "type": "boolean"
+            },
+            {
+              "id": "bc6cf269-df72-49e1-b5d5-d0289b50bd3c",
+              "name": "property_tat_contr_le_d_viation",
+              "value": "={{ $('Master Equipement').item.json.property_tat_contr_le_d_viation }}",
+              "type": "string"
+            },
+            {
+              "id": "4a53c0b1-ae13-41e6-86c0-8c893e1ca43e",
+              "name": "property_statut_d_viation",
+              "value": "={{ $json.property_statut_d_viation }}",
+              "type": "string"
+            },
+            {
+              "id": "e214dd37-03b8-4ac6-8d5d-b9d66fb6d4b3",
+              "name": "property_statut_maintenance",
+              "value": "={{ $json.property_statut_maintenance }}",
+              "type": "string"
+            },
+            {
+              "id": "b76c1683-322f-4f67-accc-7b1abda1dcbb",
+              "name": "Département",
+              "value": "={{ $('Edit Operateurs').item.json[\"Département\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2464,
+        0
+      ],
+      "id": "bdf2b31b-192b-45ee-94b0-2292ddb32ad5",
+      "name": "Sub-Workflow 01.01",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2b8575f1-e96e-4dc7-852e-687f928d1f7b",
+              "leftValue": "={{ $('Get Master Equipement').item.json.property_statut }}",
+              "rightValue": "🔧Maintenance à faire",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "22e1b3d0-ef19-4f1f-8df6-d447b534cdcb",
+              "leftValue": "={{ $('Master Equipement').item.json.property_tat_contr_le_d_viation }}",
+              "rightValue": "=🎯Contrôle deviation",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1680,
+        16
+      ],
+      "id": "218b9100-958f-4588-9b59-2712ded430db",
+      "name": "If Maintenance"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_log.workflow",
+              "value": "={{$workflow.name}}"
+            },
+            {
+              "name": "_log.executionId",
+              "value": "={{$execution.id}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ebe3d877-cae4-42e8-8211-d464e69d366b",
+      "name": "Log Meta (expressions)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -2272,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const startedAt = new Date().toISOString();\n  i.json._log = {\n    runId: startedAt,\n    workflow: i.json._log?.workflow || null,\n    executionId: i.json._log?.executionId || null,\n    startedAt,\n    ok: 0,\n    ko: 0,\n    actions: [],\n    failedNodes: {}\n  };\n  return i;\n});"
+      },
+      "id": "be367892-656f-4e7e-bda0-59bb69198935",
+      "name": "Start Log",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -2048,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "dbe8f9ea-39df-4cbd-82fb-c0008e6e2757",
+      "name": "Update Log1",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -1472,
+        288
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -2544,
+        -912
+      ],
+      "id": "d307e661-4a9d-4dff-8e84-9472440c7fe8",
+      "name": "Merge"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2240,
+        -896
+      ],
+      "id": "edf22885-8cec-4fbd-b5c6-b9c5c535d3ed",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{ ($workflow.name || 'Unknown Workflow') + \" - \" + ($json._log?.actions?.find(action => !action.ok)?.node || Object.keys($json._log?.failedNodes || {})[0] || 'UnknownNode') }}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2a08e51d-87f1-4129-9a99-ad5d653d1a2c",
+      "name": "Log Snapshot10",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "29d0ab82-e003-41e7-8e2c-27d5d995cfbe",
+      "name": "Update Log12",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        368,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "3b5149d2-0588-4b85-a59a-b7b017641a9b",
+      "name": "Update Log33",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        2688,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "79817c21-db93-4964-a185-58279418d903",
+      "name": "Update Log16",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        2256,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "1998f097-4948-4b85-8e6d-aa7b3a57e928",
+      "name": "Update Log10",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Nph7coAgeAm16pwp",
+          "mode": "list",
+          "cachedResultName": "Logger - Send to Notion"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        3088,
+        -896
+      ],
+      "id": "c0d8aa6a-7f9b-4340-9053-56be2e7c215f",
+      "name": "Execute Logger - Send to Notion"
+    },
+    {
+      "parameters": {
+        "functionCode": "const i = items[0];\nconst log = i.json._log || {};\nlog.finishedAt = new Date().toISOString();\n\nconst start = new Date(log.startedAt || log.runId || Date.now()).getTime();\nconst end = new Date(log.finishedAt).getTime();\nlog.durationSec = Math.round((end - start) / 1000);\n\n// 🎯 CORRECTION : Extraire les noms de nœuds uniques des échecs\nconst failedNodeNames = [];\nconst uniqueErrorMessages = [];\n\n// Parcourir les actions pour identifier les échecs\nif (log.actions && Array.isArray(log.actions)) {\n  log.actions.forEach(action => {\n    if (!action.ok) {\n      // Ajouter le nom du nœud s'il n'est pas déjà présent\n      if (!failedNodeNames.includes(action.node)) {\n        failedNodeNames.push(action.node);\n      }\n      \n      // Ajouter le message d'erreur s'il n'est pas déjà présent\n      if (action.msg && !uniqueErrorMessages.includes(action.msg)) {\n        uniqueErrorMessages.push(action.msg);\n      }\n    }\n  });\n}\n\n// 🎯 RÉSULTATS CORRIGÉS\nlog.failedNodesList = failedNodeNames; // Noms uniques des nœuds en échec\nlog.uniqueErrorMessages = uniqueErrorMessages; // Messages d'erreur uniques\nlog.errorSummary = uniqueErrorMessages.join(' | '); // Compilation des erreurs\n\n// Stats améliorées\nlog.stats = {\n  totalProcessed: log.ok + log.ko,\n  successCount: log.ok,\n  failureCount: log.ko,\n  successRate: `${Math.round((log.ok / (log.ok + log.ko)) * 100)}%`,\n  uniqueFailedNodes: failedNodeNames.length,\n  distinctErrors: uniqueErrorMessages.length\n};\n\ni.json._log = log;\nreturn [i];"
+      },
+      "id": "444c4990-0259-4309-88ec-7ba14d533c90",
+      "name": "Finish Log1",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        2816,
+        -896
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Consolidation COMPLÈTE des logs\nconst logData = {\n  workflow: $('Log Meta (expressions)').first().json._log?.workflow || \"WorkFlow 01\",\n  executionId: $execution.id,\n  startedAt: $('Start Log').first().json._log?.startedAt,\n  finishedAt: new Date().toISOString(),\n  runId: $('Start Log').first().json._log?.runId,\n  \n  // Consolidation des compteurs\n  ok: $input.all().reduce((sum, item) => sum + (item.json._log?.ok || 0), 0),\n  ko: $input.all().reduce((sum, item) => sum + (item.json._log?.ko || 0), 0),\n  failedNodes: $input.all().flatMap(item => item.json._log?.failedNodes || []),\n  \n  // Logique Actions\n  actions: (() => {\n    const koCount = $input.all().reduce((sum, item) => sum + (item.json._log?.ko || 0), 0);\n    if (koCount === 0) {\n      return [{ msg: \"Pass\" }];\n    } else {\n      const allActions = $input.all().flatMap(item => item.json._log?.actions || []);\n      return allActions.filter(action => action.msg !== \"Pass\");\n    }\n  })()\n};\n\nreturn [{ json: { _log: logData } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2464,
+        -896
+      ],
+      "id": "a716d6ea-d833-43b0-8960-81048f6ab883",
+      "name": "One Item1"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "6648522d-b704-4aaa-a067-c6d5db72f915",
+      "name": "Update Log17",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        2240,
+        -368
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "lSgXwM0TOWE0Hss3",
+          "mode": "list",
+          "cachedResultName": "WorkFlow 01.02"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2672,
+        -368
+      ],
+      "id": "72ec98fc-60f3-447e-8e7a-3f64332a7b0e",
+      "name": "WorkFlow 01.02",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  const failed = !!i.json._hadError;\n  const msg = i.json._errMsg || (failed ? 'failed' : 'ok');\n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "24502d13-427d-416d-88f0-b439768b7801",
+      "name": "Update Log18",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        2816,
+        -672
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d046f6d8-60a4-437d-b883-b5d2afe8c2a1",
+              "name": "name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "ec144ca9-3d76-4cf5-a953-cd2544053199",
+              "name": "property_mod_le",
+              "value": "={{ $json.property_mod_le }}",
+              "type": "string"
+            },
+            {
+              "id": "c2c77f19-7593-4d74-839b-6be8ad62fa51",
+              "name": "property_test",
+              "value": "={{ $json.property_test }}",
+              "type": "string"
+            },
+            {
+              "id": "9a9687a1-cdf4-430b-bbad-6466dae1f267",
+              "name": "property_criticit",
+              "value": "={{ $json.property_criticit }}",
+              "type": "string"
+            },
+            {
+              "id": "5ca5a329-1fb7-4c21-a98a-e051560d4e18",
+              "name": "property_dernier_etalonnage",
+              "value": "={{ $json.property_dernier_etalonnage }}",
+              "type": "object"
+            },
+            {
+              "id": "9b8658a7-8adf-46ae-bf19-a30db19dc484",
+              "name": "property_date_due",
+              "value": "={{ $json.property_date_due }}",
+              "type": "object"
+            },
+            {
+              "id": "8d52d8c7-a37c-4cc8-906e-0f256f98658c",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "1a8f694f-0cdc-48ef-ae98-525f6485d817",
+              "name": "property_talonnage_request",
+              "value": "={{ $json.property_talonnage_request }}",
+              "type": "boolean"
+            },
+            {
+              "id": "16ec2ab2-5157-4e44-ae7b-64b5e624f292",
+              "name": "property_statut",
+              "value": "={{ $json.property_statut }}",
+              "type": "string"
+            },
+            {
+              "id": "15267846-8386-4fe1-ab1b-1d97d9cdfbc2",
+              "name": "property_statut_calibration",
+              "value": "={{ $json.property_statut_calibration }}",
+              "type": "string"
+            },
+            {
+              "id": "96e612bb-76a6-40ac-adf0-004d5ecbef0e",
+              "name": "IdProcédé",
+              "value": "={{ $('Edit Operateurs').item.json[\"IdProcédé\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "cddf5805-8903-45d0-92c9-96445fcea521",
+              "name": "Responsable",
+              "value": "={{ $('Edit Operateurs').item.json.Responsable }}",
+              "type": "string"
+            },
+            {
+              "id": "50284f54-4529-47ff-bab6-4a24b6de1119",
+              "name": "url",
+              "value": "={{ $json.urlPageEquipement }}",
+              "type": "string"
+            },
+            {
+              "id": "8c3259a4-ae93-431a-b21c-f55717ce581a",
+              "name": "Département",
+              "value": "={{ $('Edit Operateurs').item.json[\"Département\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "include": "selected",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2464,
+        -368
+      ],
+      "id": "de9679cd-cabf-41fb-8ed6-4baa8afb8bd0",
+      "name": "Edit Calibration",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{ ($workflow.name || 'Unknown Workflow') + \" - \" + ($json._log?.actions?.find(action => !action.ok)?.node || Object.keys($json._log?.failedNodes || {})[0] || 'UnknownNode') }}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2114dfcb-6326-4116-a1fd-13c1c9ad0800",
+      "name": "Log Snapshot",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -1760,
+        288
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Log Meta (expressions)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If Maintenance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Update Log17",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log17",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log17",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log17",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If Maintenance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Master Equipement": {
+      "main": [
+        [
+          {
+            "node": "Log Snapshot10",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Update Log12",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Master Equipement": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WorkFlow 01.01": {
+      "main": [
+        [
+          {
+            "node": "Update Log33",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Get many database pages": {
+      "main": [
+        [
+          {
+            "node": "Edit Operateurs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Operateurs": {
+      "main": [
+        [
+          {
+            "node": "Get Master Equipement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sub-Workflow 01.01": {
+      "main": [
+        [
+          {
+            "node": "WorkFlow 01.01",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Maintenance": {
+      "main": [
+        [
+          {
+            "node": "Update Log16",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Meta (expressions)": {
+      "main": [
+        [
+          {
+            "node": "Start Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Log": {
+      "main": [
+        [
+          {
+            "node": "Get many database pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "One Item1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Snapshot10": {
+      "main": [
+        [
+          {
+            "node": "Update Log10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log12": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log33": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log16": {
+      "main": [
+        [
+          {
+            "node": "Sub-Workflow 01.01",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log10": {
+      "main": [
+        [
+          {
+            "node": "Master Equipement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finish Log1": {
+      "main": [
+        [
+          {
+            "node": "Execute Logger - Send to Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One Item1": {
+      "main": [
+        [
+          {
+            "node": "Finish Log1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log17": {
+      "main": [
+        [
+          {
+            "node": "Edit Calibration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WorkFlow 01.02": {
+      "main": [
+        [
+          {
+            "node": "Update Log18",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Update Log18": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Calibration": {
+      "main": [
+        [
+          {
+            "node": "WorkFlow 01.02",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Update Log1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Toronto",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "89100952-c1e2-4f66-9525-0c6bc34dcd33",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "af83b3ea93bc43d0c5ac63a56a75bfd2e58c747f1d5aca065acb21b4a4d3daa3"
+  },
+  "id": "omM3ESKkv4hDLeQI",
+  "tags": [
+    {
+      "createdAt": "2025-08-10T17:31:56.398Z",
+      "updatedAt": "2025-08-10T17:31:56.398Z",
+      "id": "76NLpNrjmE5vsXoO",
+      "name": "Equipement"
+    },
+    {
+      "createdAt": "2025-09-05T21:36:00.846Z",
+      "updatedAt": "2025-09-05T21:36:00.846Z",
+      "id": "wCWSOqulmiZQxnyv",
+      "name": "Scan Equipement"
+    }
+  ]
+}

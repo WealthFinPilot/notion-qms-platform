@@ -1,0 +1,25 @@
+%% Cycle de vie d une tache — SMQ laboratoire
+%% De la planification a l archivage, avec references aux workflows n8n.
+%% Source : Contexte.md, processus P1.
+flowchart LR
+    classDef step fill:#F0F9FF,stroke:#0284C7,color:#082F49,stroke-width:2px;
+    classDef wf fill:#FFE8B1,stroke:#D97706,color:#3B2500,stroke-width:2px;
+    classDef archive fill:#FEF3C7,stroke:#A16207,color:#3B2A0E,stroke-width:2px;
+
+    A["Planification<br/>echeancier source<br/>(equipement, certificat,<br/>calendrier, recurrence)"]:::step
+    B["Creation tache<br/>Master Taches<br/>avec RACI complet"]:::step
+    C["Execution<br/>Responsable et Equipe"]:::step
+    D["Approbation<br/>Approbateur"]:::step
+    E["MAJ objet source<br/>recalcul echeance"]:::step
+    F["Archivage<br/>archive thematique"]:::archive
+    G["Logs n8n<br/>Archives n8n Logs"]:::archive
+
+    WSCAN["Scans WF 01 a 04<br/>creation automatique"]:::wf
+    W06["WF 06<br/>webhook cloture"]:::wf
+    W05["WF 05<br/>+ sous-workflows 05.01 a 05.04"]:::wf
+
+    WSCAN --> B
+    A --> B --> C --> D --> E --> F --> G
+    D -. declenche .-> W06 --> E
+    F -. pilote par .-> W05
+    E -. nouvelle echeance .-> A

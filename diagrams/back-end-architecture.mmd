@@ -1,0 +1,44 @@
+%% Architecture Back End — SMQ laboratoire
+%% 9 hubs Notion, 38 bases, Master Taches comme table de faits centrale, n8n comme moteur.
+%% Source : Contexte.md (synthese) et Les bases de donnees.md (audit BasesBook).
+flowchart TB
+    classDef core fill:#F0F9FF,stroke:#0284C7,color:#082F49,stroke-width:3px;
+    classDef hub fill:#E0F2FE,stroke:#2563EB,color:#0B2545,stroke-width:2px;
+    classDef pivot fill:#FDE2E2,stroke:#B91C1C,color:#4A1111,stroke-width:2px;
+    classDef engine fill:#FFF7E0,stroke:#D97706,color:#3B2500,stroke-width:2px;
+    classDef arch fill:#EDE9FE,stroke:#7C3AED,color:#2E1065,stroke-width:2px;
+
+    subgraph HUBS["9 hubs Back End"]
+        direction TB
+        H1["Gestion des Taches<br/>Master Taches, Types de tache,<br/>Taches Recurrentes, Archives"]:::hub
+        H2["Gestion des Equipements<br/>Master Equipements,<br/>Archives Controles"]:::hub
+        H3["Achats et Fournisseurs<br/>Magasin, Demandes achat, PO,<br/>Master Fournisseurs, Certificats"]:::hub
+        H4["Gestion Locaux<br/>Salles de travail, Stockages"]:::hub
+        H5["Evenements SMQ<br/>Calendrier Qualite,<br/>Accreditations, Categories ISO"]:::hub
+        H6["Gestion Operations<br/>Types de procede, Scope ISO 17025"]:::hub
+        H7["Documentation<br/>Master Documentations,<br/>Archives doc, Nos agents"]:::hub
+        H8["Gestion RH<br/>Master Employes, Type de poste,<br/>Departements, sous-systeme Formation"]:::hub
+    end
+
+    POSTE["Type de poste<br/>pivot RACI<br/>(reference par 15+ bases)"]:::pivot
+    MT["Master Taches<br/>TABLE DE FAITS CENTRALE<br/>RACI, statuts, preuves"]:::core
+    ARCH["Architecture SMQ<br/>Modules SMQ + Modules n8n<br/>meta-referentiel auto-documente"]:::arch
+    N8N["Moteur n8n<br/>16 workflows<br/>scans planifies + webhooks"]:::engine
+
+    H2 --> MT
+    H3 --> MT
+    H4 --> MT
+    H5 --> MT
+    H6 --> MT
+    H7 --> MT
+    H8 --> MT
+    H1 --> MT
+
+    POSTE -. alimente le RACI .-> H1
+    POSTE -. alimente le RACI .-> H2
+    POSTE -. alimente le RACI .-> H3
+    POSTE -. alimente le RACI .-> H8
+
+    N8N <==> MT
+    N8N -. journalise .-> ARCH
+    ARCH -. documente .-> HUBS

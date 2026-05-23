@@ -1,0 +1,981 @@
+{
+  "name": "WorkFlow 05.02",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1872,
+        448
+      ],
+      "id": "d148310e-a250-4d49-b513-0bb773b90f93",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{ ($workflow.name || 'Unknown Workflow') + \" - \" + ($json._log?.actions?.find(action => !action.ok)?.node || Object.keys($json._log?.failedNodes || {})[0] || 'UnknownNode') }}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e92265ba-e8b2-4d15-bde6-0692ef60384f",
+      "name": "Log Snapshot3",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        2496,
+        176
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.notion.com/v1/pages/{{ $('Edit Certificat Participant').item.json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ \n  JSON.stringify((() => {\n    // Relation fixe\n    const Departement = $json.Departement;\n    const responsableId = $json.ResponsableID;\n    const FournisseurId = $json.Fournisseur;\n    \n    // CORRECTION: Parser la string avec virgules en array\n    const equipeString = $json[\"ÉquipeID\"] || \"\";\n    let operateursIDs = [];\n    \n    if (equipeString) {\n      // Split par virgule + nettoyage + suppression doublons\n      operateursIDs = Array.from(\n        new Set(\n          equipeString\n            .split(',')                    // Split par virgule\n            .map(id => id.trim())          // Enlever espaces\n            .filter(id => id && id.length > 0)  // Enlever vides\n        )\n      ).map(id => ({ id }));              // Format Notion\n    }\n    \n    // Validation sécurité\n    if (!Departement || !responsableId) {\n      console.log(\"Erreur: Département ou Responsable manquant\");\n      return null;\n    }\n    \n    // Payload PATCH\n    return {\n      properties: {\n        'ehl{': { relation: operateursIDs },\n        'pXDv': { relation: [{ id: responsableId }] },\n        'VuU{': { relation: [{ id: Departement }] },\n        'H^A{': { relation: [{ id: FournisseurId }] },\n      }\n    };\n  })())\n}}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -480,
+        0
+      ],
+      "id": "c7126ff7-c227-429e-8a1f-f35800764798",
+      "name": "HTTP Participant Qualité",
+      "alwaysOutputData": false,
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Master Fournisseur : H%5EA%7B"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "4b030f11-d7be-4901-8ee2-47428e0151d6",
+      "name": "Update Log2",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -672,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{ ($workflow.name || 'Unknown Workflow') + \" - \" + ($json._log?.actions?.find(action => !action.ok)?.node || Object.keys($json._log?.failedNodes || {})[0] || 'UnknownNode') }}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "73cb48c1-26e1-409e-a15c-0fa9dee49e8f",
+      "name": "Log Snapshot1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -864,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "block",
+        "operation": "getAll",
+        "blockId": {
+          "__rl": true,
+          "value": "={{ $('Workflow 05.02').item.json[\"Tâcheid\"] }}",
+          "mode": "id"
+        },
+        "returnAll": true,
+        "fetchNestedBlocks": true,
+        "simplifyOutput": false
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -272,
+        0
+      ],
+      "id": "9597a417-67c0-4e5f-bf28-ee2acb03ec13",
+      "name": "Get many child blocks",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Format 1 bloc — à placer dans la Loop (Split in Batches = 1)\n * Entrée : { top, childrenMap, dest_id, root }\n * Sortie : [{\n *   dest_id,\n *   children_payload: { children: [ formattedWithChildren ] },\n *   debug: {...}\n * }]\n */\n\nconst original = $json.top;\nconst childrenMap = $json.childrenMap || {};\nconst destId = $json.dest_id;\nconst rootInfo = $json.root || null;\n\nfunction detectType(block) {\n  if (typeof block?.type === 'string' && block[block.type]) return block.type;\n  const KNOWN = ['paragraph','heading_1','heading_2','heading_3','bulleted_list_item','numbered_list_item','to_do','toggle','quote','code','callout','divider','table_of_contents','link_to_page','synced_block','bookmark','image','video','pdf','file','column_list','column','table','table_row','equation'];\n  for (const k of KNOWN) if (block && block[k]) return k;\n  if (block?.unsupported) return 'unsupported';\n  return null;\n}\n\nfunction rt(node) {\n  if (!node) return [{ type:'text', text:{ content:'' }, annotations:{ bold:false, italic:false, strikethrough:false, underline:false, code:false, color:'default' }, plain_text:'', href:null }];\n  if (Array.isArray(node.text)) return node.text;\n  if (Array.isArray(node.rich_text)) return node.rich_text;\n  return [{ type:'text', text:{ content:'' }, annotations:{ bold:false, italic:false, strikethrough:false, underline:false, code:false, color:'default' }, plain_text:'', href:null }];\n}\n\nfunction getChildrenOf(id) {\n  const arr = childrenMap[id];\n  return Array.isArray(arr) ? arr : [];\n}\n\nfunction formatOne(b) {\n  const t = detectType(b) || 'paragraph';\n  let out = { object:'block', type:t };\n\n  switch (t) {\n    case 'paragraph':\n      out.paragraph = { rich_text: rt(b.paragraph), color: b.paragraph?.color || 'default' };\n      break;\n    case 'heading_1':\n      out.heading_1 = { rich_text: rt(b.heading_1), color: b.heading_1?.color || 'default', is_toggleable: false };\n      break;\n    case 'heading_2':\n      out.heading_2 = { rich_text: rt(b.heading_2), color: b.heading_2?.color || 'default', is_toggleable: false };\n      break;\n    case 'heading_3':\n      out.heading_3 = { rich_text: rt(b.heading_3), color: b.heading_3?.color || 'default', is_toggleable: false };\n      break;\n    case 'bulleted_list_item':\n      out.bulleted_list_item = { rich_text: rt(b.bulleted_list_item), color: b.bulleted_list_item?.color || 'default' };\n      break;\n    case 'numbered_list_item':\n      out.numbered_list_item = { rich_text: rt(b.numbered_list_item), color: b.numbered_list_item?.color || 'default' };\n      break;\n    case 'to_do':\n      out.to_do = { rich_text: rt(b.to_do), checked: b.to_do?.checked || false, color: b.to_do?.color || 'default' };\n      break;\n    case 'quote':\n      out.quote = { rich_text: rt(b.quote), color: b.quote?.color || 'default' };\n      break;\n    case 'code':\n      out.code = { rich_text: rt(b.code), language: b.code?.language || 'plain text', caption: Array.isArray(b.code?.caption)? b.code.caption : [] };\n      break;\n    case 'divider':\n      out.divider = {}; break;\n    case 'callout':\n      out.callout = { rich_text: rt(b.callout), icon: b.callout?.icon ?? { emoji:'💡' }, color: b.callout?.color || 'default' };\n      break;\n    case 'toggle':\n      out.toggle = { rich_text: rt(b.toggle), color: b.toggle?.color || 'default' };\n      break;\n    default:\n      out.type = 'paragraph';\n      out.paragraph = { rich_text: [{ type:'text', text:{ content:'[Bloc converti]' }, annotations:{ bold:false, italic:false, strikethrough:false, underline:false, code:false, color:'default' }, plain_text:'[Bloc converti]', href:null }], color: 'default' };\n      break;\n  }\n\n  const kids = getChildrenOf(b.id);\n  if (kids.length > 0) {\n    out.children = kids.map(ch => formatOne(ch));\n    if (t === 'heading_1' && out.heading_1) out.heading_1.is_toggleable = true;\n    if (t === 'heading_2' && out.heading_2) out.heading_2.is_toggleable = true;\n    if (t === 'heading_3' && out.heading_3) out.heading_3.is_toggleable = true;\n  }\n  return out;\n}\n\nconst formatted = formatOne(original);\nconst payload = { children: [ formatted ] };\n\nreturn [{\n  json: {\n    dest_id: destId,\n    children_payload: payload,\n    debug: {\n      root: rootInfo,\n      source_block_id: original.id,\n      children_count: (childrenMap[original.id]?.length || 0)\n    }\n  }\n \n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        0
+      ],
+      "id": "7ef65d52-d44e-4bfb-b34d-40193750f708",
+      "name": "Code",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        336,
+        -16
+      ],
+      "id": "c5172442-bbc5-4364-8c0e-a2b97c7f02a8",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.notion.com/v1/blocks/{{ $json.parentId }}/children",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ children: [ $json.block ] }) }}",
+        "options": {
+          "batching": {
+            "batch": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1104,
+        0
+      ],
+      "id": "d797e71b-3ae4-4d2d-a137-0c319091e46c",
+      "name": "HTTP Request",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        },
+        "httpHeaderAuth": {
+          "id": "KDyg4dsfzJCfkgdA",
+          "name": "Notion Header"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Index Children — MULTI-PAGE\n * - Construit childrenMap (parent_block_id -> [children])\n * - Détecte TOUTES les pages sources présentes dans l'input\n * - Émet un item par bloc top-level POUR CHAQUE page\n * - Supporte un mapping optionnel source_page_id -> dest_id\n *\n * Entrée: items (top-level + sous-blocs) de plusieurs pages possibles\n * Sortie: [{ json: { top, childrenMap, dest_id, root:{type:'page', id:'...'} } }, ...]\n */\n\nfunction normId(s){ return (s||'').toString().replace(/-/g,'').toLowerCase(); }\n\n// 1) Tous les blocs\nconst all = $input.all().map(i => i.json);\n\n// 2) Destination par défaut (optionnelle)\nlet defaultDestId;\ntry { defaultDestId = $('Set Destination').first().json.destination_id; } catch (e) {}\nif (!defaultDestId) { try { defaultDestId = $('Create Contrôle Certificat').first().json.id; } catch (e) {} }\n\n// 3) Mapping source_page_id -> dest_id (OPTIONNEL)\n//   Crée un node \"Set Destinations\" en amont qui renvoie plusieurs lignes {source_page_id, dest_id}\nconst destMap = {};\ntry {\n  const rows = $('Set Destinations').all().map(n => n.json);\n  for (const r of rows) {\n    if (r?.source_page_id && r?.dest_id) destMap[normId(r.source_page_id)] = String(r.dest_id);\n  }\n} catch (e) { /* mapping absent = OK */ }\n\n// 4) Roots explicites ? (si tu gardes un “Set Root”, on ne traite QUE celle-ci)\nlet explicitRoot = null;\ntry {\n  const r = $('Set Root').first().json;\n  if (r?.root_id) explicitRoot = { type: String(r.root_type || 'page'), id: String(r.root_id) };\n} catch (e) {}\n\n// 5) Construire childrenMap global (OK multi-pages, ids Notion sont uniques)\nconst childrenMap = {}; // { [blockId]: Block[] }\nfor (const b of all) {\n  if (b?.parent?.type === 'block_id' && b.parent.block_id) {\n    const pid = b.parent.block_id;\n    if (!childrenMap[pid]) childrenMap[pid] = [];\n    childrenMap[pid].push(b);\n  }\n}\n\n// 6) Lister les pages présentes dans l'input\nconst pagesSeen = new Map(); // normPageId -> rawPageId\nfor (const b of all) {\n  if (b?.parent?.type === 'page_id' && b.parent.page_id) {\n    const nid = normId(b.parent.page_id);\n    if (!pagesSeen.has(nid)) pagesSeen.set(nid, b.parent.page_id);\n  }\n}\n\n// 7) Déterminer les roots à traiter\nlet roots = [];\nif (explicitRoot?.type === 'page' && explicitRoot.id) {\n  roots = [ explicitRoot ];\n} else {\n  // traite TOUTES les pages rencontrées\n  roots = [...pagesSeen.entries()].map(([nid, raw]) => ({ type: 'page', id: raw }));\n  // fallback : s’il n’y a aucune page vue (rare), tente une heuristique\n  if (roots.length === 0) {\n    const firstTop = all.find(x => x?.parent?.type==='page_id' && x.parent.page_id);\n    if (firstTop) roots = [{ type:'page', id:firstTop.parent.page_id }];\n  }\n}\n\n// 8) Construire la sortie : tous les top-level de chaque page, avec dest_id dédié\nconst out = [];\nfor (const root of roots) {\n  const rid = normId(root.id);\n  const topLevel = all.filter(b => b?.parent?.type === 'page_id' && normId(b.parent.page_id) === rid);\n\n  // destination pour CETTE page : mapping > défaut > undefined (on laisse HTTP échouer proprement si vide)\n  const destForThisPage = destMap[rid] || defaultDestId || undefined;\n\n  for (const b of topLevel) {\n    out.push({\n      json: { top: b, childrenMap, dest_id: destForThisPage, root }\n    });\n  }\n}\n\nreturn out;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        -16
+      ],
+      "id": "ff50d775-7fc0-4404-be94-0fda66b28a42",
+      "name": "Index Children",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Build Cascade Queue — retire `children` du parent et seed la file\n */\nconst destId = $json.dest_id;\nconst parent = ($json.children_payload?.children || [])[0];\n\nif (!destId || !parent) {\n  return [{ json: { error: 'missing_dest_or_parent' } }];\n}\n\n// strip children au parent\nconst kids = Array.isArray(parent.children) ? parent.children : [];\nconst parentNoKids = { ...parent };\ndelete parentNoKids.children;\n\n// initialise la file avec 1 tâche \"créer le parent sous destId\"\nconst queue = [{\n  parentId: destId,\n  block: parentNoKids,\n  children: kids\n}];\n\nreturn [{ json: { queue } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        0
+      ],
+      "id": "801e7ba0-8ad1-4748-9b4e-56e7f3a870e8",
+      "name": "Build case Q",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Pop Task — sort la prochaine tâche de la file\n */\nconst q = Array.isArray($json.queue) ? $json.queue : [];\nif (q.length === 0) {\n  return [{ json: { done: true, queue: [] } }];\n}\n\nconst task = q.shift();\nreturn [{\n  json: {\n    done: false,\n    queue: q,                     // ← gardé pour Merge/After\n    parentId: task.parentId,      // ← utilisé par HTTP URL\n    block: task.block,            // ← utilisé par HTTP body (sans children !)\n    children: task.children || [] // ← gardé pour After Append\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        0
+      ],
+      "id": "00d7f003-a093-4e2e-a80e-ce5d2e47dc7a",
+      "name": "pop task",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * After Append — version \"après Merge (Pass Through)\"\n * Entrée (depuis Merge):\n *  - champs de Pop Task: queue[], children[], parentId, block\n *  - réponse HTTP Notion: results[0].id, etc.\n * Sortie:\n *  - { queue: [...prochaines tâches...] }\n */\n\n// 1) Lire la réponse Notion (côté HTTP)\nconst resp = $json; // Merge a copié la réponse HTTP dans le même objet\nconst results = resp.results || resp.data?.results || [];\nconst newId = results[0]?.id;\n\n// 2) Lire la file et les enfants venant de Pop Task (conservés par le Merge)\nlet q = Array.isArray($json.queue) ? $json.queue : [];\nconst kids = Array.isArray($json.children) ? $json.children : [];\n\n// 3) Si l'API n'a pas renvoyé d'ID, on log et on continue (ou tu peux throw si tu veux stopper)\nif (!newId) {\n  return [{\n    json: { error: 'append_failed_no_id', queue: q, debug: { resp_has_results: results.length } }\n  }];\n}\n\n// 4) Chaque enfant devient une tâche sous newId (strip de ses propres children)\nfunction strip(b) {\n  const copy = { ...b };\n  const k = Array.isArray(b.children) ? b.children : [];\n  delete copy.children;\n  return { copy, k };\n}\n\nfor (const child of kids) {\n  const { copy, k } = strip(child);\n  q.push({ parentId: newId, block: copy, children: k });\n}\n\n// 5) Retourner la nouvelle queue\nreturn [{ json: { queue: q } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        160
+      ],
+      "id": "7a927d8a-87e6-49d3-8561-086db54bb185",
+      "name": "After Append Block",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3c57946b-89b4-4b4e-b158-c3962400c2c5",
+              "leftValue": "={{ Array.isArray($json.queue) && $json.queue.length > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1568,
+        160
+      ],
+      "id": "873285c1-f6e4-4204-a469-27ba95eef969",
+      "name": "If",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1120,
+        160
+      ],
+      "id": "24c26d91-a472-4f16-8c92-375e8f41300d",
+      "name": "Merge",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "archive",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Edit Certificat Participant').item.json[\"Tâcheid\"] }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        -352
+      ],
+      "id": "838658b6-dad3-4e08-a09e-b22903c08e32",
+      "name": "Archive page",
+      "executeOnce": false,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "e3765ac1-0785-4994-8607-3493a681151e",
+      "name": "Update Log",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{ ($workflow.name || 'Unknown Workflow') + \" - \" + ($json._log?.actions?.find(action => !action.ok)?.node || Object.keys($json._log?.failedNodes || {})[0] || 'UnknownNode') }}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c20792c0-fc75-488c-a392-944c311b34b1",
+      "name": "Log Snapshot",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2256,
+        176
+      ],
+      "id": "8b32293d-4cfc-417c-9d66-b006b5fb8045",
+      "name": "Merge3"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1104,
+        0
+      ],
+      "id": "6ddca0ca-bd20-4b1c-abfa-081a01418f2e",
+      "name": "Workflow 05.02",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_ARCHIVES_CONTROLE_DES_CERTIFICATS_FOURNISSEURS}}",
+          "mode": "list",
+          "cachedResultName": "Archives Contrôle des Certificats Fournisseurs",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_ARCHIVES_CONTROLE_DES_CERTIFICATS_FOURNISSEURS}}"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Nom|title",
+              "title": "={{ $json[\"Tâche\"] }}"
+            },
+            {
+              "key": "Date de planification|date",
+              "includeTime": false,
+              "date": "={{ $json[\"Date de planification\"].date.start }}"
+            },
+            {
+              "key": "Dead line|date",
+              "includeTime": false,
+              "date": "={{ $json[\"Dead line\"].date.start }}"
+            },
+            {
+              "key": "Date complété|date",
+              "includeTime": false,
+              "date": "={{ $json[\"Date complété\"].date.start }}"
+            },
+            {
+              "key": "Types de tache|rich_text",
+              "textContent": "={{ $json[\"Type de tâche\"] }}"
+            },
+            {
+              "key": "État|rich_text",
+              "textContent": "={{ $json[\"État\"] }}"
+            },
+            {
+              "key": "Créateur|rich_text",
+              "textContent": "={{ $json[\"Créateur\"] }}"
+            },
+            {
+              "key": "Priorité|rich_text",
+              "textContent": "={{ $json[\"Priorité\"] }}"
+            },
+            {
+              "key": "Note|rich_text",
+              "textContent": "={{ $json.Note }}"
+            },
+            {
+              "key": "Ticket|number",
+              "numberValue": "={{ $json.Ticket }}"
+            },
+            {
+              "key": "Approuvée|rich_text",
+              "textContent": "={{ $json.Verification }}"
+            },
+            {
+              "key": "Nom Reponsable|rich_text",
+              "textContent": "={{ $json.Approbateur }}"
+            },
+            {
+              "key": "Mention|rich_text",
+              "textContent": "={{ $json.Mention }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -896,
+        0
+      ],
+      "id": "4819fd0e-c5e1-4aab-8be0-02d3db135a4f",
+      "name": "Create Contrôle Certificat",
+      "retryOnFail": false,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Archives Qualité : {{NOTION_DB_ID_ARCHIVES_QUALITE}}"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "acd45495-b47b-40d5-8ada-6d4129baaf98",
+              "name": "ResponsableID",
+              "value": "={{ $('Workflow 05.02').item.json.ResponsableID }}",
+              "type": "string"
+            },
+            {
+              "id": "be122791-58bf-4682-9263-8219b7d9bdcb",
+              "name": "ÉquipeID",
+              "value": "={{ $('Workflow 05.02').item.json[\"ÉquipeID\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "65c4a217-dde3-43a3-9fab-7114f59eda05",
+              "name": "Departement",
+              "value": "={{ $('Workflow 05.02').item.json.Departement }}",
+              "type": "string"
+            },
+            {
+              "id": "20f4be72-54de-4cac-886a-92a7e71d81c1",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "d125853f-28af-4a5a-b2e9-3edca604728c",
+              "name": "Fournisseur",
+              "value": "={{ $('Workflow 05.02').item.json.Fournisseur }}",
+              "type": "string"
+            },
+            {
+              "id": "78987004-cf12-4000-9932-124966b09df0",
+              "name": "Tâcheid",
+              "value": "={{ $('Workflow 05.02').item.json[\"Tâcheid\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -672,
+        -16
+      ],
+      "id": "5ef3c57f-d6f2-4b42-9c1b-5fa222353084",
+      "name": "Edit Certificat Participant"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "795fd55d-060a-437a-ad47-bc264f9b11e3",
+      "name": "Update Log3",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        128,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "198c61e6-d90a-458c-b526-c0628cd5274c",
+      "name": "Update Log4",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        -352
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const allLogs = $input.all();\n\nconst consolidated = {\n  workflow: allLogs[0].json._log?.workflow,\n  startedAt: allLogs[0].json._log?.startedAt,\n  finishedAt: new Date().toISOString(),\n  ok: allLogs.reduce((sum, item) => sum + (item.json._log?.ok || 0), 0),\n  ko: allLogs.reduce((sum, item) => sum + (item.json._log?.ko || 0), 0),\n  \n  // Récupération des nodes en échec (inchangé)\n  failedNodes: allLogs.reduce((acc, item) => {\n    if (item.json._hadError || item.json.error) {\n      const nodeName = item.json._lastNode || item.json.error?.name || 'UnknownNode';\n      acc[nodeName] = {\n        error: true,\n        message: item.json.error?.message || item.json._errMsg || 'Erreur inconnue'\n      };\n    }\n    return acc;\n  }, {}),\n  \n  // CORRECTION : Récupérer les vraies actions depuis _log.actions\n  actions: allLogs.reduce((acc, item) => {\n    // Récupérer les actions existantes dans _log.actions\n    const existingActions = item.json._log?.actions || [];\n    \n    // Ajouter les actions existantes\n    acc.push(...existingActions);\n    \n    // Si il y a une erreur globale sur cet item, ajouter une action d'erreur\n    if (item.json._hadError || item.json.error) {\n      const nodeName = item.json._lastNode || item.json.error?.name || 'UnknownNode';\n      acc.push({\n        node: nodeName,\n        ok: false,\n        msg: item.json.error?.message || item.json._errMsg || 'Erreur'\n      });\n    }\n    \n    return acc;\n  }, [])\n};\n\nreturn [{ json: { _log: consolidated } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2704,
+        176
+      ],
+      "id": "85b41b2c-6aaf-40bc-864f-0ba5c1fbef59",
+      "name": "Returns item"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        560,
+        -352
+      ],
+      "id": "e1046602-b219-4574-be73-6b7c1e45462b",
+      "name": "Merge2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Log Snapshot3": {
+      "main": [
+        [
+          {
+            "node": "Returns item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Participant Qualité": {
+      "main": [
+        [
+          {
+            "node": "Get many child blocks",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log2": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Log Snapshot1": {
+      "main": [
+        [
+          {
+            "node": "Update Log2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many child blocks": {
+      "main": [
+        [
+          {
+            "node": "Index Children",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Build case Q",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Index Children": {
+      "main": [
+        [
+          {
+            "node": "Update Log3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build case Q": {
+      "main": [
+        [
+          {
+            "node": "pop task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pop task": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "After Append Block": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "pop task",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "After Append Block",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Archive page": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Update Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Log Snapshot3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow 05.02": {
+      "main": [
+        [
+          {
+            "node": "Create Contrôle Certificat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Contrôle Certificat": {
+      "main": [
+        [
+          {
+            "node": "Edit Certificat Participant",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Certificat Participant": {
+      "main": [
+        [
+          {
+            "node": "HTTP Participant Qualité",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log4": {
+      "main": [
+        [
+          {
+            "node": "Archive page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Update Log4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ea7c152c-1251-42f8-b186-ea734ccf7122",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "af83b3ea93bc43d0c5ac63a56a75bfd2e58c747f1d5aca065acb21b4a4d3daa3"
+  },
+  "id": "KOU18Gv3gwCTQRJT",
+  "tags": [
+    {
+      "createdAt": "2025-08-26T22:10:40.037Z",
+      "updatedAt": "2025-08-26T22:10:40.037Z",
+      "id": "41B38HIWO9KNrCRH",
+      "name": "Archivage"
+    },
+    {
+      "createdAt": "2025-09-03T00:04:40.409Z",
+      "updatedAt": "2025-09-03T00:04:40.409Z",
+      "id": "ez1sPlrMFAg7y57j",
+      "name": "Archivage Certificat"
+    }
+  ]
+}

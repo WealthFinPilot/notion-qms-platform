@@ -1,0 +1,21 @@
+%% Agents IA de l intranet Notion — SMQ laboratoire
+%% Deux agents Notion AI, leurs bases consultees ou modifiees et leur declencheur.
+%% Source : Source/Notion synthese/Prompt des agents IA (resume fonctionnel, prompts non reproduits).
+flowchart TB
+    classDef agent fill:#EDE9FE,stroke:#7C3AED,color:#2E1065,stroke-width:2px;
+    classDef base fill:#E0F2FE,stroke:#2563EB,color:#0B2545,stroke-width:2px;
+    classDef trig fill:#DCFCE7,stroke:#16A34A,color:#063B18,stroke-width:2px;
+
+    U["Utilisateur<br/>question dans le chat de l agent"]:::trig
+
+    A1["Agent 1 — Le planificateur<br/>Suivi de l action<br/>discipline, responsabilite, planning"]:::agent
+    A2["Agent 2 — Le bibliothecaire<br/>Mentor de la connaissance<br/>explications claires, FR et EN"]:::agent
+
+    MT["Master Taches<br/>RACI, priorites, echeances"]:::base
+    DOC["Master Documentations Entreprise<br/>procedures, normes, formulaires"]:::base
+
+    U --> A1
+    U --> A2
+    A1 -- consulte et met a jour --> MT
+    A1 -. respecte le perimetre RACI<br/>de l utilisateur .-> MT
+    A2 -- recherche et resume --> DOC

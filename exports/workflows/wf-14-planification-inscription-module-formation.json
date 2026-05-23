@@ -1,0 +1,494 @@
+{
+  "name": "WorkFlow 14",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -832,
+        -160
+      ],
+      "id": "efb90220-91de-44dd-ba38-fc3af5d989b2",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_MODULES_FORMATIONS}}",
+          "mode": "list",
+          "cachedResultName": "MODULES - Formations",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_MODULES_FORMATIONS}}"
+        },
+        "returnAll": true,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Actif|checkbox",
+              "condition": "equals",
+              "checkboxValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -528,
+        -160
+      ],
+      "id": "7705d702-5255-4d6e-8b34-e493b8809d1f",
+      "name": "1 Get Module Formation",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "13e17009-3513-458a-be67-eda72c6644f9",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "8a483e9f-5ea8-49e3-b65a-510f8f3cc417",
+              "name": "date_fin",
+              "value": "={{ $json.property_date_de_fin }}",
+              "type": "object"
+            },
+            {
+              "id": "e7bcec03-ebd9-4462-805b-4ca6bd310150",
+              "name": "actif",
+              "value": "={{ $json.property_actif }}",
+              "type": "boolean"
+            },
+            {
+              "id": "916fbaa3-583d-4290-8a89-5c27b38a2445",
+              "name": "embauche",
+              "value": "={{ $json.property_jours_apr_s_embauche }}",
+              "type": "number"
+            },
+            {
+              "id": "fc39e098-6de8-4bef-9478-32c1ce017892",
+              "name": "debut",
+              "value": "={{ $json.property_date_de_d_but }}",
+              "type": "object"
+            },
+            {
+              "id": "82981232-db16-481c-a9af-468e88365b18",
+              "name": "etat",
+              "value": "={{ $json.property_tat }}",
+              "type": "string"
+            },
+            {
+              "id": "3fb8816f-627f-4a73-82a2-14f4f9e47de0",
+              "name": "New start",
+              "value": "={{ $json.property_tout_les_jours }}",
+              "type": "number"
+            },
+            {
+              "id": "4600feec-299c-47b5-939b-5b6326de4da9",
+              "name": "periode_jours",
+              "value": "={{ $json.property_periode_jours }}",
+              "type": "number"
+            },
+            {
+              "id": "fdd26ef0-e0d8-4112-88b7-35169864fd96",
+              "name": "New_date",
+              "value": "={{ $json.New_date }}",
+              "type": "object"
+            },
+            {
+              "id": "16de27ed-9a73-434f-b6ae-afe338118c50",
+              "name": "New_fin",
+              "value": "={{ $json.New_fin }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -16,
+        -160
+      ],
+      "id": "82017361-8828-463b-b563-d7b380ffccbd",
+      "name": "2 Edit Modules"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.date_fin.start }}",
+                    "rightValue": "={{ $now }}",
+                    "operator": {
+                      "type": "dateTime",
+                      "operation": "before"
+                    },
+                    "id": "6e9ff92b-9bed-4ff0-ad66-a9dd8633d0c6"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Passé"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "607cc628-841c-44ab-b64e-85a73379412e",
+                    "leftValue": "={{ $now }}",
+                    "rightValue": "={{ DateTime.fromISO($json.debut.start).minus({ days: 7 }).toISO() }}",
+                    "operator": {
+                      "type": "dateTime",
+                      "operation": "afterOrEquals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "A plannifier"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        -160
+      ],
+      "id": "27241709-26f8-498d-b948-072c781b6bcc",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "État|status",
+              "statusValue": "En cours"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        784,
+        -64
+      ],
+      "id": "40caa493-b418-44ec-8b17-b77e3a4cf9f5",
+      "name": "Update Module En cours",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "État|status",
+              "statusValue": "En veille"
+            },
+            {
+              "key": "Date de début|date",
+              "includeTime": false,
+              "date": "={{ $json.New_date.start }}"
+            },
+            {
+              "key": "Date de fin|date",
+              "includeTime": false,
+              "date": "={{ $json.New_fin.start }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        784,
+        -320
+      ],
+      "id": "8f90402d-9120-4194-87f3-197f8ef631d2",
+      "name": "Update Module En veille",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b518d9b5-0648-4c3f-9f2a-8cff02531913",
+              "leftValue": "={{ $json.actif }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "7f0e33da-f5fb-49e0-b87a-53196ff75ee9",
+              "leftValue": "={{ $json.etat }}",
+              "rightValue": "Programmé",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        528,
+        -80
+      ],
+      "id": "c3226f7a-8273-44df-a602-902206eeb9f8",
+      "name": "If programmé a"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b518d9b5-0648-4c3f-9f2a-8cff02531913",
+              "leftValue": "={{ $json.actif }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "7f0e33da-f5fb-49e0-b87a-53196ff75ee9",
+              "leftValue": "={{ $json.etat }}",
+              "rightValue": "Programmé",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        528,
+        -304
+      ],
+      "id": "1ad81f5f-fb05-4f51-b57d-3768b49b17f9",
+      "name": "If programmé b"
+    },
+    {
+      "parameters": {
+        "jsCode": "function getStartDate(dateObj) {\n  if (!dateObj) return null;\n\n  // string (ISO ou YYYY-MM-DD)\n  if (typeof dateObj === 'string') return dateObj;\n\n  // objet Notion date { start, end, time_zone }\n  if (typeof dateObj === 'object' && dateObj.start) return dateObj.start;\n\n  return null;\n}\n\nfunction isDateOnly(s) {\n  return typeof s === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(s);\n}\n\nfunction addDaysPreserve(dateStr, days) {\n  const base = isDateOnly(dateStr) ? `${dateStr}T00:00:00.000Z` : dateStr;\n  const d = new Date(base);\n  if (Number.isNaN(d.getTime())) throw new Error(`Date invalide: ${dateStr}`);\n\n  d.setUTCDate(d.getUTCDate() + days);\n\n  // si entrée en YYYY-MM-DD, on ressort en YYYY-MM-DD\n  if (isDateOnly(dateStr)) return d.toISOString().slice(0, 10);\n\n  // sinon ISO complet\n  return d.toISOString();\n}\n\nconst items = $input.all();\n\nreturn items.map((item) => {\n  const j = item.json;\n\n  const dateDebutStr = getStartDate(j.property_date_de_d_but);\n  const periodeJours = Number(j.property_periode_jours ?? 0);\n  const toutLesJours = Number(j.property_tout_les_jours ?? 0);\n\n  if (!dateDebutStr) {\n    // On garde l'item mais on marque une erreur (au lieu de throw pour ne pas casser le batch)\n    return {\n      json: {\n        ...j,\n        error: \"property_date_de_d_but est vide ou invalide\",\n      },\n    };\n  }\n\n  const newDate = addDaysPreserve(dateDebutStr, toutLesJours);\n  const newFin  = addDaysPreserve(newDate, periodeJours);\n\n  return {\n    json: {\n      ...j,\n      New_date: { start: newDate },\n      New_fin:  { start: newFin },\n    },\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -288,
+        -160
+      ],
+      "id": "d641971a-255d-48da-b304-e78dfac57aa4",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "1 Get Module Formation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1 Get Module Formation": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 Edit Modules": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "If programmé b",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If programmé a",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If programmé a": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Update Module En cours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If programmé b": {
+      "main": [
+        [
+          {
+            "node": "Update Module En veille",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "2 Edit Modules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "7bbe7e9f-8474-4298-8b87-a97130d08a7a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "af83b3ea93bc43d0c5ac63a56a75bfd2e58c747f1d5aca065acb21b4a4d3daa3"
+  },
+  "id": "52hYcfqUv9AMR3WR",
+  "tags": [
+    {
+      "updatedAt": "2025-12-18T18:54:30.875Z",
+      "createdAt": "2025-12-18T18:54:30.875Z",
+      "id": "7DBnhEyy87FAFDiZ",
+      "name": "Modules formation"
+    },
+    {
+      "updatedAt": "2025-12-18T19:18:36.151Z",
+      "createdAt": "2025-12-18T19:18:36.151Z",
+      "id": "BTMuU6ivo6hNzO7j",
+      "name": "Module schedule"
+    }
+  ]
+}

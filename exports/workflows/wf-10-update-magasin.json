@@ -1,0 +1,264 @@
+{
+  "name": "WorkFlow 10",
+  "nodes": [
+    {
+      "parameters": {
+        "multipleMethods": true,
+        "httpMethod": [
+          "POST"
+        ],
+        "path": "{{WEBHOOK_PATH_WF10}}",
+        "options": {
+          "responseData": ""
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        0
+      ],
+      "id": "8ec0f7e0-6130-4d24-967c-798db64f907f",
+      "name": "Webhook",
+      "webhookId": "{{WEBHOOK_ID_WF10}}"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.ItemId }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Statut de la commande|select",
+              "selectValue": "={{ $json[\"Statut Demande\"] || \"\"}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        864,
+        0
+      ],
+      "id": "3f3b753e-eafe-4e11-a51f-34b0c7222a09",
+      "name": "Update Magasin",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Récupérer l'item d'entrée\nconst item = $input.first().json;\n\n// Extraire le Statut PO (adapter selon ta structure de données)\nlet statutinitial = $input.first().json.body.data.properties[\"🔴Statut demande\"].status.name;\n\n\n// Si c'est dans properties (structure Notion)\nif (item.properties && item.properties[\"Statut demande\"] && item.properties[\"Statut demande\"].status) {\n  statutPO = item.properties[\"Statut demande\"].status.name;\n}\n// Si c'est directement accessible\nelse if (item[\"Statut demande\"]) {\n  statutinitial = item[\"Statut demande\"];\n}\n\n// Mapping des statuts selon tes règles\nlet statutDemande = \"Non défini\";\n\n\nswitch (statutinitial) {\n  case \"Commande Partiel\":\n  case \"Commandé\":\n    statutDemande = \"Commandé\";\n    break;\n  \n  case \"Bloqué\":\n    statutDemande = \"Bloqué\";\n    break;\n  \n  case \"Annulé\":\n    statutDemande = \"\";\n    break;\n  \n  case \"Refusé\":\n    statutDemande = \"\";\n    break;\n  \n  case \"⚠️Non-Conforme⚠️\":\n    statutDemande = \"\";\n    break;\n  \n  case \"Clôturé\":\n    statutDemande = \"\";\n    break;\n  \n  case \"À traiter\":\n    statutDemande = \"En cours\";\n    break;\n    \n  case \"En cours\":\n    statutDemande = \"En cours\";\n    break;\n    \n  default:\n    statutDemande = \"\";\n}\n\n// Retourner l'item avec le nouveau statut\nreturn [{\n  json: {\n    ...item,\n    \"Statut Demande\": statutDemande,\n    // Debug info\n    \"Statut Original\": statutinitial\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "8ad4b05b-acc7-4b13-9a77-2dd9dc56396e",
+      "name": "Statut Mapping"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "647c4e88-1da0-419f-b6aa-525865de89cf",
+              "name": "Statut Demande",
+              "value": "={{ $json[\"Statut Demande\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "68dba164-f6e5-4182-822c-2250e2647a65",
+              "name": "ItemId",
+              "value": "={{ $json.body.data.properties.Demande.title[0].mention.page.id }}",
+              "type": "string"
+            },
+            {
+              "id": "7ef2b6d4-cc2f-44f7-839a-d7afcd2ca355",
+              "name": "Page",
+              "value": "={{ $('Webhook').item.json.body.data.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        640,
+        0
+      ],
+      "id": "058a4742-fa76-42f7-a983-651458328100",
+      "name": "Edit Statut",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.Page }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Auto task|select",
+              "selectValue": "⚠️WorkFlow 10⚠️"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        864,
+        256
+      ],
+      "id": "d33a00d0-d6c4-4153-a750-85248a1381ce",
+      "name": "Erreur Magasin",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Webhook Notion de la base Demande d'achat trigger\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/)",
+        "height": 272,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        176,
+        -128
+      ],
+      "typeVersion": 1,
+      "id": "6ced0f8d-b8bf-4655-a70b-d3f29171c271",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Update statut magasin\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/)",
+        "height": 272,
+        "width": 704,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        416,
+        -128
+      ],
+      "typeVersion": 1,
+      "id": "a5712c96-ce4d-4247-bfa6-d28c5f534329",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Update utilisateur\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/)",
+        "height": 272,
+        "width": 384
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        736,
+        144
+      ],
+      "typeVersion": 1,
+      "id": "4b4a4cf3-4b49-45af-99f1-4adfe65cc232",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Statut Mapping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Statut Mapping": {
+      "main": [
+        [
+          {
+            "node": "Edit Statut",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Statut": {
+      "main": [
+        [
+          {
+            "node": "Update Magasin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Magasin": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Erreur Magasin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "27f2190d-f0f6-4d14-889d-4016c383a8c4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "af83b3ea93bc43d0c5ac63a56a75bfd2e58c747f1d5aca065acb21b4a4d3daa3"
+  },
+  "id": "X4sw0xtmubKC2a6v",
+  "tags": [
+    {
+      "updatedAt": "2025-09-12T22:39:32.525Z",
+      "createdAt": "2025-09-12T22:39:32.525Z",
+      "id": "ob1iUzBDY4oAYrZ0",
+      "name": "Achat"
+    },
+    {
+      "updatedAt": "2025-09-18T22:30:43.009Z",
+      "createdAt": "2025-09-18T22:30:43.009Z",
+      "id": "HoYCYFRuu4DBcbl0",
+      "name": "Suivis/Magasin"
+    }
+  ]
+}

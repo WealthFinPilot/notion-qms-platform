@@ -1,0 +1,779 @@
+{
+  "name": "WorkFlow 11",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "{{WEBHOOK_PATH_WF11}}",
+        "options": {
+          "responseData": ""
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -176,
+        -16
+      ],
+      "id": "d31418f4-d61b-4169-920d-8ec950d7df9c",
+      "name": "Documentation",
+      "webhookId": "{{WEBHOOK_ID_WF11}}"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a91b73e3-5366-498a-98f2-967593ea01fd",
+              "name": "New.Id",
+              "value": "={{ $json.body.data.id }}",
+              "type": "string"
+            },
+            {
+              "id": "5a181939-7d89-4c9f-b60b-56a4b2916022",
+              "name": "New.Code",
+              "value": "={{ $json.body.data.properties[\"Code \"].title[0].text.content }}",
+              "type": "string"
+            },
+            {
+              "id": "f6af742b-e899-4325-a3e2-8da4b0710684",
+              "name": "New.Version",
+              "value": "={{ $json.body.data.properties[\"Version d'usage\"].rich_text[0].text.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        48,
+        -16
+      ],
+      "id": "493386e0-da76-4754-87ff-080f3bf15949",
+      "name": "New Doc"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_MASTER_DOCUMENTATIONS_ENTREPRISE}}",
+          "mode": "list",
+          "cachedResultName": "Master Documentations Entreprise",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_MASTER_DOCUMENTATIONS_ENTREPRISE}}"
+        },
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Mise à jours|checkbox",
+              "condition": "equals",
+              "checkboxValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        288,
+        -32
+      ],
+      "id": "68a76823-76e5-4c14-bc4f-2c2327c219e4",
+      "name": "Get Document",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "82216235-7c9a-4202-9a72-dae33b04ec0c",
+              "leftValue": "={{ $json.property_code }}",
+              "rightValue": "={{ $('New Doc').item.json.New.Code }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        528,
+        -32
+      ],
+      "id": "afd6a66b-f593-4a6f-8b98-f44435344d71",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2083ac49-eee1-4750-94ce-fca0a723528b",
+              "name": "Last.id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "cacb4dee-94cb-407b-90f3-a2cec996700b",
+              "name": "Last.TypeCode",
+              "value": "={{ $json.property_type_code }}",
+              "type": "string"
+            },
+            {
+              "id": "447617a9-0437-4276-9fd4-3beb79f114f1",
+              "name": "Last.Shape",
+              "value": "={{ $json.property_shape }}",
+              "type": "array"
+            },
+            {
+              "id": "3f8cba94-7997-4681-b485-6730335c6b30",
+              "name": "Last.niveau",
+              "value": "={{ $json.property_niveau }}",
+              "type": "string"
+            },
+            {
+              "id": "c4c3e9af-6483-48da-bf2d-d8f9bc239d07",
+              "name": "Last.VersionUsage",
+              "value": "={{ $json.property_version_d_usage }}",
+              "type": "string"
+            },
+            {
+              "id": "881bd715-a5b2-4d6f-9d07-1eafe6071e7e",
+              "name": "Last.Document",
+              "value": "={{ $json.property_documents }}",
+              "type": "string"
+            },
+            {
+              "id": "0e8039d9-028a-4be6-a06b-bb15de69ee1a",
+              "name": "Last.Type",
+              "value": "={{ $json.property_type }}",
+              "type": "string"
+            },
+            {
+              "id": "faa1253f-1be3-44d6-a924-1a7f7a4a14ea",
+              "name": "Last.Secteur",
+              "value": "={{ $json.property_secteur }}",
+              "type": "string"
+            },
+            {
+              "id": "9d3998e5-510d-4a30-b02d-72ecf5791234",
+              "name": "Last.Titre",
+              "value": "={{ $json.property_titre }}",
+              "type": "string"
+            },
+            {
+              "id": "227ad996-9d2d-4be2-b0aa-85d2ea323d85",
+              "name": "Last.fichiers_parents",
+              "value": "={{ $json.property_fichiers_parents }}",
+              "type": "boolean"
+            },
+            {
+              "id": "2bbd7a16-8ad1-4273-b834-ca9cbb377fd9",
+              "name": "Last.Fournisseurs",
+              "value": "={{ $json.property_fournisseurs }}",
+              "type": "string"
+            },
+            {
+              "id": "e7553f3e-46ef-4b7c-a47a-42804001f882",
+              "name": "property_alliages_sp_cifiques",
+              "value": "={{ $json.property_alliages_sp_cifiques }}",
+              "type": "array"
+            },
+            {
+              "id": "0f8bd8dc-8339-4400-9663-c9e453532200",
+              "name": "Last.ICon",
+              "value": "={{ $json.property_icon }}",
+              "type": "string"
+            },
+            {
+              "id": "5bb57d2b-27fb-466a-8ef7-dda953b0f098",
+              "name": "Last.Metaux",
+              "value": "={{ $json.property_m_taux }}",
+              "type": "array"
+            },
+            {
+              "id": "8e4528c8-12a8-4830-bf4c-4aa13a3b4dcc",
+              "name": "Last.date_de_cr_ation",
+              "value": "={{ $json.property_date_de_cr_ation }}",
+              "type": "object"
+            },
+            {
+              "id": "ef8a7d65-2a13-4312-b402-0a38741c7bf8",
+              "name": "New.Version",
+              "value": "={{ $('New Doc').item.json.New.Version }}",
+              "type": "string"
+            },
+            {
+              "id": "c970cfa3-037a-4760-81f6-e584055dbbcd",
+              "name": "New.Id",
+              "value": "={{ $('New Doc').item.json.New.Id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        288,
+        192
+      ],
+      "id": "8e9d18ab-ee45-4625-8333-8904f12c1b8c",
+      "name": "Last Doc"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5132da66-4593-44d0-8004-70b1bc2d1cc1",
+              "name": "ID_Typedeprocédé",
+              "value": "={{ $json.properties[\"Types de procédé\"].id }}",
+              "type": "string"
+            },
+            {
+              "id": "30ceb869-aa9b-4065-9a11-04fd98669469",
+              "name": "ID_Groupe Fichiers",
+              "value": "={{ $json.properties[\"Groupe Fichiers\"].id }}",
+              "type": "string"
+            },
+            {
+              "id": "61485a59-d938-4892-9f42-14917e8ea882",
+              "name": "Identifiant_Responsable",
+              "value": "={{ $json.properties.Responsable.id }}",
+              "type": "string"
+            },
+            {
+              "id": "7fe7aa40-03e2-4e21-903d-fb9f44056217",
+              "name": "ID_New",
+              "value": "={{ $('New Doc').item.json.New.Id }}",
+              "type": "string"
+            },
+            {
+              "id": "e2a5cc2a-a13f-4f98-9dc6-9c05c38ee636",
+              "name": "Groupe_Fichiers",
+              "value": "={{ $('Get Document').item.json.property_groupe_fichiers.join(\", \") }}",
+              "type": "string"
+            },
+            {
+              "id": "49a2c38b-4a48-459d-9553-d525f201f3ea",
+              "name": "types_de_process",
+              "value": "={{ $('Get Document').item.json.property_types_de_proc_d.join(\", \") }}",
+              "type": "string"
+            },
+            {
+              "id": "ee01039b-5bfa-4b51-8382-43c68cbf8b12",
+              "name": "Responsable",
+              "value": "={{ $('Get Document').item.json.property_responsable[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "70a7a12e-5eb1-40cc-8852-17d8719fb520",
+              "name": "Accréditations_ID",
+              "value": "={{ $json.properties[\"Accréditations\"].id }}",
+              "type": "string"
+            },
+            {
+              "id": "275a169e-f952-47db-99a4-120ad72e51cf",
+              "name": "Accréditation",
+              "value": "={{ $('Get Document').item.json.property_accr_ditations.join(\", \") }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1024,
+        -16
+      ],
+      "id": "427709ee-8380-48e6-a5a0-9918b224b245",
+      "name": "ID Properties"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "simple": false
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        800,
+        -16
+      ],
+      "id": "09f88889-b64b-4d04-8864-148bd03c4be5",
+      "name": "Get Last Doc",
+      "executeOnce": true,
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        48,
+        192
+      ],
+      "id": "68ab4318-7de8-452f-8f56-7003c7018287",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.notion.com/v1/pages/{{ $json.ID_New }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ \n  JSON.stringify((() => {\n    // Préparer les relations (null si vide)\n    const Responsable = $json.Responsable && $json.Responsable !== \"\"\n      ? [{ id: $json.Responsable }]\n      : null;\n    \n    const Fichier = $json.Groupe_Fichiers && $json.Groupe_Fichiers !== \"\"\n      ? ($json.Groupe_Fichiers.includes(\",\")\n          ? $json.Groupe_Fichiers.split(\", \").map(id => ({ id: id.trim() }))\n          : [{ id: $json.Groupe_Fichiers }])\n      : null;\n    \n    const Process = $json.types_de_process && $json.types_de_process !== \"\"\n      ? ($json.types_de_process.includes(\",\")\n          ? $json.types_de_process.split(\", \").map(id => ({ id: id.trim() }))\n          : [{ id: $json.types_de_process }])\n      : null;\n    \n    const Accreditation = $json.Accréditation && $json.Accréditation !== \"\"\n      ? ($json.Accréditation.includes(\",\")\n          ? $json.Accréditation.split(\", \").map(id => ({ id: id.trim() }))\n          : [{ id: $json.Accréditation }])\n      : null;\n    \n    // Construire le payload dynamiquement\n    const properties = {};\n    \n    if (Responsable !== null) {\n      properties['b[xj'] = { relation: Responsable };\n    }\n    \n    if (Process !== null) {\n      properties['%3Cqu%3A'] = { relation: Process };\n    }\n    \n    if (Fichier !== null) {\n      properties['NymW'] = { relation: Fichier };\n    }\n    \n    if (Accreditation !== null) {\n      properties['iQxB'] = { relation: Accreditation };\n    }\n    \n    return { properties };\n  })())\n}}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1216,
+        -16
+      ],
+      "id": "de2c45ee-9398-4c7d-b69b-1d0dfc57e26e",
+      "name": "Mise à jours",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "{{NOTION_ID_GENERIC_03}}\nResponsable : b[xj\nGroupe fichier : NymW\nType de procédé : '%3Cqu%3A'"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.New.Id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Type Code|select",
+              "selectValue": "={{ $json.Last.TypeCode }}"
+            },
+            {
+              "key": "Shape|multi_select",
+              "multiSelectValue": "={{ $json.Last.Shape }}"
+            },
+            {
+              "key": "Niveau|select",
+              "selectValue": "={{ $json.Last.niveau }}"
+            },
+            {
+              "key": "Dernière Version|rich_text",
+              "textContent": "={{ $json.New.Version }}"
+            },
+            {
+              "key": "Documents|select",
+              "selectValue": "={{ $json.Last.Document }}"
+            },
+            {
+              "key": "Type|select",
+              "selectValue": "={{ $json.Last.Type }}"
+            },
+            {
+              "key": "Secteur|select",
+              "selectValue": "={{ $json.Last.Secteur }}"
+            },
+            {
+              "key": "Titre|rich_text",
+              "textContent": "={{ $json.Last.Titre }}"
+            },
+            {
+              "key": "=Métaux|multi_select",
+              "multiSelectValue": "={{ $json.Last.Metaux }}"
+            },
+            {
+              "key": "Alliages spécifiques|multi_select",
+              "multiSelectValue": "={{ $json.property_alliages_sp_cifiques }}"
+            },
+            {
+              "key": "Fournisseurs|select",
+              "selectValue": "={{ $json.Last.Fournisseurs }}"
+            },
+            {
+              "key": "Fichiers Parents|checkbox",
+              "checkboxValue": "={{ $json.Last.fichiers_parents }}"
+            },
+            {
+              "key": "Mise à jours|checkbox"
+            },
+            {
+              "key": "Date de création|date",
+              "includeTime": false,
+              "date": "={{ $json.Last.date_de_cr_ation.start }}"
+            }
+          ]
+        },
+        "options": {
+          "icon": "={{ $json.Last.ICon }}"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        528,
+        192
+      ],
+      "id": "05eeebdc-432a-4b3e-b62e-56cd786e5a3b",
+      "name": "Fill my new page",
+      "executeOnce": true,
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Get Last Doc').item.json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Archiver ?|checkbox",
+              "checkboxValue": true
+            },
+            {
+              "key": "Mise à jours|checkbox"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1024,
+        176
+      ],
+      "id": "f4ecee12-07f3-4cdf-b4b2-c69244388279",
+      "name": "Update Archivage Last Doc",
+      "retryOnFail": true,
+      "executeOnce": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "archive",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1216,
+        176
+      ],
+      "id": "223cc1ad-b4ee-414e-8ce1-a9c27b418fd4",
+      "name": "Archive Last Doc",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Webhook Notion de la base de donnée Master documentation entreprise et settings\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/)",
+        "height": 240,
+        "width": 448,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -256,
+        -112
+      ],
+      "typeVersion": 1,
+      "id": "4f16d80b-eaf9-439b-95c0-4686a8bc2fc7",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Scan du document et agrégation des données\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/)",
+        "height": 240,
+        "width": 752,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        192,
+        -112
+      ],
+      "typeVersion": 1,
+      "id": "a0d604c1-2ebc-4dea-85f5-798510880f60",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Mise à jours du nouveau document\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/)",
+        "height": 240,
+        "width": 976,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -32,
+        128
+      ],
+      "typeVersion": 1,
+      "id": "1319e039-65e3-458f-8a21-4d53afe35391",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Mise à jours du nouveau document\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/)",
+        "height": 240,
+        "width": 512,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        944,
+        -112
+      ],
+      "typeVersion": 1,
+      "id": "7d960b1a-7eab-429c-95ca-d6122f458c3f",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Destruction de l'ancien document\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/)",
+        "height": 240,
+        "width": 512,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        944,
+        128
+      ],
+      "typeVersion": 1,
+      "id": "7694ff14-bca5-4036-bc34-a3df8d49dd57",
+      "name": "Sticky Note4"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Documentation": {
+      "main": [
+        [
+          {
+            "node": "New Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New Doc": {
+      "main": [
+        [
+          {
+            "node": "Get Document",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get Document": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Get Last Doc",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Last Doc": {
+      "main": [
+        [
+          {
+            "node": "Fill my new page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ID Properties": {
+      "main": [
+        [
+          {
+            "node": "Mise à jours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Last Doc": {
+      "main": [
+        [
+          {
+            "node": "ID Properties",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Archivage Last Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Last Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fill my new page": {
+      "main": [
+        []
+      ]
+    },
+    "Mise à jours": {
+      "main": [
+        []
+      ]
+    },
+    "Update Archivage Last Doc": {
+      "main": [
+        [
+          {
+            "node": "Archive Last Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3ba86595-b0ac-41fa-9e22-c7320c712c77",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "af83b3ea93bc43d0c5ac63a56a75bfd2e58c747f1d5aca065acb21b4a4d3daa3"
+  },
+  "id": "P47d8FI4GwMMuPLr",
+  "tags": [
+    {
+      "updatedAt": "2025-10-07T22:35:26.042Z",
+      "createdAt": "2025-10-07T22:35:26.042Z",
+      "id": "RquBntK103e9IXsC",
+      "name": "Documentation"
+    },
+    {
+      "updatedAt": "2025-10-07T22:35:30.605Z",
+      "createdAt": "2025-10-07T22:35:30.605Z",
+      "id": "E4NU5T8v7Wxa8N7i",
+      "name": "Mise à jours"
+    }
+  ]
+}

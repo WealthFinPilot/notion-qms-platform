@@ -1,0 +1,553 @@
+{
+  "name": "WorkFlow 13",
+  "nodes": [
+    {
+      "parameters": {
+        "multipleMethods": true,
+        "httpMethod": [
+          "POST"
+        ],
+        "path": "{{WEBHOOK_PATH_WF13}}",
+        "options": {
+          "responseData": "success"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -512,
+        16
+      ],
+      "id": "9153da62-3dcf-48bf-9ec8-937a98197ddd",
+      "name": "Webhook",
+      "webhookId": "{{WEBHOOK_ID_WF13}}",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a16d819b-b4dc-445f-9363-929497ee7c05",
+              "name": "idinscription",
+              "value": "={{ $json.body.data.id }}",
+              "type": "string"
+            },
+            {
+              "id": "0a971051-378c-4c7a-bd18-809018f2ee88",
+              "name": "status",
+              "value": "={{ $json.body.data.properties[\"État\"].status.name }}",
+              "type": "string"
+            },
+            {
+              "id": "06bd76d7-6a97-464b-9786-abd0313a0bed",
+              "name": "body",
+              "value": "={{ $json.body.data.properties.Inscriptions.title[0].plain_text }}",
+              "type": "string"
+            },
+            {
+              "id": "380901e7-0619-45be-8e15-af3461664854",
+              "name": "Certificat_obtenu",
+              "value": "={{ $json.body.data.properties[\"Certificat obtenu ?\"].checkbox }}",
+              "type": "boolean"
+            },
+            {
+              "id": "fb1ea470-d5a9-4c2d-97da-ac47baa717ee",
+              "name": "Certificat",
+              "value": "={{ $json.body.data.properties[\"Certificat ou carte\"].checkbox }}",
+              "type": "boolean"
+            },
+            {
+              "id": "43f3d5e0-d430-46d2-a679-e6f49d8cfcc0",
+              "name": "obtention",
+              "value": "={{ $json.body.data.properties[\"Date d'obtention\"] }}",
+              "type": "object"
+            },
+            {
+              "id": "727db0b1-0dfa-4a44-8d77-d258bd61161e",
+              "name": "péremption",
+              "value": "={{ $json.body.data.properties[\"Date de péremption\"] }}",
+              "type": "object"
+            },
+            {
+              "id": "ae3e52fd-bf28-4a8f-83b4-62e76601aa1e",
+              "name": "Formation_indv",
+              "value": "={{ $json.body.data.properties[\"Formation indv\"].checkbox }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -272,
+        16
+      ],
+      "id": "f022b785-968e-4845-911e-1e333a84fdc9",
+      "name": "1 Edit Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  const raw = item.json.body ?? '';\n\n  // body peut être string ou objet -> on force en string\n  let body = (typeof raw === 'string') ? raw : JSON.stringify(raw);\n\n  // retire guillemets externes si présents\n  if (\n    (body.startsWith('\"') && body.endsWith('\"')) ||\n    (body.startsWith(\"'\") && body.endsWith(\"'\"))\n  ) {\n    body = body.slice(1, -1);\n  }\n\n  // enlève \" EMPxxxxx\" uniquement si c'est en FIN de texte\n  const cleanedBody = body.replace(/\\s*EMP[^\\s]+\\s*$/, '').trim();\n\n  return {\n    json: {\n      ...item.json,\n      cleanedBody, // => \"Les formules - 2025 - 12\"\n    },\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        16
+      ],
+      "id": "41ccd964-ab25-4430-962d-5138dc224019",
+      "name": "2 cleanbody",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_INSTANCES_DE_FORMATIONS}}",
+          "mode": "list",
+          "cachedResultName": "Instances de formations",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_INSTANCES_DE_FORMATIONS}}"
+        },
+        "returnAll": true,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        576,
+        -176
+      ],
+      "id": "7d1eb24d-0328-46ff-b3db-39b527d35ef6",
+      "name": "3 Get Instances",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        832,
+        -16
+      ],
+      "id": "6dcb8b4d-2a54-4102-93a3-3bc47563e04c",
+      "name": "Merge 1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "358365ec-f9c0-41a8-9c3e-4b28abce83c5",
+              "leftValue": "={{ $json.name }}",
+              "rightValue": "={{ $json.cleanedBody }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1024,
+        -16
+      ],
+      "id": "a4e7634a-0260-4d15-a151-ead95a3c11c2",
+      "name": "If match 1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0b6efe3f-16c9-49c3-94d0-9b3455a6edcf",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "ec00bb84-9f69-4c9b-9bca-9610e4b14b8d",
+              "name": "idinscription",
+              "value": "={{ $json.idinscription }}",
+              "type": "string"
+            },
+            {
+              "id": "9217bae3-0bda-4d39-ac0b-28923d4980aa",
+              "name": "status",
+              "value": "={{ $json.status }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1312,
+        -32
+      ],
+      "id": "1b6ac834-2560-40c9-9af7-e74b93ce5aae",
+      "name": "4 Edit instances"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "eaa33ac7-74e5-4359-90f7-ba2e6e91f737",
+              "leftValue": "={{ $json.Certificat }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "9a524017-9cdc-473c-9d5b-c14a05bd8a43",
+              "leftValue": "={{ $json.Formation_indv }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        272,
+        16
+      ],
+      "id": "354e7f14-4f7a-4f38-b7d8-21265e3d1db1",
+      "name": "If certificat 1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "Pas commencé",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "30243375-92ae-409f-be9d-4d4bda1b70c3"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Pas commencé"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "11cbf588-3773-48d7-9cb9-97c6a462e3c1",
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "En cours",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "En cours"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1520,
+        -48
+      ],
+      "id": "2c886861-6c62-4f60-8425-2cd17bdbf0c4",
+      "name": "Switch",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.idinscription }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "📆 Instances de formations|relation",
+              "relationValue": [
+                "={{ $json.id }}"
+              ]
+            },
+            {
+              "key": "Date complété|date",
+              "date": "={{ $now }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1808,
+        128
+      ],
+      "id": "fd511fa7-f70e-4fe8-bd9c-8a2ac13a3269",
+      "name": "5a Update terminé",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.idinscription }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "📆 Instances de formations|relation",
+              "relationValue": [
+                "={{ [] }}"
+              ]
+            },
+            {
+              "key": "Date complété|date",
+              "includeTime": false,
+              "date": "="
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1808,
+        -64
+      ],
+      "id": "01bed962-1234-47f5-9971-7f57b18f6ea0",
+      "name": "5b Update non terminé",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "1 Edit Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1 Edit Webhook": {
+      "main": [
+        [
+          {
+            "node": "2 cleanbody",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 cleanbody": {
+      "main": [
+        [
+          {
+            "node": "If certificat 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 Get Instances": {
+      "main": [
+        [
+          {
+            "node": "Merge 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge 1": {
+      "main": [
+        [
+          {
+            "node": "If match 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If match 1": {
+      "main": [
+        [
+          {
+            "node": "4 Edit instances",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4 Edit instances": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If certificat 1": {
+      "main": [
+        [
+          {
+            "node": "3 Get Instances",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge 1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "5b Update non terminé",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "5b Update non terminé",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "5a Update terminé",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1eb10916-43e3-4702-b453-c08a2fc467b1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "af83b3ea93bc43d0c5ac63a56a75bfd2e58c747f1d5aca065acb21b4a4d3daa3"
+  },
+  "id": "VfIecSfbxJuWEcdm",
+  "tags": [
+    {
+      "updatedAt": "2025-12-18T17:20:53.862Z",
+      "createdAt": "2025-12-18T17:20:53.862Z",
+      "id": "33IaYyJ2JVfgyc4Y",
+      "name": "Formation - mise à jours"
+    }
+  ]
+}

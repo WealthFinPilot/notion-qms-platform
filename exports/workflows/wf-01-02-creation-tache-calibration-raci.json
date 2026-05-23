@@ -1,0 +1,1153 @@
+{
+  "name": "WorkFlow 01.02",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_MASTER_TACHES}}",
+          "mode": "list",
+          "cachedResultName": "Master Tâches",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_MASTER_TACHES}}"
+        },
+        "title": "=",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Nom|title",
+              "title": "=Vérification - {{ $json.name }}"
+            },
+            {
+              "key": "État|status",
+              "statusValue": "Pas commencé"
+            },
+            {
+              "key": "Dead line|date",
+              "includeTime": false,
+              "date": "={{ $json.property_date_due.start }}"
+            },
+            {
+              "key": "Priorité|select",
+              "selectValue": "={{ $('WorkFlow 01').item.json.property_statut_calibration }}"
+            },
+            {
+              "key": "*Référence n8n*|rich_text",
+              "textContent": "=Calibration\nID Database: {{NOTION_DB_ID_MASTER_EQUIPEMENTS}}\nID Page: {{ $json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -864,
+        48
+      ],
+      "id": "081bbcc4-4f52-460f-991a-bd49a6976a81",
+      "name": "Tache VérificationMoyenne",
+      "retryOnFail": false,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('WorkFlow 01').item.json[\"IdProcédé\"] }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -432,
+        48
+      ],
+      "id": "4b6fa9c0-53f0-42e4-9060-7a986fc90ed9",
+      "name": "Obtenir Opérateur3",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "97f6f57b-fecf-4bc4-b488-05a1a81b5207",
+              "name": "operateursIDs",
+              "value": "={{ $('Obtenir Opérateur3').item.json.property_op_rateurs }}",
+              "type": "array"
+            },
+            {
+              "id": "825e0a72-7b28-4044-8fa1-709c017b4748",
+              "name": "=Responsable",
+              "value": "={{ $('WorkFlow 01').item.json.Responsable }}",
+              "type": "string"
+            },
+            {
+              "id": "2c65a135-0e3b-4dbd-acac-370c64fec0ab",
+              "name": "id",
+              "value": "={{ $('Tache VérificationMoyenne').item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "9ee6604b-ed5e-475e-97a4-c8015995d7fb",
+              "name": "Département",
+              "value": "={{ $('WorkFlow 01').item.json[\"Département\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "1b179dba-9dca-4ef2-9568-fa52d19be03d",
+              "name": "Approbateur",
+              "value": "={{ $('Get Approbateur Calibration').item.json.properties.Utilisateurs.rollup.array[0].people[0].id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -208,
+        32
+      ],
+      "id": "066219ec-a909-4f4c-8daa-23ff003f020c",
+      "name": "Obtenir les Operateurs3",
+      "notesInFlow": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.notion.com/v1/blocks/{{ $json.id }}/children",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{(() => {\n  const equipementName = $('WorkFlow 01').item.json.name; // Nom page DB B\n  const equipementUrl = $('WorkFlow 01').item.json.url; // URL format Notion avec slug\n\n  return {\n    children: [\n      {\n        object: 'block',\n        type: 'paragraph',\n        paragraph: {\n          rich_text: [\n            { type: 'text', text: { content: '🔗 Équipement lié : ' } },\n            { type: 'text', text: { content: equipementName, link: { url: equipementUrl } } }\n          ]\n        }\n      },\n    ]\n  };\n})()}}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1168,
+        32
+      ],
+      "id": "63cc8695-45ba-4c37-8d35-475606d13c05",
+      "name": "Vérification Lien3",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "{{NOTION_ID_GENERIC_02}}\nFUUU\nehl%7B\npXDv"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n\n  // LIGNE 5 CORRIGÉE\n  const nodeName = $prevNode.name || 'UnknownNode';\n\n  const failed = !!i.json._hadError || !!i.json.error;\n\n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n\n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n\n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n\n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "95e0219f-2993-4442-b63c-e61ef8e91abb",
+      "name": "Update Log30",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{$prevNode.name}}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            },
+            {
+              "name": "SubName",
+              "value": "={{ $workflow.name }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cbd9454a-8dea-4c88-89e1-acd43b7aa706",
+      "name": "Log Snapshot10",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -1392,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n\n  // LIGNE 5 CORRIGÉE\n  const nodeName = $prevNode.name || 'UnknownNode';\n\n  const failed = !!i.json._hadError || !!i.json.error;\n\n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n\n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n\n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n\n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "259ea826-f922-41a8-8609-ce7388e5d8f6",
+      "name": "Update Log10",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -1152,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n\n  // LIGNE 5 CORRIGÉE\n  const nodeName = $prevNode.name || 'UnknownNode';\n\n  const failed = !!i.json._hadError || !!i.json.error;\n\n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n\n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n\n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n\n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "3c97c4da-eabc-4ad3-a600-a1189faed45d",
+      "name": "Update Log",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -880,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('WorkFlow 01').item.json.id }}",
+          "mode": "id"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Étalonnage Request|checkbox",
+              "checkboxValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1392,
+        32
+      ],
+      "id": "27eaf0b1-6b5b-4745-88c0-b87ad5cdc5aa",
+      "name": "Check Calibration",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1600,
+        400
+      ],
+      "id": "9a968eff-73c4-45d1-8854-f7d490af2fc8",
+      "name": "Merge1",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n\n  // LIGNE 5 CORRIGÉE\n  const nodeName = $prevNode.name || 'UnknownNode';\n\n  const failed = !!i.json._hadError || !!i.json.error;\n\n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n\n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n\n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n\n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "09bcdf14-cd8c-4980-b4d2-d9140b0caed8",
+      "name": "Update Log31",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2336,
+        0
+      ],
+      "id": "b9f159e2-2c76-4d6e-a96e-69ff592e9d5e",
+      "name": "Merge2",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1600,
+        48
+      ],
+      "id": "77c096f9-e48c-4de8-9207-f485055a3c6b",
+      "name": "WorkFlow 01"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('WorkFlow 01').item.json.property_statut }}",
+                    "rightValue": "=⚠️Calibration requise",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "4051db1b-d7ac-4484-8d27-a9624f268c5a"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Calibration1"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b6b293ed-7bd2-4731-89e9-665300122aa9",
+                    "leftValue": "={{ $('WorkFlow 01').item.json.property_statut }}",
+                    "rightValue": "🛑Non calibré",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Calibration2"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "04d07d88-8944-42ed-a0c8-4e5a79cb4a9e",
+                    "leftValue": "={{ $('WorkFlow 01').item.json.property_statut }}",
+                    "rightValue": "⚠️Vérification requise",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Vérification1"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c59eb2e7-57ab-4d01-bbaf-405faf36a7be",
+                    "leftValue": "={{ $('WorkFlow 01').item.json.property_statut }}",
+                    "rightValue": "🔴Non vérifié",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Vérification2"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        0,
+        32
+      ],
+      "id": "a644956f-ee82-48b6-8fb0-9353c7cd2651",
+      "name": "Switch",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        224,
+        96
+      ],
+      "id": "38b15376-d73a-409e-8f69-e14c884003e1",
+      "name": "Merge3",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        224,
+        -96
+      ],
+      "id": "cd4fa224-de89-4366-b8ad-041522e235a6",
+      "name": "Merge4",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        912,
+        -32
+      ],
+      "id": "95919783-acf9-4a2b-b6d8-dc0b9f44bf8e",
+      "name": "Merge5"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n\n  // LIGNE 5 CORRIGÉE\n  const nodeName = $prevNode.name || 'UnknownNode';\n\n  const failed = !!i.json._hadError || !!i.json.error;\n\n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n\n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n\n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n\n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "d4ed0718-c507-421f-9750-c8ce8e9a7121",
+      "name": "Update Log2",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        912,
+        -384
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{ ($workflow.name || 'Unknown Workflow') + \" - \" + ($json._log?.actions?.find(action => !action.ok)?.node || Object.keys($json._log?.failedNodes || {})[0] || 'UnknownNode') }}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5cd5e646-c992-4dbb-86f3-75a222ddb3ce",
+      "name": "Log Snapshot",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        2560,
+        16
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Nom|title",
+              "title": "=Calibration - {{ $('WorkFlow 01').item.json.name }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        -96
+      ],
+      "id": "cf7a61e3-697e-478a-ae1e-1a492ca9f521",
+      "name": "Fix Name calibration",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.notion.com/v1/pages/{{ $('Tache VérificationMoyenne').item.json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  JSON.stringify((() => {\n    // Relation fixe\n    const fixedRelation = [{ id: '{{NOTION_ID_GENERIC_02}}' }];\n const Departement = $('Obtenir les Operateurs3').item.json.Département;\n\n    // Récupération et suppression des doublons\n    const operateursIDs = Array.from(\n      new Set($('Obtenir les Operateurs3').item.json.operateursIDs || [])\n    ).map(id => ({ id }));\n\n    // ID Responsable (one-way)\n    const responsableId = $('Obtenir les Operateurs3').item.json.Responsable;\n\n    // Payload PATCH\n    return {\n      properties: {\n        FUUU: { relation: fixedRelation },\n        'ehl{': { relation: operateursIDs },\n        pXDv: { relation: [{ id: responsableId }] },\n        ':Rn_' : { relation: [{ id: Departement }] },\n      }\n    };\n  })())\n}}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        688,
+        -96
+      ],
+      "id": "c63e6749-a583-4580-9e06-e9ff08145d65",
+      "name": "PATCH Cal Operateur",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "{{NOTION_ID_GENERIC_02}}\nFUUU\nehl%7B\npXDv\n$('Obtenir les Operateurs3').item.json.Responsable"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.notion.com/v1/pages/{{ $('Tache VérificationMoyenne').item.json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ \n  JSON.stringify((() => {\n    // Relation fixe\n    const fixedRelation = [{ id: '{{NOTION_ID_GENERIC_05}}' }];\n const Departement = $json[\"Département\"];\n\n    // Récupération et suppression des doublons\n    const operateursIDs = Array.from(\n      new Set($json.operateursIDs || [])\n    ).map(id => ({ id }));\n\n    // ID Responsable (one-way)\n    const responsableId = $json.Responsable;\n\n    // Payload PATCH\n    return {\n      properties: {\n        FUUU: { relation: fixedRelation },\n        'ehl{': { relation: operateursIDs },\n        pXDv: { relation: [{ id: responsableId }] },\n        ':Rn_' : { relation: [{ id: Departement }] },\n      }\n    };\n  })())\n}}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        688,
+        48
+      ],
+      "id": "361ff38e-521c-4830-ae71-bd6c6cb5a568",
+      "name": "PATCH Verif Operator",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "{{NOTION_ID_GENERIC_02}}\nFUUU\nehl%7B\npXDv"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Tache VérificationMoyenne').item.json.id }}",
+          "mode": "id"
+        },
+        "simple": false
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1600,
+        32
+      ],
+      "id": "945977c4-7329-4642-a775-6635116f8302",
+      "name": "Get a database page",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "*Référence n8n*|rich_text",
+              "textContent": "={{ $json.properties[\"*Référence n8n*\"].rich_text[0].text.content }}\nTicket : {{ $json.properties.Ticket.unique_id.number }}"
+            },
+            {
+              "key": "Approbateur|people",
+              "peopleValue": "={{ $('Obtenir les Operateurs3').item.json.Approbateur }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1808,
+        32
+      ],
+      "id": "2e293267-b358-482f-99e7-fc77cc5bbfce",
+      "name": "Update Ticket Calibration",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('WorkFlow 01').item.json.Responsable }}",
+          "mode": "id"
+        },
+        "simple": false
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -624,
+        48
+      ],
+      "id": "8046937b-26c8-4993-a4ee-e267cfbba885",
+      "name": "Get Approbateur Calibration",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n\n  // LIGNE 5 CORRIGÉE\n  const nodeName = $prevNode.name || 'UnknownNode';\n\n  const failed = !!i.json._hadError || !!i.json.error;\n\n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n\n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n\n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n\n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "f7aac02e-0d77-4e9b-8e1f-7f6fc58e4b2c",
+      "name": "Update Log32",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const allLogs = $input.all();\n\nconst consolidated = {\n  workflow: allLogs[0].json._log?.workflow,\n  startedAt: allLogs[0].json._log?.startedAt,\n  finishedAt: new Date().toISOString(),\n  ok: allLogs.reduce((sum, item) => sum + (item.json._log?.ok || 0), 0),\n  ko: allLogs.reduce((sum, item) => sum + (item.json._log?.ko || 0), 0),\n  \n  // Récupération des nodes en échec (inchangé)\n  failedNodes: allLogs.reduce((acc, item) => {\n    if (item.json._hadError || item.json.error) {\n      const nodeName = item.json._lastNode || item.json.error?.name || 'UnknownNode';\n      acc[nodeName] = {\n        error: true,\n        message: item.json.error?.message || item.json._errMsg || 'Erreur inconnue'\n      };\n    }\n    return acc;\n  }, {}),\n  \n  // CORRECTION : Récupérer les vraies actions depuis _log.actions\n  actions: allLogs.reduce((acc, item) => {\n    // Récupérer les actions existantes dans _log.actions\n    const existingActions = item.json._log?.actions || [];\n    \n    // Ajouter les actions existantes\n    acc.push(...existingActions);\n    \n    // Si il y a une erreur globale sur cet item, ajouter une action d'erreur\n    if (item.json._hadError || item.json.error) {\n      const nodeName = item.json._lastNode || item.json.error?.name || 'UnknownNode';\n      acc.push({\n        node: nodeName,\n        ok: false,\n        msg: item.json.error?.message || item.json._errMsg || 'Erreur'\n      });\n    }\n    \n    return acc;\n  }, [])\n};\n\nreturn [{ json: { _log: consolidated } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2768,
+        16
+      ],
+      "id": "1d7cc4a4-2082-4038-95da-b34f5f39dc83",
+      "name": "Returns item"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Tache VérificationMoyenne": {
+      "main": [
+        [
+          {
+            "node": "Get Approbateur Calibration",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtenir Opérateur3": {
+      "main": [
+        [
+          {
+            "node": "Obtenir les Operateurs3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtenir les Operateurs3": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vérification Lien3": {
+      "main": [
+        [
+          {
+            "node": "Check Calibration",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log32",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Snapshot10": {
+      "main": [
+        [
+          {
+            "node": "Update Log10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log10": {
+      "main": [
+        [
+          {
+            "node": "Tache VérificationMoyenne",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Check Calibration": {
+      "main": [
+        [
+          {
+            "node": "Get a database page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log32",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Update Log31",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log30": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Update Log31": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Log Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WorkFlow 01": {
+      "main": [
+        [
+          {
+            "node": "Log Snapshot10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "PATCH Verif Operator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge4": {
+      "main": [
+        [
+          {
+            "node": "Fix Name calibration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge5": {
+      "main": [
+        [
+          {
+            "node": "Vérification Lien3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log2": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Returns item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fix Name calibration": {
+      "main": [
+        [
+          {
+            "node": "PATCH Cal Operateur",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PATCH Cal Operateur": {
+      "main": [
+        [
+          {
+            "node": "Merge5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PATCH Verif Operator": {
+      "main": [
+        [
+          {
+            "node": "Merge5",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Update Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a database page": {
+      "main": [
+        [
+          {
+            "node": "Update Ticket Calibration",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log32",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Ticket Calibration": {
+      "main": [
+        [
+          {
+            "node": "Update Log30",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log32",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Approbateur Calibration": {
+      "main": [
+        [
+          {
+            "node": "Obtenir Opérateur3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log32": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "72a97b03-89d5-4268-82ca-c52484a08b74",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "af83b3ea93bc43d0c5ac63a56a75bfd2e58c747f1d5aca065acb21b4a4d3daa3"
+  },
+  "id": "lSgXwM0TOWE0Hss3",
+  "tags": [
+    {
+      "createdAt": "2025-08-10T17:31:56.398Z",
+      "updatedAt": "2025-08-10T17:31:56.398Z",
+      "id": "76NLpNrjmE5vsXoO",
+      "name": "Equipement"
+    },
+    {
+      "createdAt": "2025-09-05T21:36:21.050Z",
+      "updatedAt": "2025-09-05T21:36:21.050Z",
+      "id": "CbLg8ioZUmnRLO2Z",
+      "name": "Create Calibration"
+    }
+  ]
+}

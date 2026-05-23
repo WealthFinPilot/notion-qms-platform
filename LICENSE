@@ -1,0 +1,27 @@
+Copyright (c) 2025 Sébastien Oger. Tous droits réservés.
+
+Projet : notion-qms-lab — documentation portfolio dérivée d'un système QMS de laboratoire interne.
+
+Ce dépôt est publié à des fins de DÉMONSTRATION DE PORTFOLIO uniquement.
+
+Il constitue une œuvre dérivée, anonymisée et reformulée d'un système interne
+réel, dont la documentation source est confidentielle. Le contenu (textes,
+diagrammes, captures d'écran, structure) est protégé par le droit d'auteur.
+
+Sont AUTORISÉS, sans permission préalable :
+  - la consultation et l'évaluation du dépôt dans un contexte de recrutement
+    ou d'appréciation des compétences de l'auteur ;
+  - la citation de courts extraits avec attribution explicite à l'auteur.
+
+Sont INTERDITS, sauf autorisation écrite préalable de l'auteur :
+  - la reproduction ou la redistribution de tout ou partie du dépôt ;
+  - la réutilisation de l'architecture, des workflows ou des diagrammes dans
+    un autre projet, commercial ou non ;
+  - toute exploitation laissant entendre une conformité ou une accréditation
+    ISO/IEC 17025 du système décrit.
+
+Le système décrit *contribue à* la maîtrise d'un système de management de la
+qualité de laboratoire ; il ne *garantit pas* la conformité ISO/IEC 17025 ni
+l'accréditation, qui demeure une décision de l'organisme accréditeur.
+
+LE CONTENU EST FOURNI « EN L'ÉTAT », SANS GARANTIE D'AUCUNE SORTE.

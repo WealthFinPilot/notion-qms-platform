@@ -1,0 +1,16 @@
+# Système
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Éditeurs
+.vscode/
+*.swp
+*~
+
+# Sources non publiées (dossier parent, hors repo)
+# Note : les sources originales et le dossier anonymized/ restent dans le dossier
+# de travail local, non versionné. Rien à exclure ici côté repo public.
+
+# Fichier de travail Agent D (checklist de validation — non publié)
+REPO-READY.md

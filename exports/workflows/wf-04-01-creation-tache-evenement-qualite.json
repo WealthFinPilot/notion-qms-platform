@@ -1,0 +1,668 @@
+{
+  "name": "WorkFlow 04.01",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d31d96cf-81f1-4682-b029-f872c3cf5da4",
+              "name": "Type de tache ID",
+              "value": "={{ $('WorkFlow 04.01').item.json[\"Type de tache ID\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "f30f3e41-ffa7-4e23-a97d-b407791b4eb9",
+              "name": "Responsable ID",
+              "value": "={{ $('WorkFlow 04.01').item.json[\"Responsable ID\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "19e1bdce-0a47-4626-964d-ddf4fc6e6e7e",
+              "name": "ID Page Type de tache",
+              "value": "={{ $('WorkFlow 04.01').item.json[\"ID Page Type de tache\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "cad6ed7e-bb09-4b52-8015-3bd87fa8e44e",
+              "name": "idMaster",
+              "value": "={{ $('Tache Qualité').item.json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -64,
+        16
+      ],
+      "id": "97359fc8-16cf-494f-99dd-13942dac5f4d",
+      "name": "Obtenir les Operateurs",
+      "notesInFlow": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  const failed = !!i.json._hadError;\n  const msg = i.json._errMsg || (failed ? 'failed' : 'ok');\n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "a108a3b5-1bae-4f5a-b9da-134bddaa09c1",
+      "name": "Update Log27",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        656,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.notion.com/v1/pages/{{ $json.idMaster }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ \n  JSON.stringify((() => {\n    try {\n      // 🎯 RÉCUPÉRATION des données avec fallbacks\n      const sourceItem = $('WorkFlow 04.01').item.json;\n      \n      // Relation fixe (Type de tâche)\n      const typeDeTaskeId = sourceItem[\"ID Page Type de tache\"];\n      if (!typeDeTaskeId) throw new Error(\"ID Page Type de tache manquant\");\n      \n      const fixedRelation = [{ id: typeDeTaskeId }];\n      \n      // Équipe (avec validation)\n      const operateursIDs = sourceItem['Équipe'] || [];\n      const validOperateurs = operateursIDs.filter(op => op && op.id);\n      \n      // Responsable (avec validation)  \n      const responsableId = sourceItem[\"Responsable ID\"];\n      if (!responsableId) throw new Error(\"Responsable ID manquant\");\n      \n      // 🎯 PAYLOAD PATCH sécurisé\n      const payload = {\n        properties: {\n          FUUU: { relation: fixedRelation },\n          'ehl{': { relation: validOperateurs },\n          pXDv: { relation: [{ id: responsableId }] },\n          ':Rn_': { relation: [{ id: \"{{NOTION_ID_GENERIC_01}}\" }] }\n        }\n      };\n      \n      return payload;\n      \n    } catch (error) {\n      return {\n        error: {\n          message: error.message,\n          timestamp: new Date().toISOString()\n        }\n      };\n    }\n  })())\n}}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        144,
+        16
+      ],
+      "id": "8d913ddf-9b53-45bb-a578-b594a65d3309",
+      "name": "Update Master Tâche",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Département : {{NOTION_ID_GENERIC_01}}\nId propriété : :Rn\nFUUU\nehl%7B\npXDv"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{ ($workflow.name || 'Unknown Workflow') + \" - \" + ($json._log?.actions?.find(action => !action.ok)?.node || Object.keys($json._log?.failedNodes || {})[0] || 'UnknownNode') }}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "593f996b-c21a-4c01-9efa-8d35cba24e88",
+      "name": "Log Snapshot2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -1152,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "cd16b7ba-a683-4304-8fe8-b2cd81f79a9e",
+      "name": "Update Log4",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        656,
+        272
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1024,
+        16
+      ],
+      "id": "c51b1ffd-17b8-4272-8588-e9f9ae04c7b0",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{$prevNode.name}}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            },
+            {
+              "name": "SubName",
+              "value": "={{ $workflow.name }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ed3c0a0f-a728-4c95-86b7-36a7cb93a60b",
+      "name": "Log Snapshot10",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -1376,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n\n  // LIGNE 5 CORRIGÉE\n  const nodeName = $prevNode.name || 'UnknownNode';\n\n  const failed = !!i.json._hadError || !!i.json.error;\n\n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n\n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n\n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n\n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "ee53c7ce-74e9-4fae-be15-fa640f2f8b13",
+      "name": "Update Log10",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -1136,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{ ($workflow.name || 'Unknown Workflow') + \" - \" + ($json._log?.actions?.find(action => !action.ok)?.node || Object.keys($json._log?.failedNodes || {})[0] || 'UnknownNode') }}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c33d19b3-3b4d-4fc9-8498-4e4eb0f776a7",
+      "name": "Log Snapshot3",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        1248,
+        16
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_MASTER_TACHES}}",
+          "mode": "list",
+          "cachedResultName": "Master Tâches",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_MASTER_TACHES}}"
+        },
+        "title": "=",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Nom|title",
+              "title": "={{ $json.Name }}"
+            },
+            {
+              "key": "État|status",
+              "statusValue": "=Pas commencé"
+            },
+            {
+              "key": "Priorité|select",
+              "selectValue": "={{ $('WorkFlow 04.01').item.json[\"Priorité\"] }}"
+            },
+            {
+              "key": "Dead line|date",
+              "includeTime": false,
+              "date": "={{ $('WorkFlow 04.01').item.json.Deadline.date.start }}"
+            },
+            {
+              "key": "*Référence n8n*|rich_text",
+              "textContent": "=Qualité\nID Database: {{NOTION_DB_ID_CALENDRIER_QUALITE}}\nID Page: {{ $('WorkFlow 04.01').item.json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -928,
+        16
+      ],
+      "id": "c910b3f6-924d-4985-ba28-1ed820d4ec03",
+      "name": "Tache Qualité",
+      "retryOnFail": false,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('WorkFlow 04.01').item.json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Request n8n|checkbox",
+              "checkboxValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        432,
+        16
+      ],
+      "id": "06ae2401-ab29-4aa4-bfc4-6dd1d2374d2c",
+      "name": "Update Tache Qualité",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1584,
+        16
+      ],
+      "id": "e723a860-c1ba-4ff4-ad4d-22f0cfac09b6",
+      "name": "WorkFlow 04.01"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Tache Qualité').item.json.id }}",
+          "mode": "id"
+        },
+        "simple": false
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -480,
+        16
+      ],
+      "id": "6e8796bc-92e8-4759-8dbf-8ef523777d62",
+      "name": "Get New Tâche Qualité",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "*Référence n8n*|rich_text",
+              "textContent": "={{ $json.properties[\"*Référence n8n*\"].rich_text[0].text.content }}\nTicket : {{ $json.properties.Ticket.unique_id.number }}"
+            },
+            {
+              "key": "Approbateur|people",
+              "peopleValue": "={{ $('Get Approbateur').item.json.properties.Utilisateurs.rollup.array[0].people[0].id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -272,
+        16
+      ],
+      "id": "c9cee348-6842-4fd3-94cd-7f299cfb4e48",
+      "name": "Update Ticket",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('WorkFlow 04.01').item.json[\"Responsable ID\"] }}",
+          "mode": "id"
+        },
+        "simple": false
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -688,
+        16
+      ],
+      "id": "b6f37143-47d1-43e8-962c-35e8d0b281b3",
+      "name": "Get Approbateur",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const allLogs = $input.all();\n\nconst consolidated = {\n  workflow: allLogs[0].json._log?.workflow,\n  startedAt: allLogs[0].json._log?.startedAt,\n  finishedAt: new Date().toISOString(),\n  ok: allLogs.reduce((sum, item) => sum + (item.json._log?.ok || 0), 0),\n  ko: allLogs.reduce((sum, item) => sum + (item.json._log?.ko || 0), 0),\n  \n  // Récupération des nodes en échec (inchangé)\n  failedNodes: allLogs.reduce((acc, item) => {\n    if (item.json._hadError || item.json.error) {\n      const nodeName = item.json._lastNode || item.json.error?.name || 'UnknownNode';\n      acc[nodeName] = {\n        error: true,\n        message: item.json.error?.message || item.json._errMsg || 'Erreur inconnue'\n      };\n    }\n    return acc;\n  }, {}),\n  \n  // CORRECTION : Récupérer les vraies actions depuis _log.actions\n  actions: allLogs.reduce((acc, item) => {\n    // Récupérer les actions existantes dans _log.actions\n    const existingActions = item.json._log?.actions || [];\n    \n    // Ajouter les actions existantes\n    acc.push(...existingActions);\n    \n    // Si il y a une erreur globale sur cet item, ajouter une action d'erreur\n    if (item.json._hadError || item.json.error) {\n      const nodeName = item.json._lastNode || item.json.error?.name || 'UnknownNode';\n      acc.push({\n        node: nodeName,\n        ok: false,\n        msg: item.json.error?.message || item.json._errMsg || 'Erreur'\n      });\n    }\n    \n    return acc;\n  }, [])\n};\n\nreturn [{ json: { _log: consolidated } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        16
+      ],
+      "id": "095bca6c-8928-490e-92a4-ca016120a6d8",
+      "name": "Returns item"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Obtenir les Operateurs": {
+      "main": [
+        [
+          {
+            "node": "Update Master Tâche",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log27": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Master Tâche": {
+      "main": [
+        [
+          {
+            "node": "Update Tache Qualité",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Snapshot2": {
+      "main": [
+        [
+          {
+            "node": "Update Log4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log4": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Log Snapshot3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Snapshot10": {
+      "main": [
+        [
+          {
+            "node": "Update Log10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log10": {
+      "main": [
+        [
+          {
+            "node": "Tache Qualité",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Snapshot3": {
+      "main": [
+        [
+          {
+            "node": "Returns item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tache Qualité": {
+      "main": [
+        [
+          {
+            "node": "Get Approbateur",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Tache Qualité": {
+      "main": [
+        [
+          {
+            "node": "Update Log27",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WorkFlow 04.01": {
+      "main": [
+        [
+          {
+            "node": "Log Snapshot10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get New Tâche Qualité": {
+      "main": [
+        [
+          {
+            "node": "Update Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Ticket": {
+      "main": [
+        [
+          {
+            "node": "Obtenir les Operateurs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Approbateur": {
+      "main": [
+        [
+          {
+            "node": "Get New Tâche Qualité",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6e4ed5c5-1548-4a23-ab8b-04eca7003777",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "af83b3ea93bc43d0c5ac63a56a75bfd2e58c747f1d5aca065acb21b4a4d3daa3"
+  },
+  "id": "DPqgSThQctwjecR3",
+  "tags": [
+    {
+      "createdAt": "2025-08-22T22:35:24.324Z",
+      "updatedAt": "2025-08-22T22:35:24.324Z",
+      "id": "khxlLbEyjbwX4Ty1",
+      "name": "Tâche Qualité"
+    },
+    {
+      "createdAt": "2025-09-05T21:40:26.012Z",
+      "updatedAt": "2025-09-05T21:40:26.012Z",
+      "id": "Evsiucf2hG2MQ1Jl",
+      "name": "Create Tache Qualité"
+    }
+  ]
+}

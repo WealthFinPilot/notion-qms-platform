@@ -1,0 +1,21 @@
+%% Cycle Documentation — SMQ laboratoire
+%% Versionnage et archivage de la version precedente via WF 11.
+%% Source : Contexte.md (P3) et Les bases de donnees.md (Master Documentations, Archive Documentations).
+flowchart LR
+    classDef step fill:#F0F9FF,stroke:#0284C7,color:#082F49,stroke-width:2px;
+    classDef wf fill:#FFE8B1,stroke:#D97706,color:#3B2500,stroke-width:2px;
+    classDef btn fill:#DCFCE7,stroke:#16A34A,color:#063B18,stroke-width:2px;
+    classDef archive fill:#FEF3C7,stroke:#A16207,color:#3B2A0E,stroke-width:2px;
+
+    TRG["Declencheur<br/>veille normative ou<br/>action corrective"]:::step
+    NV["Bouton Nouvelle Version<br/>Master Documentations"]:::btn
+    VAL["Validation hierarchique"]:::step
+    W11["WF 11 webhook<br/>versionnage"]:::wf
+    ARC["Archive Documentations<br/>version precedente conservee"]:::archive
+    CUR["Version courante unique<br/>source maitrisee"]:::step
+    NOTIF["Notification destinataires<br/>(mecanisme non detaille)"]:::step
+
+    TRG --> NV --> VAL --> W11
+    W11 -. archive la version precedente .-> ARC
+    W11 --> CUR
+    CUR -. informe .-> NOTIF

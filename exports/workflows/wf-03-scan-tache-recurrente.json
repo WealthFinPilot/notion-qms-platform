@@ -1,0 +1,896 @@
+{
+  "name": "WorkFlow 03",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "months",
+              "triggerAtHour": 4
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1920,
+        32
+      ],
+      "id": "d46fe94e-6190-405f-858e-4ea2de6c2c8d",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_log.workflow",
+              "value": "={{$workflow.name}}"
+            },
+            {
+              "name": "_log.executionId",
+              "value": "={{$execution.id}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fd5eaf8a-201b-4076-a1af-9d8ad39fe602",
+      "name": "Log Meta (expressions)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -1712,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const startedAt = new Date().toISOString();\n  i.json._log = {\n    runId: startedAt,\n    workflow: i.json._log?.workflow || null,\n    executionId: i.json._log?.executionId || null,\n    startedAt,\n    ok: 0,\n    ko: 0,\n    actions: [],\n    failedNodes: {}\n  };\n  return i;\n});"
+      },
+      "id": "b00fad12-d146-45e8-a1f0-74ab986c5041",
+      "name": "Start Log",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -1488,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 5,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -48,
+        0
+      ],
+      "id": "8d01c18d-6b1c-47f1-9cf0-2a19d8d47672",
+      "name": "Loop Over Items",
+      "retryOnFail": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "69c81009-5b76-4fd5-a2db-843adfd2dd68",
+      "name": "Update Log",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        336,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "053792dc-f68a-4d7f-864a-2c3ca5f1d371",
+      "name": "Update Log2",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        976,
+        -224
+      ],
+      "id": "65263e04-e12c-41a1-b2cc-c97fd8d83720",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Nph7coAgeAm16pwp",
+          "mode": "list",
+          "cachedResultName": "Logger - Send to Notion"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1600,
+        -208
+      ],
+      "id": "69e5cd27-19b5-43c9-bc26-124ccc6d94d5",
+      "name": "Execute Logger - Send to Notion"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "250605f2-c3ca-4d82-819a-38383ba2fb21",
+              "name": "Name",
+              "value": "={{ $('Edit Tache').item.json.Name }} - {{ $('Edit Tache').item.json.Start.start }}",
+              "type": "string"
+            },
+            {
+              "id": "f08ba5af-101d-475b-9240-5d4dc9e1ed3f",
+              "name": "Type de tache ID",
+              "value": "={{ $('Edit Tache').item.json[\"Type de tache ID\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "86c0fa77-7999-4282-bc15-d5dceab7c31f",
+              "name": "Priorité",
+              "value": "={{ $('Edit Tache').item.json[\"Priorité\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "8e6412c5-dc73-4adf-b3db-d83e2bc14624",
+              "name": "Note",
+              "value": "={{ $('Edit Tache').item.json.Note }}",
+              "type": "string"
+            },
+            {
+              "id": "06519f5f-5f7c-4756-9b06-adcd2045eb35",
+              "name": "Équipe",
+              "value": "={{ $('Edit Tache').item.json[\"Équipe\"] }}",
+              "type": "array"
+            },
+            {
+              "id": "ea7e1107-123b-4b8c-a698-060d90da6727",
+              "name": "ID Page Type de tache",
+              "value": "={{ $('Edit Tache').item.json[\"ID Page Type de tache\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "27186ee9-0f3f-4691-8722-1ba1da8f5630",
+              "name": "Responsable ID",
+              "value": "={{ $('Edit Tache').item.json[\"Responsable ID\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "373f2ab7-ae17-43e9-ad58-012a05a7dcbd",
+              "name": "id",
+              "value": "={{ $('Edit Tache').item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "36a117ea-ff7b-4cc8-8cbe-1fc967795cbd",
+              "name": "=Start",
+              "value": "={{ $('Edit Tache').item.json.Start }}",
+              "type": "object"
+            },
+            {
+              "id": "42316bcf-0014-47da-87a1-4ae1e48e6fa0",
+              "name": "=NewStartDate",
+              "value": "={{ $('Code').item.json.updateData.newStartDate }}",
+              "type": "object"
+            },
+            {
+              "id": "c8f59c81-2f42-43b7-9194-d1123d35268f",
+              "name": "=Deadline",
+              "value": "={{ $('Code').item.json.taskData.deadline }}",
+              "type": "object"
+            },
+            {
+              "id": "07e9622b-62ed-4ac7-89cc-08d129cca85f",
+              "name": "DépartementID",
+              "value": "={{ $('Edit Tache').item.json[\"DépartementID\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        544,
+        160
+      ],
+      "id": "820b8c37-7248-405c-a784-60277f65e7a3",
+      "name": "Edit Certificat2",
+      "notesInFlow": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_TACHES_RECURRENTES}}",
+          "mode": "list",
+          "cachedResultName": "Tâches Récurrentes",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_TACHES_RECURRENTES}}"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Tâche active ? (*)|checkbox",
+              "condition": "equals",
+              "checkboxValue": true
+            },
+            {
+              "key": "Date de commencement (*)|date",
+              "condition": "on_or_before",
+              "date": "={{ new Date().toISOString().split('T')[0] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -1200,
+        32
+      ],
+      "id": "c7d62cba-1b51-431e-acfd-7d6c03124c00",
+      "name": "Get Tâche",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Master Fournisseur : 40%5Bsd"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "be4621d1-e2a1-4d19-bfb3-67f6b294aea8",
+              "name": "Start",
+              "value": "={{ { \"start\": $json.properties[\"Date de commencement (*)\"].date.start } }}",
+              "type": "object"
+            },
+            {
+              "id": "a079b451-6161-4f35-b694-a37008081619",
+              "name": "Type de tache ID",
+              "value": "={{ $('Get Tâche').item.json.properties[\"Types de tache (*)\"].relation[0].id }}",
+              "type": "string"
+            },
+            {
+              "id": "c7e105d6-54a5-4e91-87ec-0845bac39430",
+              "name": "ID Page Type de tache",
+              "value": "={{ $('Get Tâche').item.json.properties[\"Types de tache (*)\"].id }}",
+              "type": "string"
+            },
+            {
+              "id": "36c0d073-d480-45e7-b7d0-acb4c578d189",
+              "name": "Checkbox",
+              "value": "={{ $('Get Tâche').item.json.properties[\"Tâche active ? (*)\"].checkbox }}",
+              "type": "boolean"
+            },
+            {
+              "id": "217f5336-5585-4eee-a66d-13dca9fa48dd",
+              "name": "Répéter Nb",
+              "value": "={{ $('Get Tâche').item.json.properties[\"Répéter tous les # jour(s)   (*)\"].number }}",
+              "type": "number"
+            },
+            {
+              "id": "650dfdc4-37e8-492b-9ea8-89212e8899a3",
+              "name": "Priorité",
+              "value": "={{ $('Get Tâche').item.json.properties[\"Priorité\"].select.name }}",
+              "type": "string"
+            },
+            {
+              "id": "46e34b3e-ba35-4aab-8a06-1ae6877c2e1e",
+              "name": "Note",
+              "value": "={{(() => {\n  const richText = $('Get Tâche').item.json.properties.Note?.rich_text;\n  return richText && richText.length > 0 \n    ? richText.map(block => block.plain_text || '').join('') \n    : '';\n})()}}",
+              "type": "string"
+            },
+            {
+              "id": "e144b2c9-45ef-44b8-900c-4e31d3c331ce",
+              "name": "Équipe",
+              "value": "={{(() => {\n  const rel = $('Get Tâche').item.json.properties[\"Équipe\"]?.relation;\n  if (Array.isArray(rel) && rel.length > 0) {\n    return rel.map(item => ({ \"id\": item.id }));\n  }\n  return [];\n})()}}",
+              "type": "array"
+            },
+            {
+              "id": "5d82a5ed-7a01-4db0-8441-20b7417c9fac",
+              "name": "Dead line + Nb",
+              "value": "={{ $('Get Tâche').item.json.properties[\"Dead line après création (# jours)\"].number }}",
+              "type": "number"
+            },
+            {
+              "id": "9548bf6b-499a-4fc9-b208-110092dda694",
+              "name": "Responsable ID",
+              "value": "={{ $('Get Tâche').item.json.properties[\"Responsable (*)\"].relation[0].id }}",
+              "type": "string"
+            },
+            {
+              "id": "4b9498c0-0e1a-4e39-bbe7-7cab99a2ad64",
+              "name": "Jours semaine",
+              "value": "={{ $('Get Tâche').item.json.properties[\"Jour de la semaine préférable\"].select.name }}",
+              "type": "string"
+            },
+            {
+              "id": "50062951-6d59-4e02-b975-61e3ec23aa4e",
+              "name": "Name",
+              "value": "={{ $('Get Tâche').item.json.properties[\"Nom (*)\"].title[0].text.content }}",
+              "type": "string"
+            },
+            {
+              "id": "e4517bfd-dbbd-4f3c-92e8-9aee304b8b38",
+              "name": "url",
+              "value": "={{ $('Get Tâche').item.json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "66ee6185-dda6-4b9b-bbba-74c147e74929",
+              "name": "properties[\"Dead line après création (# jours)\"].number",
+              "value": "={{ $json.properties[\"Dead line après création (# jours)\"].number }}",
+              "type": "number"
+            },
+            {
+              "id": "fde20905-fed9-4bf7-8cb9-7a82e7041443",
+              "name": "id",
+              "value": "={{ $('Get Tâche').item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "580baaae-5f94-4fd7-a10e-8dd416473014",
+              "name": "DépartementID",
+              "value": "={{ $json.properties[\"Départements\"].relation[0].id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -688,
+        16
+      ],
+      "id": "5863e0af-a88c-45de-a727-5d0592159ba9",
+      "name": "Edit Tache",
+      "notesInFlow": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "function getNextWeekday(date, targetDay) {\n  const days = {\n    'Lundi': 1, 'Mardi': 2, 'Mercredi': 3, 'Jeudi': 4, \n    'Vendredi': 5, 'Samedi': 6, 'Dimanche': 0\n  };\n  const targetDayNum = days[targetDay];\n  if (targetDayNum === undefined) return date;\n  const currentDay = date.getDay();\n  let daysToAdd = targetDayNum - currentDay;\n  if (daysToAdd <= 0) {\n    daysToAdd += 7;\n  }\n  const newDate = new Date(date);\n  newDate.setDate(newDate.getDate() + daysToAdd);\n  return newDate;\n}\n\n// Fonction pour ajouter des jours ouvrés (lundi à vendredi)\nfunction addWorkingDays(startDate, workingDaysToAdd) {\n  const result = new Date(startDate);\n  let daysAdded = 0;\n  \n  while (daysAdded < workingDaysToAdd) {\n    result.setDate(result.getDate() + 1);\n    const dayOfWeek = result.getDay();\n    \n    // Si c'est un jour ouvré (lundi=1 à vendredi=5)\n    if (dayOfWeek >= 1 && dayOfWeek <= 5) {\n      daysAdded++;\n    }\n  }\n  \n  return result;\n}\n\n// Traitement de chaque tâche\nconst processedItems = [];\n\nfor (const item of $input.all()) {\n  // Extraire la date depuis l'objet Start\n  const startDateString = item.json.Start.start;\n  const startDate = new Date(startDateString);\n  \n  const repeatDays = item.json['Répéter Nb'];\n  const preferredDay = item.json['Jours semaine'];\n  \n  // Calculer la nouvelle date (Start + Répéter Nb)\n  const newStartDate = new Date(startDate);\n  newStartDate.setDate(newStartDate.getDate() + repeatDays);\n  \n  // Ajuster selon le jour préféré si défini\n  let finalDate = newStartDate;\n  if (preferredDay && preferredDay !== '') {\n    finalDate = getNextWeekday(newStartDate, preferredDay);\n  }\n  \n  // Calculer la deadline = Start + \"Dead line + Nb\" en jours ouvrés\n  let deadline = null;\n  if (item.json['Dead line + Nb']) {\n    const deadlineDate = addWorkingDays(startDate, item.json['Dead line + Nb']);\n    // CORRECTION : Format objet pour Notion\n    deadline = { start: deadlineDate.toISOString().split('T')[0] };\n  }\n  \n  // Préparer les données pour la création et la mise à jour\n  processedItems.push({\n    // Données pour créer la tâche dans Master Tâches\n    taskData: {\n      name: item.json.Name,\n      type_id: item.json['Type de tache ID'],\n      responsable_id: item.json['Responsable ID'],\n      equipe_id: item.json['Équipe'],\n      priorite: item.json['Priorité'],\n      deadline: deadline,\n      status: 'À faire',\n      note: item.json.Note\n    },\n    // Données pour mettre à jour la tâche récurrente\n    updateData: {\n      id: item.json.id,\n      // CORRECTION : Format objet pour Notion\n      newStartDate: { start: finalDate.toISOString().split('T')[0] }\n    }\n  });\n}\n\nreturn processedItems.map(item => ({ json: item }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        16
+      ],
+      "id": "572dd8e6-5a33-4070-962a-7f8798abe556",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "SMlmJ68gM9bfRYBO",
+          "mode": "list",
+          "cachedResultName": "WorkFlow 03.01"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        752,
+        160
+      ],
+      "id": "3b61296e-becf-4b2e-a21c-1c92d6141ebf",
+      "name": "Workflow 03.01",
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{ ($workflow.name || 'Unknown Workflow') + \" - \" + ($json._log?.actions?.find(action => !action.ok)?.node || Object.keys($json._log?.failedNodes || {})[0] || 'UnknownNode') }}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cb54e4ca-8c6b-41d9-aec1-3c1a1f8f7e0a",
+      "name": "Log Snapshot",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "716ebd4b-2a6e-43f2-bf77-99203eaf65ab",
+      "name": "Update Log1",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        976,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "0c95ca97-38f9-4548-a675-3fcfc30b4274",
+      "name": "Update Log5",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        224,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{ ($workflow.name || 'Unknown Workflow') + \" - \" + ($json._log?.actions?.find(action => !action.ok)?.node || Object.keys($json._log?.failedNodes || {})[0] || 'UnknownNode') }}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7777fbae-d464-4f69-83b9-554fd9e307d7",
+      "name": "Log Snapshot1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "5711e31d-d5b8-498a-a307-525c29738226",
+      "name": "Update Log3",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        224,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_lastNode",
+              "value": "={{ ($workflow.name || 'Unknown Workflow') + \" - \" + ($json._log?.actions?.find(action => !action.ok)?.node || Object.keys($json._log?.failedNodes || {})[0] || 'UnknownNode') }}"
+            },
+            {
+              "name": "_hadError",
+              "value": "={{ $json.error !== undefined }}"
+            },
+            {
+              "name": "_errMsg",
+              "value": "={{ $json.error?.message || ''}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "542bb3dd-6daf-4388-9d4f-dcdc4177326c",
+      "name": "Log Snapshot2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -1168,
+        -432
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const log = i.json._log || {};\n  \n  // LIGNE 5 CORRIGÉE\n  const nodeName = i.json._lastNode || 'UnknownNode';\n  \n  const failed = !!i.json._hadError || !!i.json.error;\n  \n  // Message adaptatif\n  const msg = i.json.error?.message || \n              i.json._errMsg || \n              (failed ? 'Erreur détectée' : 'Succès');\n  \n  (log.actions ||= []).push({ node: nodeName, ok: !failed, msg });\n  \n  if (failed) {\n    log.ko = (log.ko || 0) + 1;\n    log.failedNodes = log.failedNodes || {};\n    log.failedNodes[nodeName] = true;\n  } else {\n    log.ok = (log.ok || 0) + 1;\n  }\n  \n  i.json._log = log;\n  return i;\n});"
+      },
+      "id": "d09ba139-4f35-4a55-bea1-09516a89173a",
+      "name": "Update Log4",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        -432
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const i = items[0];\nconst log = i.json._log || {};\nlog.finishedAt = new Date().toISOString();\n\nconst start = new Date(log.startedAt || log.runId || Date.now()).getTime();\nconst end = new Date(log.finishedAt).getTime();\nlog.durationSec = Math.round((end - start) / 1000);\n\n// 🎯 CORRECTION : Extraire les noms de nœuds uniques des échecs\nconst failedNodeNames = [];\nconst uniqueErrorMessages = [];\n\n// Parcourir les actions pour identifier les échecs\nif (log.actions && Array.isArray(log.actions)) {\n  log.actions.forEach(action => {\n    if (!action.ok) {\n      // Ajouter le nom du nœud s'il n'est pas déjà présent\n      if (!failedNodeNames.includes(action.node)) {\n        failedNodeNames.push(action.node);\n      }\n      \n      // Ajouter le message d'erreur s'il n'est pas déjà présent\n      if (action.msg && !uniqueErrorMessages.includes(action.msg)) {\n        uniqueErrorMessages.push(action.msg);\n      }\n    }\n  });\n}\n\n// 🎯 RÉSULTATS CORRIGÉS\nlog.failedNodesList = failedNodeNames; // Noms uniques des nœuds en échec\nlog.uniqueErrorMessages = uniqueErrorMessages; // Messages d'erreur uniques\nlog.errorSummary = uniqueErrorMessages.join(' | '); // Compilation des erreurs\n\n// Stats améliorées\nlog.stats = {\n  totalProcessed: log.ok + log.ko,\n  successCount: log.ok,\n  failureCount: log.ko,\n  successRate: `${Math.round((log.ok / (log.ok + log.ko)) * 100)}%`,\n  uniqueFailedNodes: failedNodeNames.length,\n  distinctErrors: uniqueErrorMessages.length\n};\n\ni.json._log = log;\nreturn [i];"
+      },
+      "id": "4c0883ab-e34f-423d-a246-c6c4d3ff27c1",
+      "name": "Finish Log",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1408,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Consolidation COMPLÈTE des logs\nconst logData = {\n  workflow: $('Log Meta (expressions)').first().json._log?.workflow || \"WorkFlow 01\",\n  executionId: $execution.id,\n  startedAt: $('Start Log').first().json._log?.startedAt,\n  finishedAt: new Date().toISOString(),\n  runId: $('Start Log').first().json._log?.runId,\n  \n  // Consolidation des compteurs\n  ok: $input.all().reduce((sum, item) => sum + (item.json._log?.ok || 0), 0),\n  ko: $input.all().reduce((sum, item) => sum + (item.json._log?.ko || 0), 0),\n  failedNodes: $input.all().flatMap(item => item.json._log?.failedNodes || []),\n  \n  // Logique Actions\n  actions: (() => {\n    const koCount = $input.all().reduce((sum, item) => sum + (item.json._log?.ko || 0), 0);\n    if (koCount === 0) {\n      return [{ msg: \"Pass\" }];\n    } else {\n      const allActions = $input.all().flatMap(item => item.json._log?.actions || []);\n      return allActions.filter(action => action.msg !== \"Pass\");\n    }\n  })()\n};\n\nreturn [{ json: { _log: logData } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        -208
+      ],
+      "id": "cc618b75-5c76-4ad9-8d65-3a44d34c704d",
+      "name": "One Item"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Log Meta (expressions)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Meta (expressions)": {
+      "main": [
+        [
+          {
+            "node": "Start Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Log": {
+      "main": [
+        [
+          {
+            "node": "Get Tâche",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Update Log5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Log",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log": {
+      "main": [
+        [
+          {
+            "node": "Edit Certificat2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log2": {
+      "main": [
+        [
+          {
+            "node": "Edit Tache",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "One Item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Certificat2": {
+      "main": [
+        [
+          {
+            "node": "Workflow 03.01",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Tâche": {
+      "main": [
+        [
+          {
+            "node": "Update Log2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Tache": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Log Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow 03.01": {
+      "main": [
+        [
+          {
+            "node": "Update Log1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Snapshot1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log5": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Log Snapshot1": {
+      "main": [
+        [
+          {
+            "node": "Update Log3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log3": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Log Snapshot2": {
+      "main": [
+        [
+          {
+            "node": "Update Log4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Log4": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One Item": {
+      "main": [
+        [
+          {
+            "node": "Finish Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finish Log": {
+      "main": [
+        [
+          {
+            "node": "Execute Logger - Send to Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "bb4d675c-9844-43f2-b4c3-5a27f93888eb",
+  "meta": {
+    "instanceId": "af83b3ea93bc43d0c5ac63a56a75bfd2e58c747f1d5aca065acb21b4a4d3daa3"
+  },
+  "id": "we5atbuNuiu37y0x",
+  "tags": [
+    {
+      "createdAt": "2025-08-19T00:51:50.954Z",
+      "updatedAt": "2025-08-19T00:51:50.954Z",
+      "id": "JhXzyTCPZfWwKcps",
+      "name": "Tâche recurente"
+    },
+    {
+      "createdAt": "2025-09-05T21:34:55.611Z",
+      "updatedAt": "2025-09-05T21:34:55.611Z",
+      "id": "oHGFa5LbRciVwozs",
+      "name": "Scan Tâche récurente"
+    }
+  ]
+}

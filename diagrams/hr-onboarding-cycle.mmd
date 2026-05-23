@@ -1,0 +1,35 @@
+%% Cycle Formation et Onboarding RH — SMQ laboratoire
+%% Trousse par type de poste, onboarding automatise et formation continue.
+%% WF 12 a 16 places sur les transitions selon les bases touchees (extraction des JSON).
+%% Source : Contexte.md (P6) et Les bases de donnees.md (Nos Formations, Modules-Formations, Instances, Inscriptions).
+flowchart TB
+    classDef step fill:#F0F9FF,stroke:#0284C7,color:#082F49,stroke-width:2px;
+    classDef wf fill:#FFE8B1,stroke:#D97706,color:#3B2500,stroke-width:2px;
+    classDef btn fill:#DCFCE7,stroke:#16A34A,color:#063B18,stroke-width:2px;
+    classDef dash fill:#EBF8FF,stroke:#2563EB,color:#0B2545,stroke-width:2px;
+
+    EMB["Embauche<br/>Master Employes"]:::step
+    TR["Trousse par Type de poste<br/>Modules-Formations<br/>(Obligatoire, Ordre, Jours apres embauche)"]:::step
+    PROG["Bouton + Programmer<br/>Modules-Formations"]:::btn
+    INST["Instance de formation<br/>date, lieu, plateforme, formateur"]:::step
+    INS["Inscriptions par personne"]:::step
+    MT["Master Taches<br/>tache RACI"]:::step
+    EX["Execution<br/>+ televersement certificat"]:::step
+    APP["Approbation RH<br/>Verification"]:::step
+    DASH["Dashboard RH<br/>En cours, Progression, Objectif"]:::dash
+
+    W12["WF 12 webhook<br/>onboarding par type de poste<br/>(bouton Inscription d entree)"]:::wf
+    W13["WF 13 webhook<br/>MAJ formations sur commande"]:::wf
+    W14["WF 14 planifie quotidien<br/>programmation periodique<br/>des modules"]:::wf
+    W15["WF 15 webhook<br/>inscription individuelle"]:::wf
+    W16["WF 16 webhook<br/>creer tache formation<br/>avec RACI"]:::wf
+
+    EMB --> W12 --> TR
+    TR --> INST
+    PROG --> INST
+    W14 -. programme les modules recurrents .-> INST
+    INST --> W13 -. met a jour instances et inscriptions .-> INS
+    INST --> INS
+    W15 -. inscription individuelle hors session .-> INS
+    INS --> W16 --> MT
+    INS --> EX --> APP --> DASH

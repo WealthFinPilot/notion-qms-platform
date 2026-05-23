@@ -1,0 +1,932 @@
+{
+  "name": "WorkFlow 09",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "{{WEBHOOK_PATH_WF09}}",
+        "options": {
+          "responseData": ""
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1344,
+        16
+      ],
+      "id": "a88712d4-8cc7-46a6-8ce0-1bd05972c8a8",
+      "name": "Webhook",
+      "webhookId": "{{WEBHOOK_ID_WF09}}"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9640f08f-14e6-4231-b656-cff68e9674bf",
+              "name": "Demandes",
+              "value": "={{ $json.body.data.properties[\"Demandes incluses\"] && $json.body.data.properties[\"Demandes incluses\"].relation ? $json.body.data.properties[\"Demandes incluses\"].relation.map(x => x.id).join(\", \") : \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "7b6af009-5e1f-43a1-8174-c342ab84fb0e",
+              "name": "Statut PO",
+              "value": "={{ $json.body.data.properties[\"Statut PO\"].status.name }}",
+              "type": "string"
+            },
+            {
+              "id": "73a083c8-c13c-471e-b7db-6998e309d0db",
+              "name": "PageId",
+              "value": "={{ $json.body.data.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "ignoreConversionErrors": false,
+          "dotNotation": false
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1152,
+        16
+      ],
+      "id": "87d4f414-060e-449f-81ee-c628b9588f7a",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Récupérer l'item d'entrée\nconst inputItem = $input.first().json;\n\n// Vérifier que le champ \"Demandes\" existe\nif (!inputItem.Demandes) {\n  return [{ json: { message: \"Champ 'Demandes' non trouvé\" } }];\n}\n\n// Splitter la string par \", \" pour récupérer les IDs individuels\nconst ids = inputItem.Demandes.split(\", \");\n\n// Créer un item pour chaque ID\nconst outputItems = ids.map((id, index) => {\n  return {\n    json: {\n      // Garder toutes les données originales sauf \"Demandes\"\n      ...inputItem,\n      // Remplacer \"Demandes\" par l'ID individuel\n      Demandes: id.trim()\n    }\n  };\n});\n\nreturn outputItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -576,
+        16
+      ],
+      "id": "59f71d99-57cf-4ea1-8908-ff7b8ed8bffe",
+      "name": "Items demandes"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "get",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.Demandes }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -384,
+        16
+      ],
+      "id": "7c12804e-aabf-4db4-8e8a-0ae01dbff2a4",
+      "name": "Get Items demandes",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "🔴Statut demande|status",
+              "statusValue": "={{ $('Edit New Statut').item.json[\"Statut Demande\"] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        64,
+        16
+      ],
+      "id": "450009d7-7226-482f-adf9-0f2deb37dfc3",
+      "name": "Update Items Commandé",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Récupérer l'item d'entrée\nconst item = $input.first().json;\n\n// Extraire le Statut PO (adapter selon ta structure de données)\nlet statutPO = null;\n\n\n// Si c'est dans properties (structure Notion)\nif (item.properties && item.properties[\"Statut PO\"] && item.properties[\"Statut PO\"].status) {\n  statutPO = item.properties[\"Statut PO\"].status.name;\n}\n// Si c'est directement accessible\nelse if (item[\"Statut PO\"]) {\n  statutPO = item[\"Statut PO\"];\n}\n\n// Mapping des statuts selon tes règles\nlet statutDemande = \"Non défini\";\nlet FinalDemande = \"Non défini\";\n\n\nswitch (statutPO) {\n  case \"Commande Partiel\":\n  case \"Commandé\":\n    statutDemande = \"Commandé\";\n    break;\n  \n  case \"Bloqué\":\n    statutDemande = \"Bloqué\";\n    break;\n  \n  case \"Annulé\":\n    statutDemande = \"Annulé\";\n    FinalDemande = \"Fermeture\";\n    break;\n  \n  case \"Refusé\":\n    statutDemande = \"Refusé\";\n    FinalDemande = \"Fermeture\";\n    break;\n  \n  case \"⚠️Non-Conforme⚠️\":\n    statutDemande = \"⚠️Non-Conforme⚠️\";\n    FinalDemande = \"Fermeture\";\n    break;\n  \n  case \"Clôturé\":\n    statutDemande = \"Livré\";\n    FinalDemande = \"Fermeture\";\n    break;\n  \n  case \"À traiter\":\n    statutDemande = \"En cours\";\n    break;\n  \n  default:\n    statutDemande = \"Non défini\";\n    FinalDemande = \"Non défini\";\n}\n\n// Retourner l'item avec le nouveau statut\nreturn [{\n  json: {\n    ...item,\n    \"Statut Demande\": statutDemande,\n    \"Final Demande\" : FinalDemande,\n    // Debug info\n    \"Statut PO Original\": statutPO\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -976,
+        16
+      ],
+      "id": "ba4f2e61-39e7-4400-b3ed-a11ca003e23f",
+      "name": "Statut Mapping"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bef09c46-2ba7-4863-8d30-19988e5f28c2",
+              "name": "Statut Demande",
+              "value": "={{ $json[\"Statut Demande\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "cb3bd3ad-8cef-4fa3-b21b-1c8a8f3ea455",
+              "name": "Final Demande",
+              "value": "={{ $json[\"Final Demande\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "ignoreConversionErrors": false,
+          "dotNotation": false
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -784,
+        16
+      ],
+      "id": "a530d52e-7a5c-4578-961a-5f8799f5cb48",
+      "name": "Edit New Statut"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_MAGASIN}}",
+          "mode": "list",
+          "cachedResultName": "Magasin",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_MAGASIN}}"
+        },
+        "returnAll": true,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "No. de l'article|rich_text",
+              "condition": "equals",
+              "richTextValue": "={{ $json.properties[\"🔴No d'article\"].rich_text[0].text.content }}"
+            },
+            {
+              "key": "Nom commun|rich_text",
+              "condition": "equals",
+              "richTextValue": "={{ $json.properties[\"🔴Nom Commun\"].rich_text[0].plain_text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1632,
+        0
+      ],
+      "id": "c1c478d5-b9a6-481e-9f51-100abedc7329",
+      "name": "Get  pages magasin",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Statut de la commande|select",
+              "selectValue": "={{ $json[\"Statut Demande\"] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        2192,
+        0
+      ],
+      "id": "ea4d86d5-59c2-447c-9dd2-09f1e80cc413",
+      "name": "Update Magasin",
+      "executeOnce": false,
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Récupérer tous les items d'entrée\nconst items = $input.all();\n\n// Liste des statuts autorisés\nconst statutsAutorises = [\"Bloqué\", \"Commandé\", \"En Cours\"];\n\n// Traiter chaque item\nconst outputItems = items.map(item => {\n  // Récupérer le Statut Demande actuel\n  let statutDemande = $('Edit New Statut').first().json[\"Statut Demande\"];\n  \n  // Vérifier si le statut est dans la liste autorisée\n  let nouveauStatut = \"\";\n  \n  if (statutsAutorises.includes(statutDemande)) {\n    // Garder le statut s'il est autorisé\n    nouveauStatut = statutDemande;\n  } else {\n    // Vider le statut s'il n'est pas autorisé\n    nouveauStatut = \"\";\n  }\n  \n  // Retourner l'item avec le statut filtré\n  return {\n    json: {\n      ...item.json,\n      \"Statut Demande\": nouveauStatut\n    }\n  };\n});\n\nreturn outputItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1808,
+        0
+      ],
+      "id": "f02959f7-b4ad-4c36-84c5-261d916a3348",
+      "name": "Statut Magasin"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bef09c46-2ba7-4863-8d30-19988e5f28c2",
+              "name": "Statut Demande",
+              "value": "={{ $json[\"Statut Demande\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "ignoreConversionErrors": false,
+          "dotNotation": false
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2000,
+        0
+      ],
+      "id": "652c8c34-7d9a-427b-b632-a3de75be7b1e",
+      "name": "Edit Statut Magasin"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Edit Fields').first().json.PageId }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Automatisation|select",
+              "selectValue": "⚠️Suivis items⚠️"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -384,
+        528
+      ],
+      "id": "28e5cf64-f8bf-4319-949e-698de2c96a6d",
+      "name": "Erreur Suivis Items",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Edit Fields').first().json.PageId }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Automatisation|select",
+              "selectValue": "⚠️Suivis Magasin⚠️"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1648,
+        272
+      ],
+      "id": "6a9479da-4636-4486-91df-7e0fb568a1d7",
+      "name": "Erreur Suivis Magasin",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "882e64e0-b3f7-4b16-8390-7f1915b35bbb",
+              "leftValue": "={{ $json.property_livr }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -160,
+        16
+      ],
+      "id": "608b08b3-a9e4-4794-b5f5-2451e1fa7941",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "882e64e0-b3f7-4b16-8390-7f1915b35bbb",
+              "leftValue": "={{ $json.properties[\"Date d'achat\"].date.start }}",
+              "rightValue": "",
+              "operator": {
+                "type": "dateTime",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        256,
+        0
+      ],
+      "id": "8a96165f-b51e-4b5e-9893-59a19b4b73eb",
+      "name": "If1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        704,
+        0
+      ],
+      "id": "0b6ca77c-442a-4efd-83f8-6e1160ff9b3d",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Date d'achat|date",
+              "date": "={{ $now }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        464,
+        256
+      ],
+      "id": "55424456-8432-4213-b4e5-82ad14599269",
+      "name": "Update Date Items",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "882e64e0-b3f7-4b16-8390-7f1915b35bbb",
+              "leftValue": "={{ $('Edit New Statut').item.json[\"Final Demande\"] }}",
+              "rightValue": "Fermeture",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        928,
+        0
+      ],
+      "id": "11a05618-f10c-433a-80b5-6b4d7bfd2c9c",
+      "name": "If2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1360,
+        0
+      ],
+      "id": "1eb3e6ff-aa37-4087-9ad4-92781198b3d0",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Date de livraison|date",
+              "date": "={{ $now }}"
+            },
+            {
+              "key": "Livré|checkbox",
+              "checkboxValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1152,
+        256
+      ],
+      "id": "38b27585-6634-4b94-8f8e-7749c2cc0a8d",
+      "name": "Update livraisons Items",
+      "retryOnFail": true,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "content": "## Webhook Notion Base Bon de commande (PO) trigger\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/)",
+        "height": 352,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1424,
+        -144
+      ],
+      "typeVersion": 1,
+      "id": "12a8cc17-71f7-41c1-9927-cbfbe259ec59",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Scan du PO et agréagation des données\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/)",
+        "height": 352,
+        "width": 976,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1184,
+        -144
+      ],
+      "typeVersion": 1,
+      "id": "88a1b5a5-4619-419b-8dc4-ce72090f127e",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Update des items\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/)",
+        "height": 352,
+        "width": 1696,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -208,
+        -144
+      ],
+      "typeVersion": 1,
+      "id": "b4325b26-a964-4b37-91ee-6f4e7f7ad43d",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Update Statut magasin\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/)",
+        "height": 352,
+        "width": 928,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1488,
+        -144
+      ],
+      "typeVersion": 1,
+      "id": "9461c289-6c4e-4eb2-9ffe-f42ed04c8862",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Update pour utilisateur\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/)",
+        "height": 480,
+        "width": 2512
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -560,
+        208
+      ],
+      "typeVersion": 1,
+      "id": "b24f366d-530c-4f69-81f0-edbca57677ec",
+      "name": "Sticky Note4"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Statut Mapping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Items demandes": {
+      "main": [
+        [
+          {
+            "node": "Get Items demandes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Items demandes": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Erreur Suivis Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Statut Mapping": {
+      "main": [
+        [
+          {
+            "node": "Edit New Statut",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit New Statut": {
+      "main": [
+        [
+          {
+            "node": "Items demandes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Items Commandé": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Erreur Suivis Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get  pages magasin": {
+      "main": [
+        [
+          {
+            "node": "Statut Magasin",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Erreur Suivis Magasin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Statut Magasin": {
+      "main": [
+        [
+          {
+            "node": "Edit Statut Magasin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Statut Magasin": {
+      "main": [
+        [
+          {
+            "node": "Update Magasin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Magasin": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Erreur Suivis Magasin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Update Items Commandé",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Date Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Date Items": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Erreur Suivis Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update livraisons Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Get  pages magasin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update livraisons Items": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Erreur Suivis Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "68a727e5-98b5-4bb7-8595-7424ab11f0c8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "af83b3ea93bc43d0c5ac63a56a75bfd2e58c747f1d5aca065acb21b4a4d3daa3"
+  },
+  "id": "EotnFE5gjri1qAqm",
+  "tags": [
+    {
+      "updatedAt": "2025-09-12T22:39:32.525Z",
+      "createdAt": "2025-09-12T22:39:32.525Z",
+      "id": "ob1iUzBDY4oAYrZ0",
+      "name": "Achat"
+    },
+    {
+      "updatedAt": "2025-09-17T23:45:22.921Z",
+      "createdAt": "2025-09-17T23:45:22.921Z",
+      "id": "4DizjE6Z6GCKJDNe",
+      "name": "Suivis/PO"
+    }
+  ]
+}

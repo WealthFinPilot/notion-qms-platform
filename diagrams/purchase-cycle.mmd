@@ -1,0 +1,32 @@
+%% Cycle Achats — SMQ laboratoire
+%% Mon Panier vers reception et magasin, chaque transition annotee du workflow n8n.
+%% Source : Contexte.md (P2) et Les bases de donnees.md (Magasin, Demandes achat, PO).
+flowchart LR
+    classDef step fill:#F0F9FF,stroke:#0284C7,color:#082F49,stroke-width:2px;
+    classDef wf fill:#FFE8B1,stroke:#D97706,color:#3B2500,stroke-width:2px;
+    classDef btn fill:#DCFCE7,stroke:#16A34A,color:#063B18,stroke-width:2px;
+
+    MAG["Magasin<br/>catalogue consommables"]:::step
+    PANIER["Mon Panier<br/>Demandes achat"]:::step
+    DA["Demande achat (DA)<br/>quantite, urgence"]:::step
+    AP["Approbation<br/>bouton Approuver la demande"]:::btn
+    PO["Bon de Commande (PO)<br/>regroupe les DA par fournisseur"]:::step
+    SU["Suivi PO<br/>statuts envoye, confirme, livre"]:::step
+    RE["Reception"]:::step
+    STK["MAJ Magasin<br/>statut de la commande"]:::step
+    CERT["Certificats<br/>Master Fournisseurs"]:::step
+
+    W07["WF 07 webhook<br/>bouton Check out"]:::wf
+    W08["WF 08 planifie<br/>PO recurrents"]:::wf
+    W09["WF 09 webhook<br/>suivi statut PO"]:::wf
+    W10["WF 10 webhook<br/>update Magasin"]:::wf
+
+    MAG --> PANIER --> DA --> AP
+    AP -. Check out .-> W07 --> PO
+    W08 -. renouvellements planifies .-> PO
+    PO --> SU
+    W09 -. met a jour .-> SU
+    SU --> RE
+    RE --> STK
+    W10 -. met a jour .-> STK
+    RE --> CERT

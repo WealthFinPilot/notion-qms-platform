@@ -1,0 +1,1102 @@
+{
+  "name": "WorkFlow 07",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "{{WEBHOOK_PATH_WF07_NAMED}}",
+        "options": {
+          "responseData": ""
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1152,
+        -32
+      ],
+      "id": "7e9fac3a-d27c-409a-8f87-3980fc4042a5",
+      "name": "WorkFlow07",
+      "webhookId": "{{WEBHOOK_ID_WF07}}"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_DEMANDES_D_ACHAT}}",
+          "mode": "list",
+          "cachedResultName": "Demandes d’achat",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_DEMANDES_D_ACHAT}}"
+        },
+        "returnAll": true,
+        "simple": false,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "🔴Statut demande|status",
+              "condition": "equals",
+              "statusValue": "À traiter"
+            },
+            {
+              "key": "🔴📆Master Fournisseurs|rich_text",
+              "condition": "contains",
+              "richTextValue": "={{ $('Edit Webhook').item.json[\"🔴📆Master Fournisseurs\"] }}"
+            },
+            {
+              "key": "PO Créer|checkbox",
+              "condition": "equals"
+            },
+            {
+              "key": "Livré|checkbox",
+              "condition": "equals"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        144,
+        -32
+      ],
+      "id": "ed1ebfae-44d0-4095-aebb-e0844bc21ffc",
+      "name": "Get Demande Achat",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f15b795d-5689-46c7-9805-cc0c227d9e5c",
+              "leftValue": "={{ $json[\"🔴Statut demande\"] }}",
+              "rightValue": "À traiter",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -320,
+        -32
+      ],
+      "id": "737350d0-8a78-48aa-a32d-78d48c854b89",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "_log.workflow",
+              "value": "={{$workflow.name}}"
+            },
+            {
+              "name": "_log.executionId",
+              "value": "={{$execution.id}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5de50256-8565-48ef-ada6-f0f5aeb29f27",
+      "name": "Log Meta (expressions)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -928,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.map(i => {\n  const startedAt = new Date().toISOString();\n  i.json._log = {\n    runId: startedAt,\n    workflow: i.json._log?.workflow || null,\n    executionId: i.json._log?.executionId || null,\n    startedAt,\n    ok: 0,\n    ko: 0,\n    actions: [],\n    failedNodes: {}\n  };\n  return i;\n});"
+      },
+      "id": "0be87325-7c00-458f-a9cc-9030b9de8411",
+      "name": "Start Log",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -736,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.ItemID }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Auto task|select",
+              "selectValue": "Erreur: Item déjà traité"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -320,
+        208
+      ],
+      "id": "b0719d90-1e31-4f30-ac90-e5f1d70e5f21",
+      "name": "Update Erreur",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b7387bc1-c69c-40f7-a89f-0ed7185baa97",
+              "name": "ItemID",
+              "value": "={{ $json.body.data.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f48ecfbd-385d-4244-a2cc-7ccc4a4078da",
+              "name": "🔴Statut demande",
+              "value": "={{ $('WorkFlow07').item.json.body.data.properties[\"🔴Statut demande\"].status.name }}",
+              "type": "string"
+            },
+            {
+              "id": "e28454e1-8502-49f0-a66d-94e4094230b3",
+              "name": "🔴📆Master Fournisseurs",
+              "value": "={{ $('WorkFlow07').item.json.body.data.properties[\"🔴📆Master Fournisseurs\"].rich_text[0].plain_text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -512,
+        -32
+      ],
+      "id": "13c41e12-71c5-4247-ba09-edb7456f8d5b",
+      "name": "Edit Webhook",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4c56bd49-b1b5-4905-8040-77b93346ecc5",
+              "name": "Quantité",
+              "value": "={{ $json.properties[\"✅Quantité\"].number || \"\"}}",
+              "type": "number"
+            },
+            {
+              "id": "17a7407f-99da-4e96-a10f-3d2b50328bc1",
+              "name": "unitaire",
+              "value": "={{ $json.properties[\"💲Coût unitaire ($)\"].number || \"\"}}",
+              "type": "number"
+            },
+            {
+              "id": "2e192972-338c-4902-892d-65657c267b06",
+              "name": "Petit Total",
+              "value": "={{ $json.properties[\"🔴Coût total ($)\"].formula.number || \"\"}}",
+              "type": "number"
+            },
+            {
+              "id": "41140ea4-62e6-4e6a-892b-b6f23d3b7e61",
+              "name": "Responsable",
+              "value": "={{ $json.properties[\"🔴Responsable achat\"].rich_text[0].plain_text || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "bd69e36d-0fc7-427c-8f66-189497198b13",
+              "name": "Demandeur",
+              "value": "={{ $json.properties[\"🟡Demandeur\"].rich_text[0].plain_text }}",
+              "type": "string"
+            },
+            {
+              "id": "e7afbdb8-4a8c-42fa-89b9-4c60123e02e6",
+              "name": "Départements",
+              "value": "={{ $json.properties[\"🟡Départements\"] || \"\"}}",
+              "type": "object"
+            },
+            {
+              "id": "f3e4859f-e9f7-4e58-b6e8-118c5a7bac76",
+              "name": "Nom Commun",
+              "value": "={{ $json.properties[\"🔴Nom Commun\"].rich_text[0].text.content || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "4041e6d5-26b5-45bd-88a2-390d349b4eb3",
+              "name": "Criticité",
+              "value": "={{ $json.properties[\"🔴Criticité\"].number || \"\" }}",
+              "type": "number"
+            },
+            {
+              "id": "4db7691d-0af5-484c-9c63-8e39c7505511",
+              "name": "properties[\"🔴Types de consommables\"]",
+              "value": "={{ $json.properties[\"🔴Types de consommables\"].rich_text[0].plain_text || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "4b23e735-1dcd-424a-999d-8d0cae7351a5",
+              "name": "Mode de paiement",
+              "value": "={{ $json.properties[\"🟡Mode de paiement\"].select || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "56f41967-3a4d-4b1c-b023-64bac3b0b77f",
+              "name": "No d'article",
+              "value": "={{ $json.properties[\"🔴No d'article\"].rich_text[0].text.content || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "38f19a52-6337-464b-890b-41bd6ddb83df",
+              "name": "Nom Item",
+              "value": "={{ $json.properties.Demande.title[0].plain_text || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "34714d70-b34a-44d3-8de0-33f240ca8d0d",
+              "name": "URL",
+              "value": "={{ $json.properties[\"🔴URL\"].url }}",
+              "type": "string"
+            },
+            {
+              "id": "59ffb04f-4bbc-4b1a-86cf-7cfd2a767e21",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "613a4e78-d508-4959-b88e-f7ada7263073",
+              "name": "Procédé",
+              "value": "={{ $json.properties[\"🔴Types de procédé\"].rich_text[0].plain_text }}",
+              "type": "string"
+            },
+            {
+              "id": "63d224d2-5f02-4ade-9c75-59ec5af61281",
+              "name": "Statut Demande",
+              "value": "={{ $json.properties[\"🔴Statut demande\"].status.name }}",
+              "type": "string"
+            },
+            {
+              "id": "bbe6467c-5f63-4e23-bc8d-c254f2d94852",
+              "name": "Priorité",
+              "value": "={{ $json.properties[\"✅Urgence\"].select.name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        768,
+        -32
+      ],
+      "id": "a781da8c-f8f0-41aa-a256-cd1a7667f104",
+      "name": "Edit Demande",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Récupérer tous les items d'entrée\nconst items = $input.all();\n\n// Initialiser les variables\nlet grandTotal = 0;\nlet erreur = null;\nlet finalPriorite = \"Normal\"; // Valeur par défaut\n\n// Fonction pour vérifier si une valeur est un nombre valide et positif\nfunction isValidPositiveNumber(value) {\n  return value !== null && value !== undefined && typeof value === 'number' && !isNaN(value) && isFinite(value) && value > 0;\n}\n\n// Calculer la priorité finale selon la hiérarchie Normal < Urgent < Très urgent\nitems.forEach(item => {\n  const priorite = item.json[\"priorité\"] || item.json[\"Priorité\"];\n  \n  if (priorite === \"Très urgent\") {\n    finalPriorite = \"Très urgent\"; // Plus haute priorité, on peut arrêter\n  } else if (priorite === \"Urgent\" && finalPriorite !== \"Très urgent\") {\n    finalPriorite = \"Urgent\"; // Seulement si on n'a pas déjà \"Très urgent\"\n  }\n  // Si priorite === \"Normal\", on garde la valeur actuelle de finalPriorite\n});\n\n// 1. Vérifier les \"Quantité\" de tous les items (nombre, pas null, supérieur à 0)\nlet quantiteError = false;\nitems.forEach(item => {\n  const quantite = item.json[\"Quantité\"];\n  if (!isValidPositiveNumber(quantite)) {\n    quantiteError = true;\n  }\n});\n\n// Si erreur sur les quantités\nif (quantiteError) {\n  erreur = \"Erreur: Quantité\";\n} else {\n  erreur = null;\n}\n\n// 2. Vérifier les \"unitaire\" de tous les items (nombre et supérieur à 0)\nlet unitaireError = false;\nitems.forEach(item => {\n  const unitaire = item.json[\"unitaire\"];\n  if (!isValidPositiveNumber(unitaire)) {\n    unitaireError = true;\n  }\n});\n\n// 3. Si pas d'erreur sur quantité ET pas d'erreur sur unitaire → calculer Grand Total\nif (erreur === null && !unitaireError) {\n  items.forEach(item => {\n    const petitTotal = item.json[\"Petit Total\"];\n    // Additionner les Petit Total (pas besoin de vérifier, on additionne directement)\n    grandTotal += petitTotal;\n  });\n} else {\n  grandTotal = null;\n}\n\n// Créer les items de sortie - un pour chaque item d'entrée\nconst outputItems = items.map((item, index) => {\n  const data = item.json;\n  \n  // Vérifier si CET item spécifique a une erreur de quantité\n  const quantite = data[\"Quantité\"];\n  const itemQuantiteError = !isValidPositiveNumber(quantite);\n  \n  return {\n    json: {\n      // Garder toutes les données originales\n      ...data,\n      // Ajouter les informations de validation\n      \"Grand Total\": grandTotal,\n      \"Erreur\": erreur,\n      \"Erreur item\": itemQuantiteError ? \"Erreur: Quantité\" : null,\n      // Ajouter la priorité finale\n      \"FinalPriorité\": finalPriorite\n    }\n  };\n});\n\nreturn outputItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        976,
+        -32
+      ],
+      "id": "989a86c4-8b3c-4853-9ebe-210f23f2c315",
+      "name": "Grand Total",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f15b795d-5689-46c7-9805-cc0c227d9e5c",
+              "leftValue": "={{ $json.Erreur }}",
+              "rightValue": "null",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1184,
+        -32
+      ],
+      "id": "adb2e8f1-f546-4f71-a60f-2cc98e9c4a08",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f15b795d-5689-46c7-9805-cc0c227d9e5c",
+              "leftValue": "={{ $json[\"Erreur item\"] }}",
+              "rightValue": "null",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1184,
+        256
+      ],
+      "id": "c9e6c946-bb72-4596-a92d-e3559fcc06bb",
+      "name": "If2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        192
+      ],
+      "id": "9572b9ed-05fc-432c-abe7-b40641d95115",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Auto task|select",
+              "selectValue": "Erreur: Check Quantity"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1440,
+        352
+      ],
+      "id": "e03151f3-6e89-4ce4-80f7-cb10e9227de9",
+      "name": "Erreur Quanitié",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ItemsID (robuste) — \"item i\" = \"Quantité X unitaire$\" (unitaire à 2 décimales)\n// + champs additionnels par i : Criticié i, Consommable i, No Article i, Procédé i, Name item i\n\nconst rows = $input.all();\nif (!rows.length) return [];\n\n// Parse tolérant: enlève $/espaces, remplace virgule par point\nconst parseNum = (v) => {\n  if (v === null || v === undefined || v === '') return null;\n  const n = Number(String(v).replace(/\\s|\\$/g, '').replace(',', '.'));\n  return Number.isFinite(n) ? n : null;\n};\n\n// Libellé formaté: \"Quantité X unitaire$\"\nconst fmt = (q, u) => {\n  const nq = parseNum(q);\n  const nu = parseNum(u);\n  if (nq !== null && nu !== null) return `${nq} X ${nu.toFixed(2)}$`;\n  if (nq !== null && nu === null)  return `${nq}`;\n  if (nq === null && nu !== null)  return `${nu.toFixed(2)}$`;\n  return 'Non spécifié';\n};\n\n// Helper pour lire une propriété tolérante (top-level ou sous \"properties\")\nconst getProp = (r, key) =>\n  r.json[key] ??\n  (r.json.properties && r.json.properties[key]) ??\n  null;\n\nconst increment = rows.length;\nconst itemsID   = rows.map(r => r.json.id).filter(Boolean).join(', ');\n\nconst itemList        = {};\nconst lienList        = {};\nconst criticieList    = {};\nconst consommableList = {};\nconst noArticleList   = {};\nconst procedeList     = {};\nconst nameItemList    = {};\n\nrows.forEach((r, i) => {\n  const y    = i + 1;\n  const qte  = getProp(r, 'Quantité');\n  const unit = getProp(r, 'unitaire');\n  const url  = getProp(r, 'URL');\n\n  // Champs additionnels (sources)\n  const criticite     = getProp(r, 'Criticité');\n  const consommable   = getProp(r, '🔴Types de consommables');\n  const noArticle     = getProp(r, \"No d'article\");\n  const procede       = getProp(r, 'Procédé');\n  const nomCommun     = getProp(r, 'Nom Commun');\n\n  // Sorties\n  itemList[`item ${y}`]            = fmt(qte, unit);   // \"2 X 53.00$\" | \"2\" | \"53.00$\" | \"Non spécifié\"\n  lienList[`Lien ${y}`]            = url || null;\n\n  criticieList[`Criticié ${y}`]    = criticite ?? null;\n  consommableList[`Consommable ${y}`] = consommable ?? null;\n  noArticleList[`No Article ${y}`] = noArticle ?? null;\n  procedeList[`Procédé ${y}`]      = procede ?? null;\n  nameItemList[`Name item ${y}`]   = nomCommun ?? null;\n});\n\nreturn [{\n  json: {\n    ...rows[0].json,     // base\n    increment,\n    ItemsID: itemsID,\n    // listes\n    ...itemList,\n    ...lienList,\n    ...criticieList,\n    ...consommableList,\n    ...noArticleList,\n    ...procedeList,\n    ...nameItemList,\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        -48
+      ],
+      "id": "2f1e986b-1c06-40a3-b995-08a483c14e2c",
+      "name": "ItemsID"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "{{NOTION_DB_ID_BONS_DE_COMMANDE_PO}}",
+          "mode": "list",
+          "cachedResultName": "Bons de Commande (PO)",
+          "cachedResultUrl": "https://www.notion.so/{{NOTION_DB_ID_BONS_DE_COMMANDE_PO}}"
+        },
+        "simple": false,
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Date création PO|date",
+              "includeTime": false,
+              "date": "={{ $now }}"
+            },
+            {
+              "key": "Total estimé|number",
+              "numberValue": "={{ $json[\"Grand Total\"] }}"
+            },
+            {
+              "key": "Numéro PO|title",
+              "title": "PO"
+            },
+            {
+              "key": "Priorité|select",
+              "selectValue": "={{ $json[\"FinalPriorité\"] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1664,
+        -48
+      ],
+      "id": "a03fde78-ad25-482a-af3d-8e6bd3e3b9c6",
+      "name": "Create PO page",
+      "executeOnce": false,
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.notion.com/v1/pages/{{ $json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ \n  JSON.stringify((() => {\n    const ItemsIDs = $('ItemsID').item.json.ItemsID;\n    const POName = 'PO' + '-' + $json.properties.Identifiant.unique_id.number;\n    \n    // Convertir la string en array d'objets pour Notion\n    const relationArray = ItemsIDs\n      .split(\", \")  // Séparer par virgule-espace\n      .map(id => ({ id: id.trim() }));  // Créer un objet {id: \"...\"} pour chaque ID\n    \n    // Payload PATCH\n    return {\n      properties: {\n        title: { \n          title: [\n            {\n              type: \"text\",\n              text: { content: POName }\n            }\n          ]\n        }, \n        oXxi: { relation: relationArray }\n      }\n    };\n  })())\n}}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1856,
+        -48
+      ],
+      "id": "ff171e46-410e-49d8-9f9a-a8ef17708273",
+      "name": "HTTP Update PO",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "notes": "Demandes incluses : oXxi"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.notion.com/v1/blocks/{{ $json.target_id }}/children",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 90
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2448,
+        -48
+      ],
+      "id": "15db5ec2-6803-4ac7-bcf6-65b89e7cb11a",
+      "name": "HTTP To do PO",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "notes": "Demandes incluses : oXxi"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1641a4b1-28d3-44de-ad3c-2669de3da543",
+              "name": "po_page_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "535c7dc3-f3f5-4b7e-bee3-d197a4198555",
+              "name": "po_title",
+              "value": "={{ $json.properties[\"Numéro PO\"].title[0].plain_text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2048,
+        -48
+      ],
+      "id": "0321a5f2-bd5e-4939-a98c-c29be8b0a577",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === CONFIG: remplace par les noms exacts de tes nodes ===\nconst NODE_ITEMS = 'ItemsID';             // node qui sort increment, ItemsID, item i, No Article i, Criticité i, Name item i, Procédé i, Consommable i\nconst NODE_PO_CREATE = 'Create PO page';  // node Notion qui a créé la page PO (pour récupérer son id)\n\n// === UTILITAIRES ===\nconst SAFE_BATCH = 90;\nfunction chunk(arr, size) { const out=[]; for (let i=0;i<arr.length;i+=size) out.push(arr.slice(i,i+size)); return out; }\n\nfunction buildHeadingExact(text) {\n  return {\n    object: \"block\",\n    type: \"heading_2\",\n    heading_2: { rich_text: [{ type: \"text\", text: { content: text } }], is_toggleable: false }\n  };\n}\n\n// Achât — 3 colonnes : 1) lien consommable (mention page), 2) item i, 3) \"Criticité : <valeur>\" si non vide\nfunction buildToDoAchat(relId, label, criticite, fallbackFirstColText) {\n  const rt = [];\n\n  // Colonne 1 : lien consommable (mention page si possible)\n  if (relId) {\n    rt.push({ type: \"mention\", mention: { type: \"page\", page: { id: relId } } });\n  } else if (fallbackFirstColText && String(fallbackFirstColText).trim() !== '') {\n    rt.push({ type: \"text\", text: { content: String(fallbackFirstColText).trim() } });\n  } else {\n    rt.push({ type: \"text\", text: { content: \" \" } });\n  }\n\n  // Colonne 2 : item (i)\n  const col2 = (label && String(label).trim()) ? String(label).trim() : '';\n  if (col2 !== '') {\n    rt.push({ type: \"text\", text: { content: \" — \" } });\n    rt.push({ type: \"text\", text: { content: col2 } });\n  }\n\n  // Colonne 3 : \"Criticité : <valeur>\" uniquement si valeur non vide\n  const c = (criticite !== null && criticite !== undefined) ? String(criticite).trim() : '';\n  if (c !== '') {\n    rt.push({ type: \"text\", text: { content: \" — \" } });\n    rt.push({ type: \"text\", text: { content: \"Criticité : \" } });\n    rt.push({ type: \"text\", text: { content: c } });\n  }\n\n  return { object: \"block\", type: \"to_do\", to_do: { rich_text: rt, checked: false } };\n}\n\n// Ligne sous Achât : \"<NoArticle | Lien i> -> URL\" ; si NoArticle vide, utiliser \"Lien i\"\nfunction buildAchatLinkLine(i, noArticle, url) {\n  const u = (url && String(url).trim() !== '') ? String(url).trim() : '';\n  if (u === '') return null;\n  const art = (noArticle !== null && noArticle !== undefined) ? String(noArticle).trim() : '';\n  const label = (art !== '') ? art : `Lien ${i}`;\n  return {\n    object: \"block\",\n    type: \"paragraph\",\n    paragraph: {\n      rich_text: [\n        { type: \"text\", text: { content: `${label} -> ` } },\n        { type: \"text\", text: { content: u, link: { url: u } } }\n      ]\n    }\n  };\n}\n\n// Reception — 2 colonnes : 1) Name item i, 2) Procédé i (si non vide)\nfunction buildToDoReception(nameItem, procede) {\n  const rt = [];\n  const col1 = (nameItem && String(nameItem).trim()) ? String(nameItem).trim() : '';\n  const col2 = (procede && String(procede).trim()) ? String(procede).trim() : '';\n  if (col1 !== '') rt.push({ type: \"text\", text: { content: col1 } });\n  if (col2 !== '') {\n    if (rt.length > 0) rt.push({ type: \"text\", text: { content: \" — \" } });\n    rt.push({ type: \"text\", text: { content: col2 } });\n  }\n  if (rt.length === 0) rt.push({ type: \"text\", text: { content: \" \" } });\n  return { object: \"block\", type: \"to_do\", to_do: { rich_text: rt, checked: false } };\n}\n\n// Ligne sous Reception : valeur seule de \"Consommable i\" (sans libellé)\nfunction buildConsommableValueLine(value) {\n  const v = (value !== null && value !== undefined) ? String(value).trim() : '';\n  if (v === '') return null;\n  return { object: \"block\", type: \"paragraph\", paragraph: { rich_text: [{ type: \"text\", text: { content: v } }] } };\n}\n\n// === RÉCUP DES DONNÉES EN AMONT ===\nconst itemsNodeItems = $(NODE_ITEMS).all();\nif (!itemsNodeItems.length) throw new Error('Aucun output du node ItemsID');\nconst base = itemsNodeItems[0].json;\n\nconst poCreate = $(NODE_PO_CREATE).item.json || {};\nconst poId = poCreate.id || base.po_page_id;\nif (!poId) throw new Error('ID de la page PO introuvable. Vérifie NODE_PO_CREATE.id ou base.po_page_id');\n\n// === NOMBRE D’ITEMS & IDs de pages consommables ===\nconst ids = (base.ItemsID || '').split(',').map(s => s.trim()).filter(Boolean);\nlet inc = Number(base.increment) || 0;\nif (!inc) {\n  const itemKeys = Object.keys(base).filter(k => /^item\\s+\\d+$/i.test(k));\n  inc = Math.max(ids.length, itemKeys.length, 0);\n}\n\n// === CONSTRUCTION DES BLOCS ===\nconst blocks = [];\n\n// Titres EXACTS\nblocks.push(buildHeadingExact('Achât'));\n\nfor (let i = 1; i <= inc; i++) {\n  const label       = base[`item ${i}`];                         // \"35 X 56.00$\"\n  const criticite   = base[`Criticité ${i}`] ?? base[`Criticié ${i}`]; // garder vide si absent\n  const noArticle   = base[`No Article ${i}`];\n  const nameItem    = base[`Name item ${i}`];\n  const url         = base[`Lien ${i}`] || null;\n  const relId       = ids[i - 1] || null;\n\n  // Achât — to_do (3 colonnes, Criticité avec son libellé si présent)\n  const firstColFallback = nameItem || '';\n  blocks.push(buildToDoAchat(relId, label, criticite ?? '', firstColFallback));\n\n  // Sous Achât : \"<NoArticle | Lien i> -> URL\" (si URL présent)\n  const linkLine = buildAchatLinkLine(i, noArticle, url);\n  if (linkLine) blocks.push(linkLine);\n}\n\nblocks.push(buildHeadingExact('Reception'));\n\nfor (let i = 1; i <= inc; i++) {\n  const nameItem    = base[`Name item ${i}`] ?? '';\n  const procede     = base[`Procédé ${i}`] ?? '';\n  const consommable = base[`Consommable ${i}`] ?? '';\n\n  // Reception — to_do (2 colonnes)\n  blocks.push(buildToDoReception(nameItem, procede));\n\n  // Sous Reception : valeur de Consommable i (sans libellé)\n  const consLine = buildConsommableValueLine(consommable);\n  if (consLine) blocks.push(consLine);\n}\n\n// === BATCHING → 1 item / requête append ===\nconst batches = chunk(blocks, SAFE_BATCH);\nreturn batches.map(batch => ({ json: { target_id: poId, body: { children: batch } } }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2256,
+        -48
+      ],
+      "id": "5341404f-1e21-4727-8a3f-f774806d6e35",
+      "name": "Liste To do"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2480,
+        416
+      ],
+      "id": "b2aebef6-1bfb-4a85-877f-f6976f051d52",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Edit Demande').item.json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "🔴Statut demande|status",
+              "statusValue": "En cours"
+            },
+            {
+              "key": "PO Créer|checkbox",
+              "checkboxValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        2688,
+        416
+      ],
+      "id": "17bb7cc7-2e2f-40b7-96b6-de2ed61771ba",
+      "name": "Update Demandes",
+      "credentials": {
+        "notionApi": {
+          "id": "QvSxojyDPKHUcyEW",
+          "name": "Notion API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": true
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -64,
+        -48
+      ],
+      "id": "539d1d8d-f613-4f97-82f4-36234407960c",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "79c90d27-697d-4a50-9280-7e1be6be47c4",
+              "leftValue": "={{ $json.isFirstResponsable }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        512,
+        -32
+      ],
+      "id": "1f862375-8c13-4a86-8f37-6ec7dc6bd00a",
+      "name": "If3"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        768,
+        160
+      ],
+      "id": "ac312be6-73a1-4de2-be76-5bf53c0faf9f",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Récupérer tous les items d'entrée\nconst items = $input.all();\n\nif (items.length === 0) {\n  return [{ json: { message: \"Aucun item à traiter\" } }];\n}\n\n// Trouver le premier responsable (premier item qui a un responsable défini)\nlet firstResponsable = null;\n\nfor (let item of items) {\n  if (item.json.properties && \n      item.json.properties[\"🔴Responsable achat\"] && \n      item.json.properties[\"🔴Responsable achat\"].rich_text && \n      item.json.properties[\"🔴Responsable achat\"].rich_text[0] && \n      item.json.properties[\"🔴Responsable achat\"].rich_text[0].plain_text) {\n    firstResponsable = item.json.properties[\"🔴Responsable achat\"].rich_text[0].plain_text;\n    break; // Arrêter dès qu'on trouve le premier\n  }\n}\n\n// Retourner TOUS les items avec une constante booléenne\nreturn items.map((item, index) => {\n  // Extraire le responsable de cet item\n  let itemResponsable = null;\n  if (item.json.properties && \n      item.json.properties[\"🔴Responsable achat\"] && \n      item.json.properties[\"🔴Responsable achat\"].rich_text && \n      item.json.properties[\"🔴Responsable achat\"].rich_text[0] && \n      item.json.properties[\"🔴Responsable achat\"].rich_text[0].plain_text) {\n    itemResponsable = item.json.properties[\"🔴Responsable achat\"].rich_text[0].plain_text;\n  }\n  \n  return {\n    json: {\n      ...item.json,\n      isFirstResponsable: itemResponsable === firstResponsable\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        -32
+      ],
+      "id": "16730c70-02c7-4916-80f0-b8a428ec088d",
+      "name": "Assign responsable"
+    },
+    {
+      "parameters": {
+        "content": "## Webhook Notion trigger de la base Demande d'achat\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/)",
+        "height": 256,
+        "width": 592,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1200,
+        -112
+      ],
+      "typeVersion": 1,
+      "id": "fa945f45-4239-4dff-8c09-442f2df8bd77",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Scan des demandes et regroupements par PO\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/)",
+        "height": 736,
+        "width": 1744,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -608,
+        -112
+      ],
+      "typeVersion": 1,
+      "id": "c0de9f63-1d99-4591-aa9a-3407cfdf7286",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Productions des PO par reponsable\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/)",
+        "height": 736,
+        "width": 1744,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1136,
+        -112
+      ],
+      "typeVersion": 1,
+      "id": "fa813be8-f561-48f8-9c23-7cf74fcfb2a1",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "WorkFlow07": {
+      "main": [
+        [
+          {
+            "node": "Log Meta (expressions)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Erreur",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Meta (expressions)": {
+      "main": [
+        [
+          {
+            "node": "Start Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Log": {
+      "main": [
+        [
+          {
+            "node": "Edit Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Demande Achat": {
+      "main": [
+        [
+          {
+            "node": "Assign responsable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Demande": {
+      "main": [
+        [
+          {
+            "node": "Grand Total",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Grand Total": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "ItemsID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Erreur Quanitié",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ItemsID": {
+      "main": [
+        [
+          {
+            "node": "Create PO page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create PO page": {
+      "main": [
+        [
+          {
+            "node": "HTTP Update PO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Update PO": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Liste To do",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Liste To do": {
+      "main": [
+        [
+          {
+            "node": "HTTP To do PO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP To do PO": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Update Demandes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Get Demande Achat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Demandes": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Edit Demande",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assign responsable": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "566f2d1e-da90-4f5d-bcb1-6d2ef1f4ef5e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "af83b3ea93bc43d0c5ac63a56a75bfd2e58c747f1d5aca065acb21b4a4d3daa3"
+  },
+  "id": "PJf5ViYz9Yoo3rJb",
+  "tags": [
+    {
+      "updatedAt": "2025-09-12T22:39:32.525Z",
+      "createdAt": "2025-09-12T22:39:32.525Z",
+      "id": "ob1iUzBDY4oAYrZ0",
+      "name": "Achat"
+    },
+    {
+      "updatedAt": "2025-09-16T22:04:01.439Z",
+      "createdAt": "2025-09-16T22:04:01.439Z",
+      "id": "RdtIHOQokgm6xJPW",
+      "name": "Semi-Auto"
+    }
+  ]
+}
