@@ -140,13 +140,15 @@ Le moyen le plus rapide de voir le système réel en action — **cliquer sur un
 
 ## Captures d'écran
 
-Quatre vues représentatives (inventaire complet et anonymisation : [screenshots/MANIFEST.md](screenshots/MANIFEST.md)) :
+Six vues représentatives (inventaire complet et anonymisation : [screenshots/MANIFEST.md](screenshots/MANIFEST.md)) :
 
-| Front End — accueil SMQ | Workflow n8n — WF 01 |
+| Front End — accueil SMQ | Workflow n8n — WF 01 · scan équipements |
 |---|---|
 | ![Accueil SMQ](screenshots/front-end_systeme-management-qualite-iso-iec.png) | ![WF 01 Scan équipements](screenshots/workflow-n8n_wf01-scan-equipement.png) |
 | **Master Tâches — espace Focus** | **Architecture — gouvernance** |
 | ![Focus tâches](screenshots/master-taches_gestion-des-taches.png) | ![Gouvernance](screenshots/architecture_governance-flowchart.png) |
+| **Workflow n8n — WF 01-01 · création de tâche complexe (RACI, 60 nœuds)** | **Workflow n8n — WF 05 · archivage Master Tâches (44 nœuds)** |
+| ![WF 01-01 Création de tâche complexe RACI — 60 nœuds](screenshots/workflow-n8n_wf01-01-creation-tache-complexe-maintenannce-ou.png) | ![WF 05 Archivage Master Tâches — 44 nœuds](screenshots/workflow-n8n_wf05-archive-taches.png) |
 
 ## Compétences démontrées
 
