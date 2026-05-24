@@ -9,8 +9,8 @@
 ![n8n](https://img.shields.io/badge/n8n-EA4B71?logo=n8n&logoColor=white)
 ![ISO/IEC 17025](https://img.shields.io/badge/ISO%2FIEC-17025-0A66C2)
 ![Mermaid](https://img.shields.io/badge/Mermaid-FF3670?logo=mermaid&logoColor=white)
-![JavaScript](https://img.shields.io/badge/logo-javascript-blue?logo=javascript)
-![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=000)
+![JSON](https://img.shields.io/badge/JSON-000?logo=json&logoColor=fff)
 
 ## Présentation en une phrase
 
