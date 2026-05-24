@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/cover.png" alt="Plateforme de Système de Management de la Qualité — Notion × n8n pour laboratoire d'essais métallurgiques (ISO/IEC 17025)" width="100%">
+</p>
+
 # notion-qms-platform
 ## Plateforme de Système de Management de la Qualité (SMQ) — Notion × n8n pour laboratoire industriel accrédité ISO/IEC 17025
 
