@@ -8,7 +8,7 @@
 
 ## Présentation en une phrase
 
-Architecture documentée d'une plateforme de management qualité combinant Notion (référentiel relationnel, RACI) et n8n (automatisation événementielle et planifiée) pour une PME de laboratoire métallurgique accréditée.
+Architecture documentée d'une plateforme de Système Management Qualité combinant ![Notion](https://img.shields.io/badge/Notion-000000?logo=notion&logoColor=white) (référentiel relationnel, RACI) et ![n8n](https://img.shields.io/badge/n8n-EA4B71?logo=n8n&logoColor=white) (automatisation événementielle et planifiée) pour une PME de laboratoire métallurgique accréditée.
 
 > 🎥 **Voir le projet en action** — ▶ [Présentation générale](https://youtu.be/8AHTXgseMW4) · [Focus](https://youtu.be/NJMF1m_C7qQ) · [RH / Formation](https://youtu.be/NXGGmjdkIiE) · [Documentation](https://youtu.be/EjH6szkbJ3w) · [Achats](https://youtu.be/TiAE6TcnOb0)
 
