@@ -16,7 +16,16 @@
 
 Architecture documentée d'une plateforme de Système de Management de la Qualité (SMQ) combinant Notion (référentiel relationnel, RACI) et n8n (automatisation événementielle et planifiée) pour une PME de laboratoire métallurgique évoluant dans un environnement normatif rigoureux (ISO/IEC 17025).
 
-> 🎥 **Voir le projet en action** — ▶ [Présentation générale](https://youtu.be/8AHTXgseMW4) · [Focus](https://youtu.be/NJMF1m_C7qQ) · [RH / Formation](https://youtu.be/NXGGmjdkIiE) · [Documentation](https://youtu.be/EjH6szkbJ3w) · [Achats](https://youtu.be/TiAE6TcnOb0)
+>  🎥 **Voir le projet en action** — ![YouTube](https://img.shields.io/badge/YouTube-%23FF0000.svg?logo=YouTube&logoColor=white)
+-  [▶ Présentation générale](https://youtu.be/8AHTXgseMW4)
+-  [▶ Gestion des tâches](https://youtu.be/NJMF1m_C7qQ)
+-  [▶ Ressources Humaines / Formations](https://youtu.be/NXGGmjdkIiE)
+-  [▶ Documentations Entreprises](https://youtu.be/EjH6szkbJ3w)
+-  [▶ Gestion des Achâts](https://youtu.be/TiAE6TcnOb0)
+
+## > 📌 Note sur le statut du projet
+
+La plateforme a été développée à mon initiative personnelle comme solution de transition — destinée à couvrir une période de plusieurs années dans l'attente de l'intégration d'un logiciel métier sectoriel. Le projet a été présenté formellement à la direction générale puis aux équipes opérationnelles. Il n'a pas été retenu pour déploiement pour des raisons budgétaires.
 
 ## Le problème
 
