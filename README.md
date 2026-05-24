@@ -1,5 +1,5 @@
 # notion-qms-lab
-## Plateforme de Système Management de la QUalité ![Notion](https://img.shields.io/badge/Notion-000000?logo=notion&logoColor=white) × ![n8n](https://img.shields.io/badge/n8n-EA4B71?logo=n8n&logoColor=white) pour laboratoire industriel accrédité ISO/IEC 17025
+## Plateforme de Système Management de la Qualité ![Notion](https://img.shields.io/badge/Notion-000000?logo=notion&logoColor=white) × ![n8n](https://img.shields.io/badge/n8n-EA4B71?logo=n8n&logoColor=white) pour laboratoire industriel accrédité ISO/IEC 17025
 
 ![Notion](https://img.shields.io/badge/Notion-000000?logo=notion&logoColor=white)
 ![n8n](https://img.shields.io/badge/n8n-EA4B71?logo=n8n&logoColor=white)
