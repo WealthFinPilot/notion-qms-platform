@@ -1,7 +1,10 @@
 # notion-qms-lab
 ## Plateforme QMS (Quality Management System) Notion × n8n pour laboratoire accrédité ISO/IEC 17025
 
-`Notion` · `n8n` · `ISO/IEC 17025` · `Mermaid`
+![Notion](https://img.shields.io/badge/Notion-000000?logo=notion&logoColor=white)
+![n8n](https://img.shields.io/badge/n8n-EA4B71?logo=n8n&logoColor=white)
+![ISO/IEC 17025](https://img.shields.io/badge/ISO%2FIEC-17025-0A66C2)
+![Mermaid](https://img.shields.io/badge/Mermaid-FF3670?logo=mermaid&logoColor=white)
 
 ## Présentation en une phrase
 
@@ -211,3 +214,5 @@ notion-qms-lab/
 
 ---
 *Dépôt dérivé d'un projet réel : œuvre anonymisée et reformulée. La démarche d'anonymisation (noms, fournisseurs, données financières, identifiants et credentials) est documentée dans [`ANONYMIZE-TODO.md`](ANONYMIZE-TODO.md) et [`ANONYMIZE-ADDENDUM.md`](ANONYMIZE-ADDENDUM.md).*
+
+*Notion® et n8n™ sont des marques de leurs détenteurs respectifs (Notion Labs, Inc. et n8n GmbH). Ce projet est indépendant et n'est ni affilié à, ni approuvé par ces sociétés ; leurs logos ne sont utilisés qu'à titre d'indication des technologies employées.*
