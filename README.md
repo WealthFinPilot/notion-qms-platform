@@ -137,23 +137,55 @@ Le moyen le plus rapide de voir le système réel en action — **cliquer sur un
 
 **▶ [Présentation générale](https://youtu.be/8AHTXgseMW4)** — vue d'ensemble de la plateforme : QMS, Focus, Contrôle, Achats, Bibliothèque, RH.
 
-| [![Module Focus](screenshots/master-taches_automatisation-de-taches.png)](https://youtu.be/NJMF1m_C7qQ) | [![Module RH / Formation](screenshots/rh-formation_suivis-global-des-formations.png)](https://youtu.be/NXGGmjdkIiE) |
-|:---:|:---:|
-| **▶ [Module Focus — tâches & agent IA](https://youtu.be/NJMF1m_C7qQ)**<br/>Demandes et actions transformées en tâches suivies, avec un agent IA respectant les rôles. | **▶ [Module RH / Formation — n8n](https://youtu.be/NXGGmjdkIiE)**<br/>Un bouton Notion déclenche un workflow n8n qui crée les instances et inscrit les employés. |
-| [![Module Documentation](screenshots/documentation_bibliotheque-de-la-compagnie.png)](https://youtu.be/EjH6szkbJ3w) | [![Module Achats](screenshots/achats_magasin-industriel.png)](https://youtu.be/TiAE6TcnOb0) |
-| **▶ [Module Documentation / Bibliothèque](https://youtu.be/EjH6szkbJ3w)**<br/>Bibliothèque centralisée et filtrable, accès rapide à la bonne version + IA documentaire. | **▶ [Module Achats — magasin & cycle PO](https://youtu.be/TiAE6TcnOb0)**<br/>Du panier à la réception : regroupement par fournisseur, génération et suivi des PO. |
+<table>
+  <tr>
+    <td width="50%" align="center"><a href="https://youtu.be/NJMF1m_C7qQ"><img src="screenshots/master-taches_automatisation-de-taches.png" width="100%" alt="Module Focus"></a></td>
+    <td width="50%" align="center"><a href="https://youtu.be/NXGGmjdkIiE"><img src="screenshots/rh-formation_suivis-global-des-formations.png" width="100%" alt="Module RH / Formation"></a></td>
+  </tr>
+  <tr>
+    <td align="center"><b>▶ <a href="https://youtu.be/NJMF1m_C7qQ">Module Focus — tâches &amp; agent IA</a></b><br/>Demandes et actions transformées en tâches suivies, avec un agent IA respectant les rôles.</td>
+    <td align="center"><b>▶ <a href="https://youtu.be/NXGGmjdkIiE">Module RH / Formation — n8n</a></b><br/>Un bouton Notion déclenche un workflow n8n qui crée les instances et inscrit les employés.</td>
+  </tr>
+  <tr>
+    <td width="50%" align="center"><a href="https://youtu.be/EjH6szkbJ3w"><img src="screenshots/documentation_bibliotheque-de-la-compagnie.png" width="100%" alt="Module Documentation"></a></td>
+    <td width="50%" align="center"><a href="https://youtu.be/TiAE6TcnOb0"><img src="screenshots/achats_magasin-industriel.png" width="100%" alt="Module Achats"></a></td>
+  </tr>
+  <tr>
+    <td align="center"><b>▶ <a href="https://youtu.be/EjH6szkbJ3w">Module Documentation / Bibliothèque</a></b><br/>Bibliothèque centralisée et filtrable, accès rapide à la bonne version + IA documentaire.</td>
+    <td align="center"><b>▶ <a href="https://youtu.be/TiAE6TcnOb0">Module Achats — magasin &amp; cycle PO</a></b><br/>Du panier à la réception : regroupement par fournisseur, génération et suivi des PO.</td>
+  </tr>
+</table>
 
 ## Captures d'écran
 
 Six vues représentatives (inventaire complet et anonymisation : [screenshots/MANIFEST.md](screenshots/MANIFEST.md)) :
 
-| Front End — accueil SMQ | Workflow n8n — Recherche et planification des maintenances machines |
-|---|---|
-| ![Accueil de la plateforme SMQ](screenshots/front-end_systeme-management-qualite-iso-iec.png) | ![Recherche et planification des maintenances machines](screenshots/workflow-n8n_wf01-scan-equipement.png) |
-| **Espace personnel des tâches en cours** | **Architecture — gouvernance** |
-| ![Espace personnel des tâches en cours](screenshots/master-taches_gestion-des-taches.png) | ![Schéma de gouvernance](screenshots/architecture_governance-flowchart.png) |
-| **Workflow n8n — Génération et distribution des tâches complexes avec attribution RACI** (60 nœuds) | **Workflow n8n — Auto-maintenance des données et archivage ciblé** (44 nœuds) |
-| ![Génération et distribution des tâches complexes avec attribution RACI](screenshots/workflow-n8n_wf01-01-creation-tache-complexe-maintenannce-ou.png) | ![Auto-maintenance des données et archivage ciblé](screenshots/workflow-n8n_wf05-archive-taches.png) |
+<table>
+  <tr>
+    <td width="50%" align="center"><b>Front End — accueil SMQ</b></td>
+    <td width="50%" align="center"><b>Workflow n8n — Recherche et planification des maintenances machines</b></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="screenshots/front-end_systeme-management-qualite-iso-iec.png" width="100%" alt="Accueil de la plateforme SMQ"></td>
+    <td align="center"><img src="screenshots/workflow-n8n_wf01-scan-equipement.png" width="100%" alt="Recherche et planification des maintenances machines"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Espace personnel des tâches en cours</b></td>
+    <td align="center"><b>Architecture — gouvernance</b></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="screenshots/master-taches_gestion-des-taches.png" width="100%" alt="Espace personnel des tâches en cours"></td>
+    <td align="center"><img src="screenshots/architecture_governance-flowchart.png" width="100%" alt="Schéma de gouvernance"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Workflow n8n — Génération et distribution des tâches complexes avec attribution RACI</b> (60 nœuds)</td>
+    <td align="center"><b>Workflow n8n — Auto-maintenance des données et archivage ciblé</b> (44 nœuds)</td>
+  </tr>
+  <tr>
+    <td align="center"><img src="screenshots/workflow-n8n_wf01-01-creation-tache-complexe-maintenannce-ou.png" width="100%" alt="Génération et distribution des tâches complexes avec attribution RACI"></td>
+    <td align="center"><img src="screenshots/workflow-n8n_wf05-archive-taches.png" width="100%" alt="Auto-maintenance des données et archivage ciblé"></td>
+  </tr>
+</table>
 
 ## Compétences démontrées
 
