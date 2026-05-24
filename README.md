@@ -61,16 +61,16 @@ Le choix structurant : faire converger toutes les actions vers une **table de fa
 ## Pilotage & métriques du projet
 
 Le projet a été piloté avec un tableau de bord de suivi dédié, alimenté tout au long du développement.
-
+<br/><br/><br/>
 ![Suivi projet — charge et participation](screenshots/architecture_tableau-de-bord-projet.png)
 *Suivi de la charge de travail sur 5 mois : répartition hebdomadaire, taux de participation (64 %), rythme moyen (3.8 h/jour ouvré), 302 h cumulées sur 79 jours actifs.*
-
+<br/><br/><br/><br/>
 ![Métriques de développement](screenshots/architecture_tableau-de-bord-projet-2.png)
 *Architecture chiffrée : 6 pages et 38 sous-pages Notion, 6 formulaires, 26 automatisations n8n (16 WF principaux, 10 sous-WF), répartition de charge Back 77 % / Front 18 %, runtime moyen des WF 3.87 s.*
-
+<br/><br/><br/><br/>
 ![QMS ISO/IEC 17025 — tableau de bord](screenshots/architecture_tableau-de-bord-projet-3.png)
 *Périmètre opérationnel : 41 jalons qualité, 92 équipements, 104 fournisseurs, 205 consommables, 5 départements, 15 employés, 372 documents — charge de développement distribuée par exigence ISO/IEC 17025.*
-
+<br/><br/><br/>
 ## Architecture
 
 9 hubs Back End · 38 bases · 30 modules · 62 liens directionnels. *Master Tâches* est la table de faits centrale : équipements, certificats, jalons qualité, achats et formations y déposent tous une tâche RACI, exécutée selon le même cycle puis archivée par le même mécanisme.
