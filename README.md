@@ -1,4 +1,4 @@
-# notion-qms-lab
+# notion-qms-platform
 ## Plateforme de Système de Management de la Qualité (SMQ) — Notion × n8n pour laboratoire industriel accrédité ISO/IEC 17025
 
 ![Notion](https://img.shields.io/badge/Notion-000000?logo=notion&logoColor=white)
