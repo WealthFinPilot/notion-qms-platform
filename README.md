@@ -1,5 +1,5 @@
 # notion-qms-lab
-## Plateforme de Système Management de la Qualité ![Notion](https://img.shields.io/badge/Notion-000000?logo=notion&logoColor=white) × ![n8n](https://img.shields.io/badge/n8n-EA4B71?logo=n8n&logoColor=white) pour laboratoire industriel accrédité ISO/IEC 17025
+## Plateforme de Système de Management de la Qualité (SMQ) — Notion × n8n pour laboratoire industriel accrédité ISO/IEC 17025
 
 ![Notion](https://img.shields.io/badge/Notion-000000?logo=notion&logoColor=white)
 ![n8n](https://img.shields.io/badge/n8n-EA4B71?logo=n8n&logoColor=white)
@@ -8,7 +8,7 @@
 
 ## Présentation en une phrase
 
-Architecture documentée d'une plateforme de Système Management Qualité combinant Notion (référentiel relationnel, RACI) et n8n (automatisation événementielle et planifiée) pour une PME de laboratoire métallurgique évoluant dans un environnement normatif extrèmement rigoureux ISO/IEC 17025.
+Architecture documentée d'une plateforme de Système de Management de la Qualité (SMQ) combinant Notion (référentiel relationnel, RACI) et n8n (automatisation événementielle et planifiée) pour une PME de laboratoire métallurgique évoluant dans un environnement normatif extrêmement rigoureux (ISO/IEC 17025).
 
 > 🎥 **Voir le projet en action** — ▶ [Présentation générale](https://youtu.be/8AHTXgseMW4) · [Focus](https://youtu.be/NJMF1m_C7qQ) · [RH / Formation](https://youtu.be/NXGGmjdkIiE) · [Documentation](https://youtu.be/EjH6szkbJ3w) · [Achats](https://youtu.be/TiAE6TcnOb0)
 
