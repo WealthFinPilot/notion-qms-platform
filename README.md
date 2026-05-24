@@ -1,5 +1,5 @@
 # notion-qms-lab
-## Plateforme QMS (Quality Management System) Notion × n8n pour laboratoire accrédité ISO/IEC 17025
+## Plateforme QMS (Quality Management System) Notion ![Notion](https://img.shields.io/badge/Notion-000000?logo=notion&logoColor=white) × n8n pour laboratoire accrédité ISO/IEC 17025
 
 ![Notion](https://img.shields.io/badge/Notion-000000?logo=notion&logoColor=white)
 ![n8n](https://img.shields.io/badge/n8n-EA4B71?logo=n8n&logoColor=white)
