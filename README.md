@@ -23,7 +23,7 @@ Architecture documentée d'une plateforme de Système de Management de la Qualit
 -  [▶ Documentations Entreprises](https://youtu.be/EjH6szkbJ3w)
 -  [▶ Gestion des Achâts](https://youtu.be/TiAE6TcnOb0)
 
-## > 📌 Note sur le statut du projet
+## 📌 Note sur le statut du projet
 
 La plateforme a été développée à mon initiative personnelle comme solution de transition — destinée à couvrir une période de plusieurs années dans l'attente de l'intégration d'un logiciel métier sectoriel. Le projet a été présenté formellement à la direction générale puis aux équipes opérationnelles. Il n'a pas été retenu pour déploiement pour des raisons budgétaires.
 
