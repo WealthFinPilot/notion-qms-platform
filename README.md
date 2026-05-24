@@ -20,11 +20,13 @@ Une PME de laboratoire accréditée (~15-20 personnes, essais destructifs et con
 
 ## La solution
 
-Une plateforme orienté Système Managemnent de la Qualité hybride, pensée pour rester maintenable par une petite structure :
+Une plateforme hybride orientée Système de Management de la Qualité (SMQ), pensée pour rester maintenable par une petite structure :
 
 - **Notion** comme référentiel structuré — 9 hubs Back End, matrice RACI appliquée à toutes les tâches, vues différenciées par profil (commun / gestionnaires / personnels).
 - **n8n auto-hébergé (VPS Hostinger)** comme moteur d'automatisation — scans planifiés (production de tâches) et webhooks événementiels (réaction aux clics utilisateur), avec journalisation des exécutions.
 - **Agents Notion AI** intégrés — une interface conversationnelle posée sur les bases, respectant les rôles.
+
+> **Pourquoi n8n plutôt que les automatisations natives de Notion ?** En 2025-2026, Notion ne permet pas qu'une automatisation en déclenche une autre : un processus ne peut pas en appeler un autre de façon chaînée. n8n lève ce plafond — un workflow peut en déclencher d'autres — ce qui rend possible un enchaînement de processus **entièrement automatisé, de bout en bout**, sans intervention manuelle entre les étapes.
 
 Le choix structurant : faire converger toutes les actions vers une **table de faits unique** (*Master Tâches*) et déléguer la circulation de la donnée entre domaines à n8n. Cela donne un seul cycle de vie à maintenir, une seule surface d'intégration et une traçabilité homogène.
 
@@ -142,13 +144,13 @@ Le moyen le plus rapide de voir le système réel en action — **cliquer sur un
 
 Six vues représentatives (inventaire complet et anonymisation : [screenshots/MANIFEST.md](screenshots/MANIFEST.md)) :
 
-| Front End — accueil SMQ | Workflow n8n — WF 01 · scan équipements |
+| Front End — accueil SMQ | Workflow n8n — Recherche et planification des maintenances machines |
 |---|---|
-| ![Accueil SMQ](screenshots/front-end_systeme-management-qualite-iso-iec.png) | ![WF 01 Scan équipements](screenshots/workflow-n8n_wf01-scan-equipement.png) |
-| **Master Tâches — espace Focus** | **Architecture — gouvernance** |
-| ![Focus tâches](screenshots/master-taches_gestion-des-taches.png) | ![Gouvernance](screenshots/architecture_governance-flowchart.png) |
-| **Workflow n8n — WF 01-01 · création de tâche complexe (RACI, 60 nœuds)** | **Workflow n8n — WF 05 · archivage Master Tâches (44 nœuds)** |
-| ![WF 01-01 Création de tâche complexe RACI — 60 nœuds](screenshots/workflow-n8n_wf01-01-creation-tache-complexe-maintenannce-ou.png) | ![WF 05 Archivage Master Tâches — 44 nœuds](screenshots/workflow-n8n_wf05-archive-taches.png) |
+| ![Accueil de la plateforme SMQ](screenshots/front-end_systeme-management-qualite-iso-iec.png) | ![Recherche et planification des maintenances machines](screenshots/workflow-n8n_wf01-scan-equipement.png) |
+| **Espace personnel des tâches en cours** | **Architecture — gouvernance** |
+| ![Espace personnel des tâches en cours](screenshots/master-taches_gestion-des-taches.png) | ![Schéma de gouvernance](screenshots/architecture_governance-flowchart.png) |
+| **Workflow n8n — Génération et distribution des tâches complexes avec attribution RACI** (60 nœuds) | **Workflow n8n — Auto-maintenance des données et archivage ciblé** (44 nœuds) |
+| ![Génération et distribution des tâches complexes avec attribution RACI](screenshots/workflow-n8n_wf01-01-creation-tache-complexe-maintenannce-ou.png) | ![Auto-maintenance des données et archivage ciblé](screenshots/workflow-n8n_wf05-archive-taches.png) |
 
 ## Compétences démontrées
 
